@@ -85,10 +85,8 @@ npm install
 Create a `.env` file in the `backend` directory and add the following environment variables:
 
 ```env
-PORT=5000
 ATLAS_URI=<Your MongoDB Connection String>
 JWT_SECRET=<A_Strong_Secret_Key_For_JWT>
-FRONTEND_URL=http://localhost:5173 # Or your frontend's production URL
 ```
 
 *   Replace `<Your MongoDB Connection String>` with your MongoDB connection URI (e.g., from MongoDB Atlas).
