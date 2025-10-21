@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthContext } from '../context/AuthContext';
 import TransactionList from '../components/TransactionList';
@@ -85,7 +85,6 @@ const TransactionsPage = () => {
     
     setIsLoading(true);
     try {
-      let url = 'http://localhost:5000/api/transactions';
       const params = new URLSearchParams();
       
       if (filters.type) params.append('type', filters.type);
@@ -94,14 +93,8 @@ const TransactionsPage = () => {
       if (filters.dateTo) params.append('dateTo', filters.dateTo);
       if (filters.minAmount) params.append('minAmount', filters.minAmount);
       if (filters.maxAmount) params.append('maxAmount', filters.maxAmount);
-      
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
 
-      const res = await axios.get(url, {
-        headers: { 'x-auth-token': token },
-      });
+      const res = await api.get('transactions', { params });
       
       setTransactions(res.data);
     } catch (error) {
@@ -160,10 +153,9 @@ const TransactionsPage = () => {
     try {
       if (editingTransaction) {
         // Update existing transaction
-        const res = await axios.put(
-          `http://localhost:5000/api/transactions/${editingTransaction._id}`,
-          transactionData,
-          { headers: { 'x-auth-token': token } }
+        const res = await api.put(
+          `transactions/${editingTransaction._id}`,
+          transactionData
         );
         
         setTransactions(transactions.map(t => 
@@ -172,10 +164,9 @@ const TransactionsPage = () => {
         setEditingTransaction(null);
       } else {
         // Add new transaction
-        const res = await axios.post(
-          'http://localhost:5000/api/transactions',
-          transactionData,
-          { headers: { 'x-auth-token': token } }
+        const res = await api.post(
+          'transactions',
+          transactionData
         );
         
         setTransactions([res.data, ...transactions]);
@@ -190,9 +181,7 @@ const TransactionsPage = () => {
   // Handle delete
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/transactions/${id}`, {
-        headers: { 'x-auth-token': token },
-      });
+      await api.delete(`transactions/${id}`);
       setTransactions(transactions.filter(t => t._id !== id));
     } catch (error) {
       console.error('Error deleting transaction:', error);

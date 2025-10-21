@@ -1,6 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const helmet = require('helmet');
+const morgan = require('morgan');
+// const rateLimit = require('express-rate-limit');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -18,6 +22,17 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
+app.use(helmet());
+app.use(morgan('dev'));
+
+// const limiter = rateLimit({
+// 	windowMs: 1 * 60 * 1000, // 1 minutes
+// 	hydrogen: 10000, // Limit each IP to 10000 requests per `window` (here, per 1 minutes)
+// 	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+// 	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+// });
+
+// app.use('/api', limiter);
 
 // MongoDB connection with better error handling
 const uri = process.env.ATLAS_URI;
@@ -66,6 +81,17 @@ process.on('SIGINT', async () => {
     process.exit(1);
   }
 });
+
+// Serve frontend in production
+if (process.env.NODE_ENV === 'production') {
+  // Serve the static files from the React app
+  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+  // Handles any requests that don't match the ones above
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
+  });
+}
 
 // Routes
 const usersRouter = require('./routes/users');

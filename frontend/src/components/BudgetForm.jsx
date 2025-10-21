@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Target, DollarSign, Calendar, Tag, Save, Loader, AlertCircle } from 'lucide-react';
-import axios from 'axios';
+import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 
 const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
@@ -47,9 +47,7 @@ const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
       if (!token) return;
       
       try {
-        const response = await axios.get('http://localhost:5000/api/budget/categories', {
-          headers: { 'x-auth-token': token }
-        });
+        const response = await api.get('/api/budget/categories');
         setAvailableCategories(response.data);
       } catch (error) {
         console.error('Error fetching categories:', error);

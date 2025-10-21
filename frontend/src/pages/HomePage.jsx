@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import api from "../services/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -74,16 +75,13 @@ const HomePage = () => {
     try {
       if (editingBudgetGoal) {
         // Update existing budget goal
-        await axios.put(
-          `http://localhost:5000/api/budget/${editingBudgetGoal._id}`,
-          budgetData,
-          { headers: { "x-auth-token": token } }
+        await api.put(
+          `budget/${editingBudgetGoal._id}`,
+          budgetData
         );
       } else {
         // Create new budget goal
-        await axios.post("http://localhost:5000/api/budget", budgetData, {
-          headers: { "x-auth-token": token },
-        });
+        await api.post("budget", budgetData);
       }
 
       // Close the form and reset editing state
@@ -167,15 +165,9 @@ const HomePage = () => {
     setIsLoading(true);
     try {
       const [transactionsRes, statsRes, chartRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/transactions", {
-          headers: { "x-auth-token": token },
-        }),
-        axios.get("http://localhost:5000/api/transactions/stats", {
-          headers: { "x-auth-token": token },
-        }),
-        axios.get("http://localhost:5000/api/transactions/chart-data", {
-          headers: { "x-auth-token": token },
-        }),
+        api.get("transactions"),
+        api.get("transactions/stats"),
+        api.get("transactions/chart-data"),
       ]);
 
       setAllTransactions(transactionsRes.data);
@@ -244,17 +236,15 @@ const HomePage = () => {
   const handleAddTransaction = async (transactionData) => {
     try {
       if (editTransaction) {
-        await axios.put(
-          `http://localhost:5000/api/transactions/${editTransaction._id}`,
-          transactionData,
-          { headers: { "x-auth-token": token } }
+        await api.put(
+          `transactions/${editTransaction._id}`,
+          transactionData
         );
         setEditTransaction(null);
       } else {
-        await axios.post(
-          "http://localhost:5000/api/transactions",
-          transactionData,
-          { headers: { "x-auth-token": token } }
+        await api.post(
+          "transactions",
+          transactionData
         );
       }
 
@@ -274,9 +264,7 @@ const HomePage = () => {
   // Handle transaction delete
   const handleDeleteTransaction = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/transactions/${id}`, {
-        headers: { "x-auth-token": token },
-      });
+      await api.delete(`transactions/${id}`);
       await refreshData();
     } catch (error) {
       console.error("Error deleting transaction:", error);
@@ -327,11 +315,15 @@ const HomePage = () => {
     };
   };
 
+  const navigate = useNavigate();
+
   useEffect(() => {
-    console.log("AuthContext user:", user);
-    console.log("AuthContext token:", token);
-    fetchAllData();
-  }, [token]);
+    if (!token) {
+      navigate('/login');
+    } else {
+      fetchAllData();
+    }
+  }, [token, navigate]);
 
   const filteredStats = getFilteredStats();
 
@@ -497,10 +489,9 @@ const HomePage = () => {
                     // Show loading state
                     setIsGeneratingReport?.(true);
 
-                    const response = await axios.get(
-                      "http://localhost:5000/api/transactions/report",
+                    const response = await api.get(
+                      "transactions/report",
                       {
-                        headers: { "x-auth-token": token },
                         responseType: "blob",
                       }
                     );
@@ -628,15 +619,14 @@ const HomePage = () => {
                   onSubmit={async (budgetData) => {
                     try {
                       // Fix: Use correct API endpoint and include all required data
-                      await axios.post(
-                        "http://localhost:5000/api/budget", // Fixed endpoint
+                      await api.post(
+                        "budget", // Fixed endpoint
                         {
                           category: budgetData.category,
                           amount: budgetData.amount,
                           month: budgetData.month, // Now included
                           year: budgetData.year, // Now included
-                        },
-                        { headers: { "x-auth-token": token } }
+                        }
                       );
 
                       showNotification(
