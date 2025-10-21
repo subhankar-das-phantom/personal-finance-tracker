@@ -170,8 +170,14 @@ const HomePage = () => {
         api.get("transactions/chart-data"),
       ]);
 
-      setAllTransactions(transactionsRes.data);
-      setRecentTransactions(transactionsRes.data.slice(0, 5));
+      if (Array.isArray(transactionsRes.data)) {
+        setAllTransactions(transactionsRes.data);
+        setRecentTransactions(transactionsRes.data.slice(0, 5));
+      } else {
+        console.error("Error: transactions data is not an array", transactionsRes.data);
+        setAllTransactions([]);
+        setRecentTransactions([]);
+      }
       setStats(statsRes.data || stats); // Update to new stats structure
       setChartData(chartRes.data || []);
     } catch (error) {

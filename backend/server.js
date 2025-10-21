@@ -1,76 +1,80 @@
+// server.js
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 const morgan = require('morgan');
-// const rateLimit = require('express-rate-limit');
+const rateLimit = require('express-rate-limit');
+// const { ipKeyGenerator } = require('express-rate-limit'); // Only if you need a custom key (see note below)
 const path = require('path');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 5000;
 
-// CORS configuration - more secure than default
+// If you’re behind a reverse proxy/CDN (Render, Nginx, Cloudflare, etc.)
+app.set('trust proxy', 1);
+
+// CORS (single-origin; change to a whitelist function if you have multiple)
+const allowedOrigin =
+  process.env.NODE_ENV === 'production'
+    ? process.env.FRONTEND_URL || 'http://localhost:5173'
+    : 'http://localhost:5173';
+
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? process.env.FRONTEND_URL || 'http://localhost:5173' 
-    : 'http://localhost:5173',
+  origin: allowedOrigin,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
 };
-
 app.use(cors(corsOptions));
+
+// Core middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(helmet());
-app.use(morgan('dev'));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
-// const limiter = rateLimit({
-// 	windowMs: 1 * 60 * 1000, // 1 minutes
-// 	hydrogen: 10000, // Limit each IP to 10000 requests per `window` (here, per 1 minutes)
-// 	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-// 	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-// });
+// Rate limiting (express-rate-limit v7+ uses `limit`; if v6, use `max`)
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,     // 1 minute
+  limit: 1000,             // adjust to your needs (100–600 typical for public APIs)
+  standardHeaders: true,   // RateLimit-* headers
+  legacyHeaders: false,    // disable X-RateLimit-* headers
+  skip: (req) => req.path === '/health', // don’t rate-limit health
+  message: { error: 'Too many requests, please try again later.' },
+  // If you want per-user or per-API-key limiting, uncomment keyGenerator below.
+  // Ensure IPv6 safety using ipKeyGenerator fallback.
+  // keyGenerator: (req, res) => {
+  //   if (req.user?.id) return `user:${req.user.id}`;
+  //   if (req.headers['x-api-key']) return `key:${req.headers['x-api-key']}`;
+  //   return ipKeyGenerator(req); // safe IPv6-normalized fallback
+  // },
+});
 
-// app.use('/api', limiter);
+// Apply limiter to API routes only
+app.use('/api', apiLimiter);
 
-// MongoDB connection with better error handling
+// MongoDB connection
 const uri = process.env.ATLAS_URI;
-
 if (!uri) {
   console.error('ATLAS_URI environment variable is not defined');
   process.exit(1);
 }
 
-// Connect to MongoDB with improved options
-mongoose.connect(uri, { 
-  useNewUrlParser: true, 
-  useUnifiedTopology: true 
-})
-.then(() => {
-  console.log("MongoDB database connection established successfully");
-})
-.catch(err => {
-  console.error('MongoDB connection error:', err);
-  process.exit(1);
-});
+mongoose
+  .connect(uri) // modern mongoose: no need for useNewUrlParser/useUnifiedTopology
+  .then(() => console.log('MongoDB database connection established successfully'))
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  });
 
-// MongoDB connection event handlers
 const connection = mongoose.connection;
+connection.on('error', (err) => console.error('MongoDB connection error:', err));
+connection.on('disconnected', () => console.log('MongoDB disconnected. Attempting to reconnect...'));
+connection.on('reconnected', () => console.log('MongoDB reconnected successfully'));
 
-connection.on('error', (err) => {
-  console.error('MongoDB connection error:', err);
-});
-
-connection.on('disconnected', () => {
-  console.log('MongoDB disconnected. Attempting to reconnect...');
-});
-
-connection.on('reconnected', () => {
-  console.log('MongoDB reconnected successfully');
-});
-
-// Graceful shutdown handling
+// Graceful shutdown
 process.on('SIGINT', async () => {
   try {
     await mongoose.connection.close();
@@ -82,18 +86,7 @@ process.on('SIGINT', async () => {
   }
 });
 
-// Serve frontend in production
-if (process.env.NODE_ENV === 'production') {
-  // Serve the static files from the React app
-  app.use(express.static(path.join(__dirname, '../frontend/dist')));
-
-  // Handles any requests that don't match the ones above
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
-  });
-}
-
-// Routes
+// Routers
 const usersRouter = require('./routes/users');
 const transactionsRouter = require('./routes/transactions');
 const budgetGoalsRouter = require('./routes/budgetGoals');
@@ -104,49 +97,61 @@ app.use('/api/transactions', transactionsRouter);
 app.use('/api/budgetGoals', budgetGoalsRouter);
 app.use('/api/budget', budgetRoutes);
 
-
-// Basic health check endpoint
+// Health route (keep outside /api so limiter skip works)
 app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
+  res.status(200).json({
+    status: 'OK',
     message: 'Server is running',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
   });
 });
 
-// Root endpoint
+// Root metadata
 app.get('/', (req, res) => {
-  res.json({ 
+  res.json({
     message: 'Personal Finance Tracker API',
     version: '1.0.0',
     endpoints: {
       users: '/api/users',
       transactions: '/api/transactions',
-      health: '/health'
-    }
+      budgetGoals: '/api/budgetGoals',
+      budget: '/api/budget',
+      health: '/health',
+    },
   });
 });
 
-// 404 handler for undefined routes - FIXED FOR EXPRESS v5
-app.use('/*catchAll', (req, res) => {
-  res.status(404).json({ 
+// Serve frontend in production (Vite/React build in ../frontend/dist)
+if (process.env.NODE_ENV === 'production') {
+  const distPath = path.join(__dirname, '../frontend/dist');
+  app.use(express.static(distPath));
+  // SPA fallback
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
+
+// 404 handler (must be after all routes)
+app.all('*', (req, res) => {
+  res.status(404).json({
     success: false,
     message: 'Route not found',
-    requestedUrl: req.originalUrl 
+    requestedUrl: req.originalUrl,
   });
 });
 
-// Global error handler
+// Global error handler (keep last)
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   console.error('Global error handler:', err);
-  
   res.status(err.status || 500).json({
     success: false,
-    message: process.env.NODE_ENV === 'production' 
-      ? 'Something went wrong!' 
-      : err.message,
-    error: process.env.NODE_ENV === 'development' ? err.stack : {}
+    message:
+      process.env.NODE_ENV === 'production'
+        ? 'Something went wrong!'
+        : err.message,
+    error: process.env.NODE_ENV === 'development' ? err.stack : {},
   });
 });
 

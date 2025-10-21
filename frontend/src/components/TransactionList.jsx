@@ -24,8 +24,10 @@ const TransactionList = ({ transactions, onDelete, onEdit, isLoading = false }) 
   // Filter and sort transactions
   const filteredTransactions = transactions
     .filter(transaction => {
-      const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          transaction.category.toLowerCase().includes(searchTerm.toLowerCase());
+      const description = transaction.description || '';
+      const category = transaction.category || '';
+      const matchesSearch = description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          category.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesFilter = filterType === 'all' || transaction.type === filterType;
       return matchesSearch && matchesFilter;
     })
