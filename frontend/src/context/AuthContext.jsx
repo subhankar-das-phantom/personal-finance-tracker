@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import authService from '../services/authService';
 
 export const AuthContext = createContext();
 
@@ -10,9 +10,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (token) {
-      axios.defaults.headers.common['x-auth-token'] = token;
-      // Fetch user data
-      axios.get('http://localhost:5000/api/users/me')
+      authService.getUser()
         .then(res => setUser(res.data))
         .catch(err => {
           console.error(err);
@@ -20,18 +18,17 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem('token');
         });
     } else {
-      delete axios.defaults.headers.common['x-auth-token'];
       setUser(null);
     }
   }, [token]);
 
   const register = async (username, email, password) => {
-    return axios.post('http://localhost:5000/api/users/register', { username, email, password });
+    return authService.register(username, email, password);
   };
 
   const login = async (email, password) => {
     try {
-      const res = await axios.post('http://localhost:5000/api/users/login', { email, password });
+      const res = await authService.login(email, password);
       setToken(res.data.token);
       localStorage.setItem('token', res.data.token);
       return { success: true };
