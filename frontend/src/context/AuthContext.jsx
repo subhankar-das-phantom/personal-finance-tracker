@@ -22,9 +22,18 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
-  const register = async (username, email, password) => {
-    return authService.register(username, email, password);
-  };
+const register = async (username, email, password) => {
+  try {
+    const res = await authService.register(username, email, password);
+    setToken(res.data.token);
+    localStorage.setItem('token', res.data.token);
+    return { success: true };
+  } catch (err) {
+    console.error('Register error:', err.response ? err.response.data : err.message);
+    return { success: false, error: err.response ? err.response.data.msg : err.message };
+  }
+};
+
 
   const login = async (email, password) => {
     try {
