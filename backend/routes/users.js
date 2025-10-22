@@ -6,7 +6,7 @@ let User = require('../models/user.model');
 
 // Register
 router.post('/register', async (req, res) => {
-  try {
+  try { 
     const { username, email, password } = req.body;
 
     // Check if user exists
@@ -28,7 +28,16 @@ router.post('/register', async (req, res) => {
 
     const savedUser = await newUser.save();
     console.log('User saved:', savedUser);
-    res.json(savedUser);
+
+    // Create and assign token
+    const token = jwt.sign({ id: savedUser._id }, process.env.JWT_SECRET);
+    res.json({
+      token,
+      user: {
+        id: savedUser._id,
+        username: savedUser.username,
+      },
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
