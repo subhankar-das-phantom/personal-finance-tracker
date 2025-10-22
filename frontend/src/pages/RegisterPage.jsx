@@ -143,17 +143,23 @@ const RegisterPage = () => {
     setIsLoading(true);
     
     try {
-      await register(formData.username, formData.email, formData.password);
+      const result = await register(formData.username, formData.email, formData.password);
       
-      setSuccessMessage('Account created successfully! Redirecting to login...');
-      
-      // Success animation delay
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
+      if (result.success) {
+        setSuccessMessage('Account created successfully! Redirecting to the dashboard...');
+        
+        // Success animation delay
+        setTimeout(() => {
+          navigate('/');
+        }, 2000);
+      } else {
+        setRegisterError(result.error || 'Registration failed. Please try again.');
+        setIsLoading(false);
+      }
       
     } catch (err) {
-      setRegisterError(err.response?.data?.msg || err.response?.data?.error || 'Registration failed. Please try again.');
+      // Fallback for unexpected errors
+      setRegisterError('An unexpected error occurred. Please try again.');
       setIsLoading(false);
     }
   };
