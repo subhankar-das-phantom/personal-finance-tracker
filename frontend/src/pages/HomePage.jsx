@@ -560,7 +560,7 @@ const HomePage = () => {
                 description="Detailed insights & trends"
                 icon={PieChart}
                 color="purple"
-                onClick={() => console.log("View analytics")}
+                onClick={() => navigate('/analytics')}
               />
             </div>
           </motion.div>
