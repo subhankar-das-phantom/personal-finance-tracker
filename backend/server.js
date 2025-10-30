@@ -89,13 +89,13 @@ process.on('SIGINT', async () => {
 // Routers
 const usersRouter = require('./routes/users');
 const transactionsRouter = require('./routes/transactions');
-const budgetGoalsRouter = require('./routes/budgetGoals');
-const budgetRoutes = require('./routes/budget');
+const budgetRouter = require('./routes/budget');
+
 
 app.use('/api/users', usersRouter);
 app.use('/api/transactions', transactionsRouter);
-app.use('/api/budgetGoals', budgetGoalsRouter);
-app.use('/api/budget', budgetRoutes);
+app.use('/api/budgetGoals', budgetRouter);
+app.use('/api/budget', budgetRouter);
 
 // Health route (keep outside /api so limiter skip works)
 app.get('/health', (req, res) => {

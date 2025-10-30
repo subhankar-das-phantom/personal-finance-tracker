@@ -1,4 +1,3 @@
-// src/pages/AnalyticsPage.jsx
 import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -10,21 +9,29 @@ import {
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
+import BudgetList from '../components/BudgetList';
+import BudgetProgress from '../components/BudgetProgress';
+import BudgetForm from '../components/BudgetForm';
+import { getBudgets, getBudgetProgress, addBudget, updateBudget, deleteBudget } from '../services/budgetService';
 
 const COLORS = ['#6366F1', '#22C55E', '#F59E0B', '#EF4444', '#06B6D4', '#A855F7', '#84CC16'];
 
 const AnalyticsPage = () => {
   const [analyticsData, setAnalyticsData] = useState(null);
+  const [budgetGoals, setBudgetGoals] = useState([]);
+  const [budgetProgress, setBudgetProgress] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [timeframe, setTimeframe] = useState('6m');
   const [chartType, setChartType] = useState('bar');
+  const [isBudgetFormOpen, setIsBudgetFormOpen] = useState(false);
+  const [editingGoal, setEditingGoal] = useState(null);
 
   const navigate = useNavigate();
   const { token } = useContext(AuthContext);
 
   useEffect(() => {
-    const fetchAnalytics = async () => {
+    const fetchAllData = async () => {
       if (!token) {
         navigate('/login');
         return;
@@ -32,17 +39,57 @@ const AnalyticsPage = () => {
       setIsLoading(true);
       setError('');
       try {
-        const { data } = await api.get('transactions/analytics');
-        setAnalyticsData(data);
+        const [analytics, budgets, progress] = await Promise.all([
+          api.get('transactions/analytics'),
+          getBudgets(),
+          getBudgetProgress(),
+        ]);
+        setAnalyticsData(analytics.data);
+        setBudgetGoals(budgets);
+        setBudgetProgress(progress);
       } catch (err) {
-        console.error('Error fetching analytics data:', err);
-        setError('Failed to load analytics. Please try again.');
+        console.error('Error fetching data:', err);
+        setError('Failed to load data. Please try again.');
       } finally {
         setIsLoading(false);
       }
     };
-    fetchAnalytics();
+    fetchAllData();
   }, [token, navigate]);
+
+  const handleAddBudget = () => {
+    setEditingGoal(null);
+    setIsBudgetFormOpen(true);
+  };
+
+  const handleEditBudget = (goal) => {
+    setEditingGoal(goal);
+    setIsBudgetFormOpen(true);
+  };
+
+  const handleDeleteBudget = async (id) => {
+    try {
+      await deleteBudget(id);
+      setBudgetGoals(budgetGoals.filter(goal => goal._id !== id));
+    } catch (error) {
+      console.error('Error deleting budget:', error);
+    }
+  };
+
+  const handleBudgetFormSubmit = async (budgetData) => {
+    try {
+      if (editingGoal) {
+        const updatedGoal = await updateBudget(editingGoal._id, budgetData);
+        setBudgetGoals(budgetGoals.map(goal => goal._id === editingGoal._id ? updatedGoal : goal));
+      } else {
+        const newGoal = await addBudget(budgetData);
+        setBudgetGoals([...budgetGoals, newGoal]);
+      }
+      setIsBudgetFormOpen(false);
+    } catch (error) {
+      console.error('Error saving budget:', error);
+    }
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -197,6 +244,32 @@ const AnalyticsPage = () => {
             <AnalyticsCard icon={TrendingDown} title="This Month Expenses" value={periods.thisMonth.expense} tone="danger" />
             <AnalyticsCard icon={Scale} title="This Month Net" value={periods.thisMonth.netBalance} tone={periods.thisMonth.netBalance >= 0 ? 'brand' : 'danger'} />
             <AnalyticsCard icon={Calendar} title="This Year Net" value={periods.thisYear.netBalance} tone={periods.thisYear.netBalance >= 0 ? 'brand' : 'danger'} />
+          </motion.div>
+
+          {/* Budget Section */}
+          <motion.div variants={itemVariants} className="bg-white/80 dark:bg-gray-800/80 backdrop-blur rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Budget Goals</h3>
+              <button
+                onClick={handleAddBudget}
+                className="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+              >
+                Add Budget
+              </button>
+            </div>
+            {isBudgetFormOpen && (
+              <BudgetForm
+                onClose={() => setIsBudgetFormOpen(false)}
+                onSubmit={handleBudgetFormSubmit}
+                goal={editingGoal}
+              />
+            )}
+            <BudgetList goals={budgetGoals} onEdit={handleEditBudget} onDelete={handleDeleteBudget} />
+          </motion.div>
+
+          {/* Budget Progress */}
+          <motion.div variants={itemVariants}>
+            <BudgetProgress progress={budgetProgress} />
           </motion.div>
 
           {/* Charts */}
