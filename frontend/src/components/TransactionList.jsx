@@ -1,107 +1,164 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Edit3, 
-  Trash2, 
-  Calendar, 
-  DollarSign, 
-  Tag, 
-  TrendingUp, 
+import React, { useState, memo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { FixedSizeList as List } from "react-window";
+import {
+  Edit3,
+  Trash2,
+  Calendar,
+  Tag,
+  TrendingUp,
   TrendingDown,
-  Search,
-  Filter,
-  SortAsc,
-  Eye,
-  AlertCircle
-} from 'lucide-react';
+  AlertCircle,
+} from "lucide-react";
 
-const TransactionList = ({ transactions, onDelete, onEdit, isLoading = false }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
-  const [sortBy, setSortBy] = useState('date');
-  const [sortOrder, setSortOrder] = useState('desc');
+// =============================
+// TransactionRow Component
+// =============================
+const TransactionRow = memo(({ index, style, items, onEdit, onDelete }) => {
+  const transaction = items[index];
+  const [isActive, setIsActive] = useState(false);
 
-  // Filter and sort transactions
-  const filteredTransactions = transactions
-    .filter(transaction => {
-      const description = transaction.description || '';
-      const category = transaction.category || '';
-      const matchesSearch = description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          category.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilter = filterType === 'all' || transaction.type === filterType;
-      return matchesSearch && matchesFilter;
-    })
-    .sort((a, b) => {
-      let aValue, bValue;
-      
-      switch (sortBy) {
-        case 'amount':
-          aValue = parseFloat(a.amount);
-          bValue = parseFloat(b.amount);
-          break;
-        case 'date':
-          aValue = new Date(a.date);
-          bValue = new Date(b.date);
-          break;
-        case 'category':
-          aValue = a.category.toLowerCase();
-          bValue = b.category.toLowerCase();
-          break;
-        default:
-          return 0;
-      }
-      
-      if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
+  // Safety check for async/paginated data
+  if (!transaction) {
+    return (
+      <div style={style}>
+        <div className="mx-4 my-2 bg-gray-100 dark:bg-gray-800 rounded-xl p-4 animate-pulse">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const formatDate = (dateString) =>
+    new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const formatAmount = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
+  const formatAmount = (amount) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(amount);
-  };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
+  return (
+    <div style={style}>
+      <motion.div
+        onHoverStart={() => setIsActive(true)}
+        onHoverEnd={() => setIsActive(false)}
+        onTap={() => setIsActive(!isActive)}
+        className="mx-4 my-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all duration-200 cursor-pointer"
+      >
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          {/* Left side (icon + details) */}
+          <div className="flex items-center space-x-4 flex-1 min-w-0">
+            <div
+              className={`p-2 rounded-lg flex-shrink-0 ${
+                transaction.type === "income"
+                  ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
+                  : "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+              }`}
+            >
+              {transaction.type === "income" ? (
+                <TrendingUp className="h-5 w-5" />
+              ) : (
+                <TrendingDown className="h-5 w-5" />
+              )}
+            </div>
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.3 }
-    },
-    exit: { 
-      opacity: 0, 
-      x: -100,
-      transition: { duration: 0.2 }
-    }
-  };
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
+                  {transaction.description || "No description"}
+                </h3>
+                <span
+                  className={`text-lg sm:text-xl font-bold sm:ml-4 whitespace-nowrap ${
+                    transaction.type === "income"
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-red-600 dark:text-red-400"
+                  }`}
+                >
+                  {transaction.type === "income" ? "+" : "-"}
+                  {formatAmount(transaction.amount)}
+                </span>
+              </div>
 
-  if (isLoading) {
+              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex items-center space-x-1">
+                  <Tag className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{transaction.category}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Calendar className="h-4 w-4 flex-shrink-0" />
+                  <span>{formatDate(transaction.date)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Edit/Delete Buttons */}
+          <AnimatePresence>
+            {isActive && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center space-x-2 flex-shrink-0"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(transaction);
+                  }}
+                  className="p-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors duration-200"
+                  title="Edit transaction"
+                >
+                  <Edit3 className="h-4 w-4" />
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(transaction._id);
+                  }}
+                  className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
+                  title="Delete transaction"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    </div>
+  );
+});
+TransactionRow.displayName = "TransactionRow";
+
+// =============================
+// TransactionList Component
+// =============================
+const TransactionList = ({ transactions, onDelete, onEdit, isLoading = false }) => {
+  const ITEM_HEIGHT = 120;
+  const LIST_HEIGHT = 600;
+
+  if (isLoading && transactions.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 border border-gray-100 dark:border-gray-800">
         <div className="animate-pulse space-y-4">
-          {[1,2,3,4,5].map(i => (
+          {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="h-16 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
           ))}
         </div>
@@ -114,86 +171,31 @@ const TransactionList = ({ transactions, onDelete, onEdit, isLoading = false }) 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden"
+      className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800"
     >
       {/* Header */}
-      <div className="p-6 border-b border-gray-100 dark:border-gray-800">
+      <div className="p-4 sm:p-6 border-b border-gray-100 dark:border-gray-800">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4"
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
         >
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-2">
               Recent Transactions
             </h2>
             <div className="w-16 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" />
           </div>
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            {filteredTransactions.length} transactions
-          </div>
-        </motion.div>
-
-        {/* Filters and Search */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4"
-        >
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search transactions..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)} // This line was already correct
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-            />
-          </div>
-
-          {/* Filter */}
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="pl-10 pr-8 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-            >
-              <option value="all">All Types</option>
-              <option value="income">Income</option>
-              <option value="expense">Expense</option>
-            </select>
-          </div>
-
-          {/* Sort */}
-          <div className="relative">
-            <SortAsc className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <select
-              value={`${sortBy}-${sortOrder}`}
-              onChange={(e) => {
-                const [field, order] = e.target.value.split('-');
-                setSortBy(field);
-                setSortOrder(order);
-              }}
-              className="pl-10 pr-8 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-            >
-              <option value="date-desc">Date (Newest)</option>
-              <option value="date-asc">Date (Oldest)</option>
-              <option value="amount-desc">Amount (High to Low)</option>
-              <option value="amount-asc">Amount (Low to High)</option>
-              <option value="category-asc">Category (A-Z)</option>
-              <option value="category-desc">Category (Z-A)</option>
-            </select>
+            {transactions.length} transactions
           </div>
         </motion.div>
       </div>
 
-      {/* Transaction List */}
-      <div className="max-h-96 overflow-y-auto">
-        {filteredTransactions.length === 0 ? (
+      {/* List Section */}
+      <div className="p-2 sm:p-4">
+        {transactions.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -201,132 +203,33 @@ const TransactionList = ({ transactions, onDelete, onEdit, isLoading = false }) 
           >
             <AlertCircle className="h-12 w-12 mb-4 opacity-50" />
             <p className="text-lg font-medium mb-2">No transactions found</p>
-            <p className="text-sm">
-              {searchTerm || filterType !== 'all' 
-                ? 'Try adjusting your filters or search terms' 
-                : 'Add your first transaction to get started'
-              }
+            <p className="text-sm text-center px-4">
+              Try adjusting your filters or search terms
             </p>
           </motion.div>
         ) : (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="p-6 space-y-3"
+          <List
+            height={LIST_HEIGHT}
+            itemCount={transactions.length}
+            itemSize={ITEM_HEIGHT}
+            width="100%"
+            className="custom-scrollbar"
           >
-            <AnimatePresence mode="popLayout">
-              {filteredTransactions.map((transaction, index) => (
-                <TransactionItem
-                  key={transaction._id}
-                  transaction={transaction}
+            {({ index, style }) => {
+              const tx = transactions[index];
+              if (!tx) return null;
+              return (
+                <TransactionRow
                   index={index}
+                  style={style}
+                  items={transactions}
                   onEdit={onEdit}
                   onDelete={onDelete}
-                  formatDate={formatDate}
-                  formatAmount={formatAmount}
-                  variants={itemVariants}
                 />
-              ))}
-            </AnimatePresence>
-          </motion.div>
+              );
+            }}
+          </List>
         )}
-      </div>
-    </motion.div>
-  );
-};
-
-// Individual Transaction Item Component
-const TransactionItem = ({ transaction, index, onEdit, onDelete, formatDate, formatAmount, variants }) => {
-  const [isActive, setIsActive] = useState(false);
-
-  return (
-    <motion.div
-      layout
-      variants={variants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      onHoverStart={() => setIsActive(true)}
-      onHoverEnd={() => setIsActive(false)}
-      onTap={() => setIsActive(!isActive)}
-      className="relative bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all duration-200 cursor-pointer"
-    >
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4" >
-        {/* Left side - Transaction info */}
-        <div className="flex items-center space-x-4 flex-1">
-          {/* Type indicator */}
-          <div className={`self-start p-2 rounded-lg ${
-            transaction.type === 'income' 
-              ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' 
-              : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
-          }`}>
-            {transaction.type === 'income' ? (
-              <TrendingUp className="h-5 w-5" />
-            ) : (
-              <TrendingDown className="h-5 w-5" />
-            )}
-          </div>
-
-          {/* Transaction details */}
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-                {transaction.description}
-              </h3>
-              <span className={`text-xl font-bold sm:ml-4 ${
-                transaction.type === 'income' 
-                  ? 'text-green-600 dark:text-green-400' 
-                  : 'text-red-600 dark:text-red-400'
-              }`}>
-                {transaction.type === 'income' ? '+' : '-'}{formatAmount(transaction.amount)}
-              </span>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-500 dark:text-gray-400">
-              <div className="flex items-center space-x-1">
-                <Tag className="h-4 w-4" />
-                <span>{transaction.category}</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <Calendar className="h-4 w-4" />
-                <span>{formatDate(transaction.date)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right side - Action buttons */}
-        <AnimatePresence>
-          {isActive && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.2 }}
-              className="flex items-center space-x-2 sm:ml-4 self-end sm:self-center"
-            >
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => onEdit(transaction)}
-                className="p-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors duration-200"
-                title="Edit transaction"
-              >
-                <Edit3 className="h-4 w-4" />
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => onDelete(transaction._id)}
-                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
-                title="Delete transaction"
-              >
-                <Trash2 className="h-4 w-4" />
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </motion.div>
   );

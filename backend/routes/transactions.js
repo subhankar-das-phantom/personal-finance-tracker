@@ -6,21 +6,84 @@ const PDFDocument = require('pdfkit');
 // Get all transactions
 router.get('/', auth, async (req, res) => {
   try {
-    const { type, category, limit } = req.query;
+    const {
+      type,
+      category,
+      search,
+      sortBy = 'date',
+      sortOrder = 'desc',
+      dateFrom,
+      dateTo,
+      minAmount,
+      maxAmount,
+      // optional pagination; if not provided, return all (no implicit 50)
+      page,
+      pageSize
+    } = req.query;
+
     const filter = { user: req.user };
-    if (type) {
-      filter.type = type;
-    }
-    if (category) {
-      filter.category = category;
+
+    if (type) filter.type = type;
+    if (category) filter.category = category;
+
+    if (dateFrom || dateTo) {
+      filter.date = {};
+      if (dateFrom) filter.date.$gte = new Date(dateFrom);
+      if (dateTo) {
+        const end = new Date(dateTo);
+        end.setHours(23, 59, 59, 999);
+        filter.date.$lte = end;
+      }
     }
 
-    const transactions = await Transaction.find(filter)
-      .sort({ date: -1 })
-      .limit(limit ? parseInt(limit) : 0);
+    if (minAmount || maxAmount) {
+      filter.amount = {};
+      if (minAmount) filter.amount.$gte = parseFloat(minAmount);
+      if (maxAmount) filter.amount.$lte = parseFloat(maxAmount);
+    }
 
-    res.json(transactions);
+    if (search) {
+      filter.$or = [
+        { description: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const validSortFields = ['date', 'amount', 'category', 'type'];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : 'date';
+    const sortObj = { [sortField]: sortOrder === 'asc' ? 1 : -1 };
+    if (sortField !== 'date') sortObj.date = -1;
+
+    // If page/pageSize are provided, paginate; otherwise return all
+    let query = Transaction.find(filter).sort(sortObj);
+    let totalCount = 0;
+
+    if (page && pageSize) {
+      const p = Math.max(1, parseInt(page, 10) || 1);
+      const ps = Math.max(1, parseInt(pageSize, 10) || 50);
+      const skip = (p - 1) * ps;
+
+      [transactions, totalCount] = await Promise.all([
+        query.skip(skip).limit(ps).lean(),
+        Transaction.countDocuments(filter)
+      ]);
+
+      return res.json({
+        transactions,
+        pagination: {
+          page: p,
+          pageSize: ps,
+          totalCount,
+          totalPages: Math.ceil(totalCount / ps),
+          hasMore: skip + transactions.length < totalCount
+        }
+      });
+    }
+
+    const transactions = await query.lean();
+    return res.json(transactions);
   } catch (err) {
+    console.error('Error fetching transactions:', err);
     res.status(500).json({ error: err.message });
   }
 });

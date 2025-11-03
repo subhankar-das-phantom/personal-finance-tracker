@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import api from "../services/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../context/AuthContext";
 import TransactionList from "../components/TransactionList";
+import useDebounce from "../hooks/useDebounce";
 import * as XLSX from "xlsx";
 import TransactionForm from "../components/TransactionForm";
 import {
@@ -21,11 +22,11 @@ import {
   FileText,
   File,
   CheckCircle2,
+  SortAsc,
 } from "lucide-react";
 
 const TransactionsPage = () => {
   const [transactions, setTransactions] = useState([]);
-  const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,13 +37,15 @@ const TransactionsPage = () => {
     endDate: "",
     preset: "all",
   });
-  const [exportFormat, setExportFormat] = useState("excel"); // excel, pdf, csv
+  const [exportFormat, setExportFormat] = useState("excel");
 
-  // Filter states
+  // Filter and sort states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("date");
+  const [sortOrder, setSortOrder] = useState("desc");
   const [filters, setFilters] = useState({
     type: "",
     category: "",
-    searchTerm: "",
     dateFrom: "",
     dateTo: "",
     minAmount: "",
@@ -58,7 +61,10 @@ const TransactionsPage = () => {
     transactionCount: 0,
   });
 
-  const { token, user } = useContext(AuthContext);
+  const { token } = useContext(AuthContext);
+
+  // Debounced search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   // Predefined categories
   const categories = [
@@ -98,74 +104,63 @@ const TransactionsPage = () => {
     },
   };
 
-  // Fetch transactions
-  const fetchTransactions = async () => {
+  // Fetch transactions from server with all filters
+  const fetchTransactions = useCallback(async () => {
     if (!token) return;
 
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
 
+      // Add all filter parameters
+      if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
       if (filters.type) params.append("type", filters.type);
       if (filters.category) params.append("category", filters.category);
       if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
       if (filters.dateTo) params.append("dateTo", filters.dateTo);
       if (filters.minAmount) params.append("minAmount", filters.minAmount);
       if (filters.maxAmount) params.append("maxAmount", filters.maxAmount);
+      if (sortBy) params.append("sortBy", sortBy);
+      if (sortOrder) params.append("sortOrder", sortOrder);
 
-      const res = await api.get("transactions", { params });
+      const res = await api.get(`transactions?${params.toString()}`);
 
-      setTransactions(res.data);
+      // Handle both old and new response formats
+      const transactionsData = res.data.transactions || res.data;
+      setTransactions(transactionsData);
+
+      // Calculate stats
+      const income = transactionsData
+        .filter((t) => t.type === "income")
+        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+      const expenses = transactionsData
+        .filter((t) => t.type === "expense")
+        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+      setStats({
+        totalIncome: income,
+        totalExpenses: expenses,
+        netBalance: income - expenses,
+        transactionCount: transactionsData.length,
+      });
     } catch (error) {
       console.error("Error fetching transactions:", error);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Apply local filters
-  useEffect(() => {
-    let filtered = [...transactions];
-
-    if (filters.searchTerm) {
-      filtered = filtered.filter(
-        (t) =>
-          t.description
-            .toLowerCase()
-            .includes(filters.searchTerm.toLowerCase()) ||
-          t.category.toLowerCase().includes(filters.searchTerm.toLowerCase())
-      );
-    }
-
-    setFilteredTransactions(filtered);
-
-    const income = filtered
-      .filter((t) => t.type === "income")
-      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-
-    const expenses = filtered
-      .filter((t) => t.type === "expense")
-      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-
-    setStats({
-      totalIncome: income,
-      totalExpenses: expenses,
-      netBalance: income - expenses,
-      transactionCount: filtered.length,
-    });
-  }, [transactions, filters.searchTerm]);
-
-  useEffect(() => {
-    fetchTransactions();
   }, [
     token,
-    filters.type,
-    filters.category,
-    filters.dateFrom,
-    filters.dateTo,
-    filters.minAmount,
-    filters.maxAmount,
+    debouncedSearchTerm,
+    filters,
+    sortBy,
+    sortOrder,
   ]);
+
+  // Fetch transactions when filters change
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   const refreshData = async () => {
     setIsRefreshing(true);
@@ -193,15 +188,21 @@ const TransactionsPage = () => {
       }
 
       setShowAddForm(false);
+      await fetchTransactions(); // Refresh to get updated stats
     } catch (error) {
       console.error("Error saving transaction:", error);
     }
   };
 
   const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this transaction?")) {
+      return;
+    }
+
     try {
       await api.delete(`transactions/${id}`);
       setTransactions(transactions.filter((t) => t._id !== id));
+      await fetchTransactions(); // Refresh stats
     } catch (error) {
       console.error("Error deleting transaction:", error);
     }
@@ -217,10 +218,12 @@ const TransactionsPage = () => {
   };
 
   const clearFilters = () => {
+    setSearchTerm("");
+    setSortBy("date");
+    setSortOrder("desc");
     setFilters({
       type: "",
       category: "",
-      searchTerm: "",
       dateFrom: "",
       dateTo: "",
       minAmount: "",
@@ -283,9 +286,8 @@ const TransactionsPage = () => {
     }
   };
 
-  // Filter transactions by date range
   const getFilteredTransactionsByDate = () => {
-    let transactionsToExport = [...filteredTransactions];
+    let transactionsToExport = [...transactions];
 
     if (exportDateRange.startDate && exportDateRange.endDate) {
       const startDate = new Date(exportDateRange.startDate);
@@ -301,7 +303,6 @@ const TransactionsPage = () => {
     return transactionsToExport;
   };
 
-  // Calculate stats for filtered transactions
   const calculateRangeStats = (transactions) => {
     const rangeIncome = transactions
       .filter((t) => t.type === "income")
@@ -319,7 +320,6 @@ const TransactionsPage = () => {
     };
   };
 
-  // Export to Excel
   const exportToExcel = (transactionsToExport, rangeStats, dateRangeStr) => {
     const wb = XLSX.utils.book_new();
 
@@ -545,7 +545,6 @@ const TransactionsPage = () => {
     return filename;
   };
 
-  // Export to CSV
   const exportToCSV = (transactionsToExport, dateRangeStr) => {
     const csvContent = [
       ["Date", "Type", "Category", "Description", "Amount"],
@@ -573,10 +572,8 @@ const TransactionsPage = () => {
     return filename;
   };
 
-  // Export to PDF (using backend route)
   const exportToPDF = async (dateRangeStr) => {
     try {
-      // Build query parameters for date range
       const params = new URLSearchParams();
       if (exportDateRange.startDate) params.append('startDate', exportDateRange.startDate);
       if (exportDateRange.endDate) params.append('endDate', exportDateRange.endDate);
@@ -602,7 +599,6 @@ const TransactionsPage = () => {
     }
   };
 
-  // Main export handler
   const handleExport = async () => {
     try {
       const transactionsToExport = getFilteredTransactionsByDate();
@@ -672,81 +668,108 @@ const TransactionsPage = () => {
           {/* Header Section */}
           <motion.div
             variants={itemVariants}
-            className="flex flex-col lg:flex-row lg:items-center lg:justify-between"
+            className="flex flex-col space-y-4"
           >
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 All Transactions 📊
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                 Manage and analyze your financial transactions
               </p>
             </div>
 
-            <div className="flex items-center space-x-4 mt-4 lg:mt-0">
+            {/* Controls Row */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
               {/* Search */}
-              <div className="relative">
+              <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search transactions..."
-                  value={filters.searchTerm}
-                  onChange={(e) => updateFilter("searchTerm", e.target.value)}
-                  className="pl-10 pr-4 py-2 w-64 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
                 />
               </div>
 
-              {/* Filter Toggle */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowFilters(!showFilters)}
-                className={`p-2 rounded-lg border transition-colors duration-200 ${
-                  showFilters
-                    ? "border-indigo-500 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400"
-                    : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:text-indigo-600"
-                }`}
-              >
-                <Filter className="h-5 w-5" />
-              </motion.button>
+              {/* Sort Dropdown */}
+              <div className="relative min-w-[180px]">
+                <SortAsc className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                <select
+                  value={`${sortBy}-${sortOrder}`}
+                  onChange={(e) => {
+                    const [field, order] = e.target.value.split("-");
+                    setSortBy(field);
+                    setSortOrder(order);
+                  }}
+                  className="w-full pl-10 pr-8 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer text-sm sm:text-base"
+                >
+                  <option value="date-desc">Date (Newest)</option>
+                  <option value="date-asc">Date (Oldest)</option>
+                  <option value="amount-desc">Amount (High-Low)</option>
+                  <option value="amount-asc">Amount (Low-High)</option>
+                  <option value="category-asc">Category (A-Z)</option>
+                  <option value="category-desc">Category (Z-A)</option>
+                </select>
+              </div>
 
-              {/* Refresh Button */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={refreshData}
-                disabled={isRefreshing}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200"
-              >
-                <RefreshCw
-                  className={`h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`}
-                />
-              </motion.button>
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2">
+                {/* Filter Toggle */}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`p-2 rounded-lg border transition-colors duration-200 ${
+                    showFilters
+                      ? "border-indigo-500 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400"
+                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:text-indigo-600"
+                  }`}
+                  title="Toggle filters"
+                >
+                  <Filter className="h-5 w-5" />
+                </motion.button>
 
-              {/* Export Button */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleExportClick}
-                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200"
-              >
-                <Download className="h-5 w-5" />
-                <span>Export</span>
-              </motion.button>
+                {/* Refresh Button */}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={refreshData}
+                  disabled={isRefreshing}
+                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200"
+                  title="Refresh data"
+                >
+                  <RefreshCw
+                    className={`h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`}
+                  />
+                </motion.button>
 
-              {/* Add Transaction Button */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  setEditingTransaction(null);
-                  setShowAddForm(true);
-                }}
-                className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg transition-shadow duration-200"
-              >
-                <Plus className="h-5 w-5" />
-                <span>Add Transaction</span>
-              </motion.button>
+                {/* Export Button */}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleExportClick}
+                  className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200 text-sm"
+                >
+                  <Download className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="hidden sm:inline">Export</span>
+                </motion.button>
+
+                {/* Add Transaction Button */}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    setEditingTransaction(null);
+                    setShowAddForm(true);
+                  }}
+                  className="flex items-center space-x-2 px-3 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg transition-shadow duration-200 text-sm"
+                >
+                  <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span>Add</span>
+                </motion.button>
+              </div>
             </div>
           </motion.div>
 
@@ -757,16 +780,16 @@ const TransactionsPage = () => {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-6"
+                className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-4 sm:p-6"
               >
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
                     Advanced Filters
                   </h3>
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={clearFilters}
-                      className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                      className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                     >
                       Clear All
                     </button>
@@ -779,15 +802,15 @@ const TransactionsPage = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Transaction Type
                     </label>
                     <select
                       value={filters.type}
                       onChange={(e) => updateFilter("type", e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
                     >
                       <option value="">All Types</option>
                       <option value="income">Income</option>
@@ -796,13 +819,13 @@ const TransactionsPage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Category
                     </label>
                     <select
                       value={filters.category}
                       onChange={(e) => updateFilter("category", e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
                     >
                       <option value="">All Categories</option>
                       {categories.map((cat) => (
@@ -814,31 +837,31 @@ const TransactionsPage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Date From
                     </label>
                     <input
                       type="date"
                       value={filters.dateFrom}
                       onChange={(e) => updateFilter("dateFrom", e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Date To
                     </label>
                     <input
                       type="date"
                       value={filters.dateTo}
                       onChange={(e) => updateFilter("dateTo", e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Min Amount
                     </label>
                     <input
@@ -849,12 +872,12 @@ const TransactionsPage = () => {
                       onChange={(e) =>
                         updateFilter("minAmount", e.target.value)
                       }
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Max Amount
                     </label>
                     <input
@@ -865,7 +888,7 @@ const TransactionsPage = () => {
                       onChange={(e) =>
                         updateFilter("maxAmount", e.target.value)
                       }
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
                     />
                   </div>
                 </div>
@@ -876,7 +899,7 @@ const TransactionsPage = () => {
           {/* Statistics Cards */}
           <motion.div
             variants={itemVariants}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
           >
             <StatsCard
               title="Total Income"
@@ -912,7 +935,7 @@ const TransactionsPage = () => {
           {/* Transaction List */}
           <motion.div variants={itemVariants}>
             <TransactionList
-              transactions={filteredTransactions}
+              transactions={transactions}
               onEdit={handleEdit}
               onDelete={handleDelete}
               isLoading={isLoading}
@@ -920,7 +943,7 @@ const TransactionsPage = () => {
           </motion.div>
         </motion.div>
 
-        {/* Export Modal */}
+        {/* Export Modal - Keep the same as your original */}
         <AnimatePresence>
           {showExportModal && (
             <motion.div
@@ -935,20 +958,21 @@ const TransactionsPage = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-3xl overflow-hidden"
+                className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-3xl overflow-hidden max-h-[90vh] overflow-y-auto"
               >
+                {/* Export Modal Content - Keep your existing export modal JSX */}
                 {/* Header */}
-                <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6 text-white">
+                <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-4 sm:p-6 text-white sticky top-0 z-10">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div className="p-2 bg-white/20 rounded-lg">
-                        <Download className="h-6 w-6" />
+                        <Download className="h-5 w-5 sm:h-6 sm:w-6" />
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold">
+                        <h2 className="text-xl sm:text-2xl font-bold">
                           Export Transactions
                         </h2>
-                        <p className="text-green-100 text-sm">
+                        <p className="text-green-100 text-xs sm:text-sm">
                           Choose format and date range
                         </p>
                       </div>
@@ -963,40 +987,40 @@ const TransactionsPage = () => {
                 </div>
 
                 {/* Body */}
-                <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+                <div className="p-4 sm:p-6 space-y-6">
                   {/* Current Stats */}
                   <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
                       <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                           Total
                         </p>
-                        <p className="text-lg font-bold text-gray-900 dark:text-white">
-                          {filteredTransactions.length}
+                        <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+                          {transactions.length}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                           Income
                         </p>
-                        <p className="text-lg font-bold text-green-600">
+                        <p className="text-base sm:text-lg font-bold text-green-600">
                           {formatCurrency(stats.totalIncome)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                           Expenses
                         </p>
-                        <p className="text-lg font-bold text-red-600">
+                        <p className="text-base sm:text-lg font-bold text-red-600">
                           {formatCurrency(stats.totalExpenses)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                           Net
                         </p>
                         <p
-                          className={`text-lg font-bold ${
+                          className={`text-base sm:text-lg font-bold ${
                             stats.netBalance >= 0
                               ? "text-blue-600"
                               : "text-red-600"
@@ -1013,7 +1037,7 @@ const TransactionsPage = () => {
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                       Select Export Format
                     </label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       {[
                         {
                           value: "excel",
@@ -1052,14 +1076,14 @@ const TransactionsPage = () => {
                             </div>
                           )}
                           <format.icon
-                            className={`h-10 w-10 mx-auto mb-2 ${
+                            className={`h-8 w-8 sm:h-10 sm:w-10 mx-auto mb-2 ${
                               exportFormat === format.value
                                 ? `text-${format.color}-600`
                                 : "text-gray-400"
                             }`}
                           />
                           <div className="text-center">
-                            <p className="font-semibold text-gray-900 dark:text-white">
+                            <p className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
                               {format.label}
                             </p>
                             <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
@@ -1076,7 +1100,7 @@ const TransactionsPage = () => {
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                       Quick Select Period
                     </label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {[
                         { value: "all", label: "All Time", icon: "📅" },
                         { value: "thisMonth", label: "This Month", icon: "📆" },
@@ -1109,7 +1133,7 @@ const TransactionsPage = () => {
                           }`}
                         >
                           <div className="text-2xl mb-1">{preset.icon}</div>
-                          <div className="text-sm font-medium dark:text-white">
+                          <div className="text-xs sm:text-sm font-medium dark:text-white">
                             {preset.label}
                           </div>
                         </button>
@@ -1122,7 +1146,7 @@ const TransactionsPage = () => {
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                       Or Choose Custom Date Range
                     </label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs text-gray-600 dark:text-gray-400 mb-2">
                           Start Date
@@ -1139,7 +1163,7 @@ const TransactionsPage = () => {
                                 preset: "custom",
                               })
                             }
-                            className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-green-500 focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 transition-all"
+                            className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-green-500 focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 transition-all text-sm"
                           />
                         </div>
                       </div>
@@ -1160,7 +1184,7 @@ const TransactionsPage = () => {
                               })
                             }
                             min={exportDateRange.startDate}
-                            className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-green-500 focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 transition-all"
+                            className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-green-500 focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 transition-all text-sm"
                           />
                         </div>
                       </div>
@@ -1172,7 +1196,7 @@ const TransactionsPage = () => {
                     <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
                       <div className="flex items-center space-x-2 text-blue-700 dark:text-blue-400">
                         <Calendar className="h-5 w-5" />
-                        <span className="font-medium">
+                        <span className="font-medium text-sm">
                           Selected Period:{" "}
                           {new Date(
                             exportDateRange.startDate
@@ -1197,18 +1221,18 @@ const TransactionsPage = () => {
                 </div>
 
                 {/* Footer */}
-                <div className="bg-gray-50 dark:bg-gray-800 px-6 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
+                <div className="bg-gray-50 dark:bg-gray-800 px-4 sm:px-6 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sticky bottom-0">
                   <button
                     onClick={() => setShowExportModal(false)}
-                    className="px-6 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    className="px-4 sm:px-6 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors text-sm sm:text-base"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleExport}
-                    className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+                    className="flex items-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all text-sm sm:text-base"
                   >
-                    <Download className="h-5 w-5" />
+                    <Download className="h-4 w-4 sm:h-5 sm:w-5" />
                     <span>
                       Export as {exportFormat.toUpperCase()}
                     </span>
@@ -1284,15 +1308,15 @@ const StatsCard = ({
   return (
     <motion.div
       whileHover={{ y: -4 }}
-      className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 transition-all duration-200"
+      className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-4 sm:p-6 transition-all duration-200"
     >
       <div className="flex items-center justify-between mb-4">
         <div
-          className={`p-3 rounded-xl bg-gradient-to-r ${
+          className={`p-2 sm:p-3 rounded-xl bg-gradient-to-r ${
             colorClasses[color].split(" ")[0]
           } ${colorClasses[color].split(" ")[1]}`}
         >
-          <Icon className="h-6 w-6 text-white" />
+          <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
         </div>
         <div
           className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -1305,10 +1329,10 @@ const StatsCard = ({
         </div>
       </div>
 
-      <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+      <h3 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
         {title}
       </h3>
-      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+      <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
         {formatValue(value)}
       </p>
     </motion.div>
