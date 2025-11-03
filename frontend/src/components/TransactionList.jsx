@@ -122,7 +122,7 @@ const TransactionList = ({ transactions, onDelete, onEdit, isLoading = false }) 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="flex items-center justify-between mb-6"
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4"
         >
           <div>
             <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
@@ -140,7 +140,7 @@ const TransactionList = ({ transactions, onDelete, onEdit, isLoading = false }) 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="flex flex-col sm:flex-row gap-4"
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
         >
           {/* Search */}
           <div className="relative flex-1">
@@ -149,7 +149,7 @@ const TransactionList = ({ transactions, onDelete, onEdit, isLoading = false }) 
               type="text"
               placeholder="Search transactions..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => setSearchTerm(e.target.value)} // This line was already correct
               className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
             />
           </div>
@@ -238,7 +238,7 @@ const TransactionList = ({ transactions, onDelete, onEdit, isLoading = false }) 
 
 // Individual Transaction Item Component
 const TransactionItem = ({ transaction, index, onEdit, onDelete, formatDate, formatAmount, variants }) => {
-  const [isHovered, setIsHovered] = useState(false);
+  const [isActive, setIsActive] = useState(false);
 
   return (
     <motion.div
@@ -247,16 +247,16 @@ const TransactionItem = ({ transaction, index, onEdit, onDelete, formatDate, for
       initial="hidden"
       animate="visible"
       exit="exit"
-      whileHover={{ scale: 1.02 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      className="group relative bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all duration-200 cursor-pointer"
+      onHoverStart={() => setIsActive(true)}
+      onHoverEnd={() => setIsActive(false)}
+      onTap={() => setIsActive(!isActive)}
+      className="relative bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all duration-200 cursor-pointer"
     >
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4" >
         {/* Left side - Transaction info */}
         <div className="flex items-center space-x-4 flex-1">
           {/* Type indicator */}
-          <div className={`p-2 rounded-lg ${
+          <div className={`self-start p-2 rounded-lg ${
             transaction.type === 'income' 
               ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' 
               : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
@@ -270,11 +270,11 @@ const TransactionItem = ({ transaction, index, onEdit, onDelete, formatDate, for
 
           {/* Transaction details */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-1">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
                 {transaction.description}
               </h3>
-              <span className={`text-xl font-bold ${
+              <span className={`text-xl font-bold sm:ml-4 ${
                 transaction.type === 'income' 
                   ? 'text-green-600 dark:text-green-400' 
                   : 'text-red-600 dark:text-red-400'
@@ -283,7 +283,7 @@ const TransactionItem = ({ transaction, index, onEdit, onDelete, formatDate, for
               </span>
             </div>
             
-            <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-500 dark:text-gray-400">
               <div className="flex items-center space-x-1">
                 <Tag className="h-4 w-4" />
                 <span>{transaction.category}</span>
@@ -298,13 +298,13 @@ const TransactionItem = ({ transaction, index, onEdit, onDelete, formatDate, for
 
         {/* Right side - Action buttons */}
         <AnimatePresence>
-          {isHovered && (
+          {isActive && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.2 }}
-              className="flex items-center space-x-2 ml-4"
+              className="flex items-center space-x-2 sm:ml-4 self-end sm:self-center"
             >
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -315,7 +315,6 @@ const TransactionItem = ({ transaction, index, onEdit, onDelete, formatDate, for
               >
                 <Edit3 className="h-4 w-4" />
               </motion.button>
-              
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
