@@ -33,6 +33,11 @@ const transactionSchema = new Schema({
   timestamps: true,
 });
 
+transactionSchema.index({ user: 1, date: -1 });
+transactionSchema.index({ user: 1, type: 1 });
+transactionSchema.index({ user: 1, category: 1 });
+transactionSchema.index({ description: 'text', category: 'text' });
+
 const Transaction = mongoose.model('Transaction', transactionSchema);
 
 module.exports = Transaction;
