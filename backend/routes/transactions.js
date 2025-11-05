@@ -2,6 +2,25 @@ const router = require('express').Router();
 let Transaction = require('../models/transaction.model');
 const auth = require('../middleware/auth');
 const PDFDocument = require('pdfkit');
+const NodeCache = require('node-cache');
+
+// Initialize cache with 60 second TTL
+const cache = new NodeCache({ stdTTL: 60, checkperiod: 120 });
+
+// Helper to generate cache keys
+const getCacheKey = (prefix, userId, params = {}) => {
+  return `${prefix}_${userId}_${JSON.stringify(params)}`;
+};
+
+// Helper to invalidate user cache
+const invalidateUserCache = (userId) => {
+  const keys = cache.keys();
+  keys.forEach(key => {
+    if (key.includes(userId.toString())) {
+      cache.del(key);
+    }
+  });
+};
 
 // Get all transactions
 router.get('/', auth, async (req, res) => {
@@ -16,10 +35,16 @@ router.get('/', auth, async (req, res) => {
       dateTo,
       minAmount,
       maxAmount,
-      // optional pagination; if not provided, return all (no implicit 50)
       page,
       pageSize
     } = req.query;
+
+    // Check cache first
+    const cacheKey = getCacheKey('transactions', req.user, req.query);
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
 
     const filter = { user: req.user };
 
@@ -56,19 +81,19 @@ router.get('/', auth, async (req, res) => {
 
     // If page/pageSize are provided, paginate; otherwise return all
     let query = Transaction.find(filter).sort(sortObj);
-    let totalCount = 0;
+    let result;
 
     if (page && pageSize) {
       const p = Math.max(1, parseInt(page, 10) || 1);
       const ps = Math.max(1, parseInt(pageSize, 10) || 50);
       const skip = (p - 1) * ps;
 
-      [transactions, totalCount] = await Promise.all([
+      const [transactions, totalCount] = await Promise.all([
         query.skip(skip).limit(ps).lean(),
         Transaction.countDocuments(filter)
       ]);
 
-      return res.json({
+      result = {
         transactions,
         pagination: {
           page: p,
@@ -77,11 +102,15 @@ router.get('/', auth, async (req, res) => {
           totalPages: Math.ceil(totalCount / ps),
           hasMore: skip + transactions.length < totalCount
         }
-      });
+      };
+    } else {
+      const transactions = await query.lean();
+      result = transactions;
     }
 
-    const transactions = await query.lean();
-    return res.json(transactions);
+    // Cache the result
+    cache.set(cacheKey, result);
+    return res.json(result);
   } catch (err) {
     console.error('Error fetching transactions:', err);
     res.status(500).json({ error: err.message });
@@ -102,6 +131,10 @@ router.post('/', auth, async (req, res) => {
     });
 
     const savedTransaction = await newTransaction.save();
+    
+    // Invalidate cache for this user
+    invalidateUserCache(req.user);
+    
     res.json(savedTransaction);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -123,6 +156,10 @@ router.put('/:id', auth, async (req, res) => {
       },
       { new: true }
     );
+    
+    // Invalidate cache for this user
+    invalidateUserCache(req.user);
+    
     res.json(updatedTransaction);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -133,6 +170,10 @@ router.put('/:id', auth, async (req, res) => {
 router.delete('/:id', auth, async (req, res) => {
   try {
     const deletedTransaction = await Transaction.findByIdAndDelete(req.params.id);
+    
+    // Invalidate cache for this user
+    invalidateUserCache(req.user);
+    
     res.json(deletedTransaction);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -142,11 +183,19 @@ router.delete('/:id', auth, async (req, res) => {
 // Get transaction summary
 router.get('/summary', auth, async (req, res) => {
   try {
+    const cacheKey = getCacheKey('summary', req.user);
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     const summary = await Transaction.aggregate([
       { $match: { user: req.user, type: 'expense' } },
       { $group: { _id: '$category', value: { $sum: '$amount' } } },
       { $project: { name: '$_id', value: 1, _id: 0 } },
     ]);
+    
+    cache.set(cacheKey, summary);
     res.json(summary);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -156,6 +205,12 @@ router.get('/summary', auth, async (req, res) => {
 // Get statistics
 router.get('/stats', auth, async (req, res) => {
   try {
+    const cacheKey = getCacheKey('stats', req.user);
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     const transactions = await Transaction.find({ user: req.user });
 
     const now = new Date();
@@ -222,6 +277,7 @@ router.get('/stats', auth, async (req, res) => {
       },
     };
 
+    cache.set(cacheKey, response);
     res.json(response);
   } catch (err) {
     console.error('Stats error:', err);
@@ -232,6 +288,12 @@ router.get('/stats', auth, async (req, res) => {
 // Get chart data
 router.get('/chart-data', auth, async (req, res) => {
   try {
+    const cacheKey = getCacheKey('chart-data', req.user);
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     const transactions = await Transaction.find({ 
       user: req.user, 
       type: 'expense' 
@@ -249,6 +311,7 @@ router.get('/chart-data', auth, async (req, res) => {
       value
     }));
     
+    cache.set(cacheKey, chartData);
     res.json(chartData);
   } catch (err) {
     console.error('Chart data error:', err);
@@ -259,6 +322,12 @@ router.get('/chart-data', auth, async (req, res) => {
 // Get comprehensive analytics data
 router.get('/analytics', auth, async (req, res) => {
   try {
+    const cacheKey = getCacheKey('analytics', req.user);
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     const transactions = await Transaction.find({ user: req.user }).sort({ date: 'desc' });
 
     if (transactions.length === 0) {
@@ -266,6 +335,8 @@ router.get('/analytics', auth, async (req, res) => {
     }
 
     const analyticsData = calculateFinancialStats(transactions);
+    
+    cache.set(cacheKey, analyticsData);
     res.json(analyticsData);
   } catch (err) {
     console.error('Error generating analytics data:', err);
@@ -273,7 +344,7 @@ router.get('/analytics', auth, async (req, res) => {
   }
 });
 
-// Professional PDF Report Route
+// Professional PDF Report Route (NO CACHE - always fresh)
 router.get('/report', auth, async (req, res) => {
   try {
     const transactions = await Transaction.find({ user: req.user }).sort({ date: -1 });
