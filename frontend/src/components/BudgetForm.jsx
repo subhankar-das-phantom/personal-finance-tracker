@@ -47,7 +47,7 @@ const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
       if (!token) return;
       
       try {
-        const response = await api.get('/api/budget/categories');
+        const response = await api.get('/budget/categories');
         setAvailableCategories(response.data);
       } catch (error) {
         console.error('Error fetching categories:', error);
