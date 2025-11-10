@@ -484,7 +484,7 @@ const HomePage = () => {
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
               Quick Actions
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
               <QuickActionCard
                 title="Download PDF Report"
                 description="Comprehensive financial analysis"
@@ -554,13 +554,6 @@ const HomePage = () => {
                   setEditingBudgetGoal(null);
                   setShowBudgetForm(true);
                 }}
-              />
-              <QuickActionCard
-                title="View Analytics"
-                description="Detailed insights & trends"
-                icon={PieChart}
-                color="purple"
-                onClick={() => navigate('/analytics')}
               />
             </div>
           </motion.div>
