@@ -11,7 +11,8 @@ import {
   Home, 
   CreditCard,
   UserPlus,
-  LogIn 
+  LogIn,
+  PieChart
 } from 'lucide-react';
 
 const Navbar = () => {
@@ -66,6 +67,12 @@ const Navbar = () => {
                   icon={CreditCard} 
                   label="Transactions" 
                   isActive={isActiveLink('/transactions')}
+                />
+                <NavItem 
+                  to="/analytics" 
+                  icon={PieChart} 
+                  label="Analytics" 
+                  isActive={isActiveLink('/analytics')}
                 />
                 
                 {/* User Menu */}
@@ -152,6 +159,12 @@ const Navbar = () => {
                     to="/transactions" 
                     icon={CreditCard} 
                     label="Transactions" 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  />
+                  <MobileNavItem 
+                    to="/analytics" 
+                    icon={PieChart} 
+                    label="Analytics" 
                     onClick={() => setIsMobileMenuOpen(false)}
                   />
                   
