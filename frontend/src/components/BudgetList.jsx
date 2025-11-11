@@ -3,7 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Edit, Trash2 } from 'lucide-react';
 
-const BudgetList = ({ goals, onEdit, onDelete }) => {
+const BudgetList = ({ goals = [], onEdit, onDelete }) => {
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
