@@ -9,6 +9,7 @@ import RegisterPage from './pages/RegisterPage';
 
 import TransactionsPage from './pages/TransactionsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import BudgetPage from './pages/BudgetPage';
 
 import { AnimatePresence } from 'framer-motion';
 
@@ -21,6 +22,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/transactions" element={<TransactionsPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/budget" element={<BudgetPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
           </Routes>
