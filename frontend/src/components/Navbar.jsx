@@ -12,7 +12,8 @@ import {
   CreditCard,
   UserPlus,
   LogIn,
-  PieChart
+  PieChart,
+  PiggyBank
 } from 'lucide-react';
 
 const Navbar = () => {
@@ -74,7 +75,12 @@ const Navbar = () => {
                   label="Analytics" 
                   isActive={isActiveLink('/analytics')}
                 />
-                
+                <NavItem 
+                  to="/budget" 
+                  icon={PiggyBank} 
+                  label="Budget" 
+                  isActive={isActiveLink('/budget')}
+                />
                 {/* User Menu */}
                 <div className="flex items-center space-x-4 ml-6 pl-6 border-l border-gray-200 dark:border-gray-700">
                   <motion.div
