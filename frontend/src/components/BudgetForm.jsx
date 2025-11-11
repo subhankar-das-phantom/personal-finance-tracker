@@ -51,18 +51,6 @@ const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
         setAvailableCategories(response.data);
       } catch (error) {
         console.error('Error fetching categories:', error);
-        // Fallback categories if API fails
-        setAvailableCategories([
-          { category: 'Food & Dining' },
-          { category: 'Transportation' },
-          { category: 'Shopping' },
-          { category: 'Entertainment' },
-          { category: 'Bills & Utilities' },
-          { category: 'Healthcare' },
-          { category: 'Education' },
-          { category: 'Travel' },
-          { category: 'Other' }
-        ]);
       }
     };
 
