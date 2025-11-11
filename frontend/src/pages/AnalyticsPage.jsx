@@ -246,7 +246,7 @@ const AnalyticsPage = () => {
             <AnalyticsCard icon={Calendar} title="This Year Net" value={periods.thisYear.netBalance} tone={periods.thisYear.netBalance >= 0 ? 'brand' : 'danger'} />
           </motion.div>
 
-          {/* Budget Section */}
+          {/* Budget Section
           <motion.div variants={itemVariants} className="bg-white/80 dark:bg-gray-800/80 backdrop-blur rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-800 dark:text-white">Budget Goals</h3>
@@ -265,12 +265,12 @@ const AnalyticsPage = () => {
               />
             )}
             <BudgetList goals={budgetGoals} onEdit={handleEditBudget} onDelete={handleDeleteBudget} />
-          </motion.div>
+          </motion.div> */}
 
           {/* Budget Progress */}
-          <motion.div variants={itemVariants}>
+          {/* <motion.div variants={itemVariants}>
             <BudgetProgress progress={budgetProgress} />
-          </motion.div>
+          </motion.div> */}
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
