@@ -347,11 +347,16 @@ router.get('/analytics', auth, async (req, res) => {
 // Professional PDF Report Route (NO CACHE - always fresh)
 router.get('/report', auth, async (req, res) => {
   try {
+    const User = require('../models/user.model');
+    const user = await User.findById(req.user);
     const transactions = await Transaction.find({ user: req.user }).sort({ date: -1 });
     
     if (transactions.length === 0) {
       return res.status(404).json({ message: 'No transactions found for report generation' });
     }
+
+    // Get user currency preferences (default to INR if not set)
+    const userCurrency = user?.currency || { code: 'INR', locale: 'en-IN' };
 
     // Calculate comprehensive statistics
     const stats = calculateFinancialStats(transactions);
@@ -366,8 +371,8 @@ router.get('/report', auth, async (req, res) => {
     // Pipe PDF to response
     doc.pipe(res);
     
-    // Generate PDF content
-    await generatePDFReport(doc, transactions, stats);
+    // Generate PDF content with user's currency
+    await generatePDFReport(doc, transactions, stats, userCurrency);
     
     // Finalize PDF
     doc.end();
@@ -509,9 +514,31 @@ function calculateFinancialInsights(periods) {
 }
 
 // Main PDF generation function
-async function generatePDFReport(doc, transactions, stats) {
+async function generatePDFReport(doc, transactions, stats, userCurrency) {
   let yPosition = 50;
   let currentPage = 1;
+  
+  // Currency formatting helper
+  const formatCurrency = (value) => {
+    const formatted = new Intl.NumberFormat(userCurrency.locale, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+
+    // Map currency codes to symbols safe for PDFKit (Standard Fonts)
+    const symbols = {
+      'INR': 'Rs ', // Rupee symbol ₹ is not supported in standard PDF fonts
+      'USD': '$',
+      'EUR': '€',
+      'GBP': '£',
+      'JPY': '¥',
+      'AUD': 'A$',
+      'CAD': 'C$',
+    };
+
+    const symbol = symbols[userCurrency.code] || `${userCurrency.code} `;
+    return `${symbol}${formatted}`;
+  };
   
   // Helper function to add page footer
   const addPageFooter = (pageNum, totalPages) => {
@@ -559,20 +586,20 @@ async function generatePDFReport(doc, transactions, stats) {
   const rightCol = 320;
   
   doc.fontSize(11).fillColor('#4A5568');
-  doc.text('Total Income:', leftCol, yPosition).text(`$${stats.periods.allTime.income.toFixed(2)}`, leftCol + 100, yPosition);
-  doc.text('This Month Income:', rightCol, yPosition).text(`$${stats.periods.thisMonth.income.toFixed(2)}`, rightCol + 120, yPosition);
+  doc.text('Total Income:', leftCol, yPosition).text(formatCurrency(stats.periods.allTime.income), leftCol + 100, yPosition);
+  doc.text('This Month Income:', rightCol, yPosition).text(formatCurrency(stats.periods.thisMonth.income), rightCol + 120, yPosition);
   yPosition += 18;
   
-  doc.text('Total Expenses:', leftCol, yPosition).text(`$${stats.periods.allTime.expense.toFixed(2)}`, leftCol + 100, yPosition);
-  doc.text('This Month Expenses:', rightCol, yPosition).text(`$${stats.periods.thisMonth.expense.toFixed(2)}`, rightCol + 120, yPosition);
+  doc.text('Total Expenses:', leftCol, yPosition).text(formatCurrency(stats.periods.allTime.expense), leftCol + 100, yPosition);
+  doc.text('This Month Expenses:', rightCol, yPosition).text(formatCurrency(stats.periods.thisMonth.expense), rightCol + 120, yPosition);
   yPosition += 18;
   
-  doc.text('Net Balance:', leftCol, yPosition).fillColor(stats.periods.allTime.netBalance >= 0 ? '#38A169' : '#E53E3E').text(`$${stats.periods.allTime.netBalance.toFixed(2)}`, leftCol + 100, yPosition);
+  doc.text('Net Balance:', leftCol, yPosition).fillColor(stats.periods.allTime.netBalance >= 0 ? '#38A169' : '#E53E3E').text(formatCurrency(stats.periods.allTime.netBalance), leftCol + 100, yPosition);
   doc.fillColor('#4A5568').text('Savings Rate:', rightCol, yPosition).text(`${stats.periods.thisMonth.savingsRate.toFixed(1)}%`, rightCol + 120, yPosition);
   yPosition += 18;
   
   doc.text('Total Transactions:', leftCol, yPosition).text(stats.totalTransactions.toString(), leftCol + 100, yPosition);
-  doc.text('Avg Transaction:', rightCol, yPosition).text(`$${stats.periods.allTime.avgTransaction.toFixed(2)}`, rightCol + 120, yPosition);
+  doc.text('Avg Transaction:', rightCol, yPosition).text(formatCurrency(stats.periods.allTime.avgTransaction), rightCol + 120, yPosition);
   yPosition += 30;
   
   // Key Insights
@@ -607,9 +634,9 @@ async function generatePDFReport(doc, transactions, stats) {
     doc.rect(50, yPosition, 495, 20).fill(bgColor).stroke('#E2E8F0');
     doc.fontSize(9).fillColor('#4A5568');
     doc.text(cat.category.substring(0, 20), 60, yPosition + 6);
-    doc.text(`$${cat.amount.toFixed(2)}`, 200, yPosition + 6);
+    doc.text(formatCurrency(cat.amount), 200, yPosition + 6);
     doc.text(cat.count.toString(), 320, yPosition + 6);
-    doc.text(`$${(cat.amount / cat.count).toFixed(2)}`, 440, yPosition + 6);
+    doc.text(formatCurrency(cat.amount / cat.count), 440, yPosition + 6);
     yPosition += 20;
   });
   yPosition += 20;
@@ -636,9 +663,9 @@ async function generatePDFReport(doc, transactions, stats) {
     doc.rect(50, yPosition, 495, 20).fill(bgColor).stroke('#E2E8F0');
     doc.fontSize(9).fillColor('#4A5568');
     doc.text(trend.month, 60, yPosition + 6);
-    doc.text(`$${trend.income.toFixed(0)}`, 140, yPosition + 6);
-    doc.text(`$${trend.expense.toFixed(0)}`, 220, yPosition + 6);
-    doc.fillColor(trend.netBalance >= 0 ? '#38A169' : '#E53E3E').text(`$${trend.netBalance.toFixed(0)}`, 300, yPosition + 6);
+    doc.text(formatCurrency(trend.income), 140, yPosition + 6);
+    doc.text(formatCurrency(trend.expense), 220, yPosition + 6);
+    doc.fillColor(trend.netBalance >= 0 ? '#38A169' : '#E53E3E').text(formatCurrency(trend.netBalance), 300, yPosition + 6);
     doc.fillColor('#4A5568').text(`${trend.savingsRate.toFixed(1)}%`, 410, yPosition + 6);
     doc.text(trend.count.toString(), 485, yPosition + 6);
     yPosition += 20;
@@ -679,7 +706,7 @@ async function generatePDFReport(doc, transactions, stats) {
     doc.text(new Date(t.date).toLocaleDateString(), 60, yPosition + 5);
     doc.fillColor(t.type === 'income' ? '#38A169' : '#E53E3E').text(t.type.toUpperCase(), 130, yPosition + 5);
     doc.fillColor('#4A5568').text(t.category.substring(0, 12), 180, yPosition + 5);
-    doc.text(`$${amount.toFixed(2)}`, 280, yPosition + 5);
+    doc.text(formatCurrency(amount), 280, yPosition + 5);
     doc.text(String(t.description || '').substring(0, 25), 350, yPosition + 5);
     yPosition += 18;
   });
