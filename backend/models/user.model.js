@@ -22,6 +22,10 @@ const userSchema = new Schema({
     required: true,
     minlength: 6
   },
+  currency: {
+    code: { type: String, default: 'INR' },
+    locale: { type: String, default: 'en-IN' }
+  },
 }, {
   timestamps: true,
 });
