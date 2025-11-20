@@ -52,8 +52,40 @@ const register = async (username, email, password) => {
     localStorage.removeItem('token');
   };
 
+  const updateProfile = async (data) => {
+    try {
+      const res = await authService.updateProfile(data);
+      setUser(prev => ({ ...prev, ...res.data }));
+      return { success: true };
+    } catch (err) {
+      console.error('Update profile error:', err);
+      return { success: false, error: err.response ? err.response.data.msg : err.message };
+    }
+  };
+
+  const changePassword = async (data) => {
+    try {
+      await authService.changePassword(data);
+      return { success: true };
+    } catch (err) {
+      console.error('Change password error:', err);
+      return { success: false, error: err.response ? err.response.data.msg : err.message };
+    }
+  };
+
+  const deleteAccount = async () => {
+    try {
+      await authService.deleteAccount();
+      logout();
+      return { success: true };
+    } catch (err) {
+      console.error('Delete account error:', err);
+      return { success: false, error: err.response ? err.response.data.msg : err.message };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, register, login, logout }}>
+    <AuthContext.Provider value={{ user, token, register, login, logout, updateProfile, changePassword, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );
