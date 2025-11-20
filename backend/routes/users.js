@@ -91,4 +91,81 @@ router.get('/me', auth, async (req, res) => {
   }
 });
 
+// Update user currency preferences
+router.put('/me/currency', auth, async (req, res) => {
+  try {
+    const { code, locale } = req.body;
+    const user = await User.findById(req.user);
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
+    user.currency = { code, locale };
+    await user.save();
+    res.json(user.currency);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update user profile
+router.put('/me', auth, async (req, res) => {
+  try {
+    const { username, email } = req.body;
+    const user = await User.findById(req.user);
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
+    if (username) user.username = username;
+    if (email) user.email = email;
+
+    await user.save();
+    res.json({
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      currency: user.currency
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Change password
+router.put('/me/password', auth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user);
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) return res.status(400).json({ msg: 'Invalid current password' });
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    res.json({ msg: 'Password updated successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete account
+const Transaction = require('../models/transaction.model');
+const BudgetGoal = require('../models/budgetGoal.model');
+
+router.delete('/me', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user);
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
+    // Delete all user data
+    await Transaction.deleteMany({ user: user._id });
+    await BudgetGoal.deleteMany({ user: user._id });
+    await User.findByIdAndDelete(req.user);
+
+    res.json({ msg: 'Account deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
