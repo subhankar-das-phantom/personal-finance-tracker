@@ -1,200 +1,236 @@
-# Personal Finance Tracker
+# Personal Finance Tracker 💰
 
-A full-stack personal finance tracking application designed to help users manage their income, expenses, and budget goals effectively. This application provides a comprehensive overview of financial health, transaction management, and insightful reporting.
+A full-stack web application for managing personal finances, tracking transactions, setting budgets, and analyzing spending patterns with beautiful visualizations.
 
-## Features
+## ✨ Features
 
-### User Management
-*   **User Registration & Login:** Secure user authentication with JWT.
-*   **User Dashboard:** Personalized overview of financial data upon login.
+### 📊 Dashboard & Analytics
+- **Real-time Overview**: View total income, expenses, and balance at a glance
+- **Interactive Charts**: Visualize spending patterns with pie charts, bar charts, and trend analysis
+- **Category Breakdown**: Detailed analytics of expenses by category
+- **Monthly Reports**: Track financial performance over time
 
-### Transaction Management
-*   **Add/Edit/Delete Transactions:** Full CRUD operations for income and expense transactions.
-*   **Categorization:** Assign categories to transactions for better organization.
-*   **Filtering & Sorting:** Easily filter and sort transactions by type, category, date, and amount.
-*   **Search:** Search transactions by description or category.
-*   **CSV Export:** Export transaction data to a CSV file.
+### 💸 Transaction Management
+- **Add/Edit/Delete Transactions**: Complete CRUD operations for managing transactions
+- **Categorization**: Organize transactions by categories (Food, Transport, Entertainment, etc.)
+- **Search & Filter**: Quickly find transactions by date, category, or amount
+- **Bulk Operations**: Import/export transactions in Excel format
+- **Virtual Scrolling**: Efficiently handle large transaction lists
 
-### Financial Overview & Reporting
-*   **Dashboard Statistics:** View total income, total expenses, net balance, and transaction count.
-*   **Monthly Trends:** Compare current and previous month's financial performance.
-*   **Expense Breakdown Chart:** Visual representation of spending across different categories.
-*   **PDF Report Generation:** Download a comprehensive financial report with detailed statistics, category breakdowns, monthly trends, and transaction history.
+### 🎯 Budget Planning
+- **Set Budget Goals**: Create monthly budget targets for different categories
+- **Track Progress**: Monitor spending against budget limits
+- **Visual Indicators**: Color-coded progress bars and alerts
+- **Budget Analytics**: Compare budgeted vs. actual spending
 
-### Budgeting
-*   **Set Budget Goals:** Create monthly budget goals for specific categories.
-*   **Budget Progress Tracking:** Monitor spending against set budget goals, with indicators for overspending or remaining budget.
-*   **Category Management:** Automatically suggests categories from existing transactions for budget setting.
+### 🔐 Authentication & Security
+- **User Registration & Login**: Secure authentication with JWT tokens
+- **Password Encryption**: Bcrypt-based password hashing
+- **Protected Routes**: Secure API endpoints with middleware
+- **Rate Limiting**: Protection against brute-force attacks
 
-## Technologies Used
+### 📈 Advanced Features
+- **PDF Report Generation**: Export financial reports as PDF
+- **Data Visualization**: Powered by Recharts for beautiful, interactive charts
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
+- **Dark Mode Ready**: Modern UI built with Material-UI and Tailwind CSS
+- **Smooth Animations**: Enhanced UX with Framer Motion
 
-### Backend (Node.js, Express, MongoDB)
-*   **Node.js:** JavaScript runtime environment.
-*   **Express.js:** Web application framework for Node.js.
-*   **MongoDB:** NoSQL database for storing user, transaction, and budget data.
-*   **Mongoose:** MongoDB object data modeling (ODM) for Node.js.
-*   **JWT (JSON Web Tokens):** For secure user authentication.
-*   **Bcrypt.js:** For password hashing.
-*   **CORS:** Middleware for enabling Cross-Origin Resource Sharing.
-*   **Dotenv:** For managing environment variables.
-*   **Chart.js Node Canvas:** For server-side chart rendering (used in PDF reports).
-*   **PDFKit:** For generating PDF financial reports.
+## 🛠️ Tech Stack
 
-### Frontend (React, Vite, Material UI, TailwindCSS, Framer Motion)
-*   **React:** JavaScript library for building user interfaces.
-*   **Vite:** Fast build tool for modern web projects.
-*   **React Router DOM:** For declarative routing in React applications.
-*   **Axios:** Promise-based HTTP client for making API requests.
-*   **Material UI (MUI):** React components for faster and easier web development.
-*   **Tailwind CSS:** A utility-first CSS framework for rapid UI development.
-*   **Framer Motion:** A production-ready motion library for React.
-*   **Lucide React:** A collection of beautiful, pixel-perfect icons.
-*   **Recharts:** A composable charting library built on React components.
+### Frontend
+- **React 19** - Modern React with latest features
+- **Vite** - Lightning-fast build tool
+- **React Router** - Client-side routing
+- **Material-UI (MUI)** - Component library with Material Design
+- **Tailwind CSS** - Utility-first CSS framework
+- **Framer Motion** - Animation library
+- **Recharts** - Charting library for data visualization
+- **Axios** - HTTP client for API requests
+- **XLSX** - Excel file import/export
 
-## Getting Started
+### Backend
+- **Node.js & Express** - Server framework
+- **MongoDB & Mongoose** - Database and ODM
+- **JWT** - Authentication tokens
+- **Bcrypt.js** - Password hashing
+- **Helmet** - Security middleware
+- **CORS** - Cross-origin resource sharing
+- **Morgan** - HTTP request logger
+- **Rate Limiting** - API protection
+- **PDFKit** - PDF generation
 
-Follow these instructions to set up and run the project locally.
-
-### Prerequisites
-
-*   Node.js (v14 or higher)
-*   npm (Node Package Manager)
-*   MongoDB instance (local or cloud-based, e.g., MongoDB Atlas)
-
-### 1. Clone the Repository
-
-```bash
-git clone <repository_url>
-cd personal-finance-tracker
-```
-
-### 2. Backend Setup
-
-Navigate to the `backend` directory:
-
-```bash
-cd backend
-```
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Create a `.env` file in the `backend` directory and add the following environment variables:
-
-```env
-ATLAS_URI=<Your MongoDB Connection String>
-JWT_SECRET=<A_Strong_Secret_Key_For_JWT>
-```
-
-*   Replace `<Your MongoDB Connection String>` with your MongoDB connection URI (e.g., from MongoDB Atlas).
-*   Replace `<A_Strong_Secret_Key_For_JWT>` with a long, random string for JWT token signing.
-
-Start the backend server:
-
-```bash
-npm run dev
-```
-
-The backend server will run on `http://localhost:5000`.
-
-### 3. Frontend Setup
-
-Open a new terminal and navigate to the `frontend` directory:
-
-```bash
-cd ../frontend
-```
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Start the frontend development server:
-
-```bash
-npm run dev
-```
-
-The frontend application will typically run on `http://localhost:5173`.
-
-## Usage
-
-1.  **Register:** Open your browser and go to `http://localhost:5173`. Register a new user account.
-2.  **Login:** Log in with your newly created credentials.
-3.  **Dashboard:** Explore your financial overview, recent transactions, and expense charts.
-4.  **Transactions:** Navigate to the "Transactions" page to add, edit, delete, filter, and export your financial transactions.
-5.  **Budget Goals:** On the dashboard, use the "Set Budget Goal" quick action to create monthly budgets for different categories.
-6.  **Reports:** Download a PDF financial report from the dashboard's quick actions.
-
-## API Endpoints
-
-The backend API is accessible at `http://localhost:5000/api`.
-
-*   **`/api/users`**
-    *   `POST /register`: Register a new user.
-    *   `POST /login`: Log in a user and receive a JWT.
-    *   `GET /me`: Get authenticated user's details (requires JWT).
-*   **`/api/transactions`**
-    *   `GET /`: Get all transactions for the authenticated user.
-    *   `POST /`: Add a new transaction.
-    *   `PUT /:id`: Update an existing transaction.
-    *   `DELETE /:id`: Delete a transaction.
-    *   `GET /summary`: Get a summary of expenses by category.
-    *   `GET /stats`: Get overall financial statistics (income, expenses, net balance, monthly comparisons).
-    *   `GET /chart-data`: Get data for expense category charts.
-    *   `GET /report`: Generate and download a PDF financial report.
-*   **`/api/budgetGoals`**
-    *   `GET /`: Get all budget goals for the authenticated user.
-    *   `POST /`: Add a new budget goal.
-    *   `PUT /:id`: Update an existing budget goal.
-    *   `DELETE /:id`: Delete a budget goal.
-    *   `GET /progress`: Get budget progress for the current month.
-    *   `GET /summary/:year/:month`: Get budget summary for a specific month/year.
-    *   `GET /categories`: Get available categories from existing transactions.
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 personal-finance-tracker/
 ├── backend/
-│   ├── config/             # Configuration files (e.g., database config)
-│   ├── controllers/        # Logic for handling requests
-│   ├── middleware/         # Authentication middleware (auth.js)
-│   ├── models/             # Mongoose schemas (user.model.js, transaction.model.js, budgetGoal.model.js)
-│   ├── routes/             # API routes (users.js, transactions.js, budgetGoals.js)
-│   ├── .env                # Environment variables (local)
-│   ├── package.json        # Backend dependencies and scripts
-│   ├── server.js           # Main backend application file
-│   └── ...
-└── frontend/
-    ├── public/             # Static assets
-    ├── src/
-    │   ├── assets/         # Images, icons
-    │   ├── components/     # Reusable React components (e.g., Navbar, TransactionForm)
-    │   ├── context/        # React Context for global state (AuthContext.jsx)
-    │   ├── pages/          # Main application pages (e.g., HomePage, LoginPage)
-    │   ├── services/       # (Currently empty, API calls are in components)
-    │   ├── App.css         # Global CSS for App
-    │   ├── App.jsx         # Main React application component
-    │   ├── index.css       # Global CSS
-    │   └── main.jsx        # React entry point
-    ├── .gitignore          # Git ignore rules
-    ├── eslint.config.js    # ESLint configuration
-    ├── index.html          # Main HTML file
-    ├── package.json        # Frontend dependencies and scripts
-    ├── README.md           # Frontend specific README (can be removed or merged)
-    └── vite.config.js      # Vite configuration
+│   ├── config/         # Configuration files
+│   ├── controllers/    # Route controllers
+│   ├── middleware/     # Custom middleware (auth, etc.)
+│   ├── models/         # MongoDB models
+│   ├── routes/         # API routes
+│   ├── server.js       # Express server setup
+│   └── package.json
+│
+├── frontend/
+│   ├── public/         # Static assets
+│   ├── src/
+│   │   ├── assets/     # Images, fonts, etc.
+│   │   ├── components/ # Reusable React components
+│   │   ├── context/    # React Context providers
+│   │   ├── hooks/      # Custom React hooks
+│   │   ├── pages/      # Page components
+│   │   ├── services/   # API service layer
+│   │   ├── App.jsx     # Main App component
+│   │   └── main.jsx    # Entry point
+│   ├── vite.config.js
+│   └── package.json
+│
+└── README.md
 ```
 
-## Contributing
+## 🚀 Getting Started
 
-Contributions are welcome! Please fork the repository and create a pull request with your changes.
+### Prerequisites
+- **Node.js** (v16 or higher)
+- **MongoDB** (local installation or MongoDB Atlas account)
+- **npm** or **yarn**
 
-## License
+### Installation
 
-This project is licensed under the ISC License.
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd personal-finance-tracker
+   ```
+
+2. **Set up Backend**
+   ```bash
+   cd backend
+   npm install
+   ```
+
+   Create a `.env` file in the `backend` directory:
+   ```env
+   ATLAS_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/finance-tracker
+   JWT_SECRET=your_jwt_secret_key_here
+   PORT=5000
+   NODE_ENV=development
+   FRONTEND_URL=http://localhost:5173
+   ```
+
+3. **Set up Frontend**
+   ```bash
+   cd ../frontend
+   npm install
+   ```
+
+   Create a `.env` file in the `frontend` directory:
+   ```env
+   VITE_API_URL=http://localhost:5000/api
+   ```
+
+### Running the Application
+
+1. **Start the Backend Server**
+   ```bash
+   cd backend
+   npm run dev
+   ```
+   Server will run on `http://localhost:5000`
+
+2. **Start the Frontend Development Server**
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+   Application will open at `http://localhost:5173`
+
+## 📚 API Endpoints
+
+### Authentication
+- `POST /api/users/register` - Register new user
+- `POST /api/users/login` - Login user
+- `GET /api/users/profile` - Get user profile (protected)
+
+### Transactions
+- `GET /api/transactions` - Get all transactions (protected)
+- `POST /api/transactions` - Create transaction (protected)
+- `PUT /api/transactions/:id` - Update transaction (protected)
+- `DELETE /api/transactions/:id` - Delete transaction (protected)
+
+### Budget
+- `GET /api/budget` - Get budget goals (protected)
+- `POST /api/budget` - Create budget goal (protected)
+- `PUT /api/budget/:id` - Update budget goal (protected)
+- `DELETE /api/budget/:id` - Delete budget goal (protected)
+
+### Health
+- `GET /health` - Server health check
+
+## 🔒 Security Features
+
+- **JWT Authentication** - Secure token-based authentication
+- **Password Hashing** - Bcrypt encryption for user passwords
+- **Helmet.js** - Security headers for Express apps
+- **Rate Limiting** - 1000 requests per minute per IP
+- **CORS Protection** - Configured allowed origins
+- **Input Validation** - Server-side validation for all inputs
+- **MongoDB Injection Protection** - Safe query practices with Mongoose
+
+## 🎨 UI/UX Features
+
+- **Modern Design** - Clean, intuitive interface
+- **Responsive Layout** - Mobile-first design approach
+- **Interactive Charts** - Click and hover interactions on charts
+- **Loading States** - Smooth loading indicators
+- **Error Handling** - User-friendly error messages
+- **Form Validation** - Real-time form validation
+- **Smooth Transitions** - Framer Motion animations
+
+## 📦 Build for Production
+
+### Frontend
+```bash
+cd frontend
+npm run build
+```
+This creates an optimized build in the `frontend/dist` directory.
+
+### Backend
+The backend server will automatically serve the frontend build in production mode when `NODE_ENV=production`.
+
+### Deployment
+The application includes a `vercel.json` configuration for easy deployment to Vercel or similar platforms.
+
+## 🧪 Development Tips
+
+- **Hot Reload**: Both frontend (Vite) and backend (nodemon) support hot reloading
+- **Debugging**: Use browser DevTools for frontend and Node.js debugger for backend
+- **Database**: Use MongoDB Compass to visualize your database
+- **API Testing**: Use Postman or Thunder Client to test API endpoints
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is open source and available under the MIT License.
+
+## 🐛 Known Issues
+
+- None currently. Please report any bugs by opening an issue.
+
+## 📧 Contact
+
+For questions or support, please open an issue in the repository.
+
+---
+
+**Happy Tracking! 💰📊**
