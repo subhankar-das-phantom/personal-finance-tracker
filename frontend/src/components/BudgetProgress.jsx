@@ -5,13 +5,17 @@ import {
   TrendingDown,
   AlertTriangle,
   CheckCircle,
-  DollarSign,
+  Coins,
   Target,
   Activity,
   Clock,
 } from 'lucide-react';
+import { useCurrency } from '../context/CurrencyContext';
+import { formatCurrency } from '../utils/currency';
 
 const BudgetProgress = ({ progress }) => {
+  const { currency } = useCurrency();
+  
   if (!progress || !progress.budgetProgress) {
     return null;
   }
@@ -53,7 +57,7 @@ const BudgetProgress = ({ progress }) => {
 
   const getStatusMessage = (item) => {
     if (item.percentageUsed >= 100) {
-      return `Over budget by $${(item.actualSpent - item.budgetAmount).toFixed(2)}`;
+      return `Over budget by ${formatCurrency(item.actualSpent - item.budgetAmount, currency.locale, currency.code)}`;
     } else if (item.percentageUsed >= 80) {
       return `${(100 - item.percentageUsed).toFixed(0)}% budget remaining`;
     } else {
@@ -158,10 +162,10 @@ const BudgetProgress = ({ progress }) => {
                 </div>
                 <div className="text-right">
                   <div className="text-lg font-bold text-gray-900 dark:text-white">
-                    ${item.actualSpent.toFixed(2)}
+                    {formatCurrency(item.actualSpent, currency.locale, currency.code)}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    of ${item.budgetAmount.toFixed(2)}
+                    of {formatCurrency(item.budgetAmount, currency.locale, currency.code)}
                   </div>
                 </div>
               </div>
@@ -201,7 +205,7 @@ const BudgetProgress = ({ progress }) => {
                       ? 'text-green-600 dark:text-green-400' 
                       : 'text-red-600 dark:text-red-400'
                   }`}>
-                    ${Math.abs(item.remaining).toFixed(2)}
+                    {formatCurrency(Math.abs(item.remaining), currency.locale, currency.code)}
                   </div>
                 </div>
                 <div>
@@ -232,14 +236,14 @@ const BudgetProgress = ({ progress }) => {
           <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="p-2 bg-blue-500 rounded-lg">
-                <DollarSign className="h-4 w-4 text-white" />
+                <Coins className="h-4 w-4 text-white" />
               </div>
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Total Budget
               </span>
             </div>
             <div className="text-2xl font-bold text-gray-900 dark:text-white">
-              ${summary.totalBudget.toFixed(2)}
+              {formatCurrency(summary.totalBudget, currency.locale, currency.code)}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Across {summary.categoriesCount} categories
@@ -266,7 +270,7 @@ const BudgetProgress = ({ progress }) => {
               </span>
             </div>
             <div className="text-2xl font-bold text-gray-900 dark:text-white">
-              ${summary.totalSpent.toFixed(2)}
+              {formatCurrency(summary.totalSpent, currency.locale, currency.code)}
             </div>
             <div className={`text-xs font-medium mt-1 ${
               summary.totalSpent > summary.totalBudget
@@ -283,13 +287,13 @@ const BudgetProgress = ({ progress }) => {
             <div>
               <div className="text-sm opacity-90 mb-1">Total Remaining</div>
               <div className="text-3xl font-bold">
-                ${summary.totalRemaining.toFixed(2)}
+                {formatCurrency(summary.totalRemaining, currency.locale, currency.code)}
               </div>
             </div>
             <div className="text-right">
               <div className="text-sm opacity-90 mb-1">Avg per day</div>
               <div className="text-xl font-semibold">
-                ${(summary.totalRemaining / daysRemaining).toFixed(2)}
+                {formatCurrency(summary.totalRemaining / daysRemaining, currency.locale, currency.code)}
               </div>
             </div>
           </div>
