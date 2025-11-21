@@ -12,6 +12,18 @@ const authService = {
   login: (email, password) => {
     return api.post('users/login', { email, password });
   },
+
+  updateProfile: (data) => {
+    return api.put('users/me', data);
+  },
+
+  changePassword: (data) => {
+    return api.put('users/me/password', data);
+  },
+
+  deleteAccount: () => {
+    return api.delete('users/me');
+  },
 };
 
 export default authService;
