@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  DollarSign, 
+  Coins, 
   Calendar, 
   Tag, 
   FileText, 
@@ -213,7 +213,7 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false }) => {
         >
           <FormField
             label="Amount"
-            icon={DollarSign}
+            icon={Coins}
             error={errors.amount}
             isSubmitted={isSubmitted}
           >
