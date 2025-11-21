@@ -6,7 +6,6 @@ import {
   Plus,
   TrendingUp,
   TrendingDown,
-  DollarSign,
   Calendar,
   Target,
   PieChart,
@@ -24,6 +23,8 @@ import TransactionList from "../components/TransactionList";
 import TransactionForm from "../components/TransactionForm";
 import BudgetForm from "../components/BudgetForm";
 import { AuthContext } from "../context/AuthContext";
+import { useCurrency } from "../context/CurrencyContext";
+import { formatCurrency } from "../utils/currency";
 
 const HomePage = () => {
   const [chartData, setChartData] = useState([]);
@@ -663,7 +664,6 @@ const HomePage = () => {
   );
 };
 
-// Stats Card Component
 const StatsCard = ({
   title,
   value,
@@ -672,6 +672,8 @@ const StatsCard = ({
   change,
   isCount = false,
 }) => {
+  const { currency } = useCurrency();
+  
   const colorClasses = {
     green:
       "from-emerald-500 to-teal-600 text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20",
@@ -683,12 +685,7 @@ const StatsCard = ({
 
   const formatValue = (val) => {
     if (isCount) return val.toLocaleString();
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(val);
+    return formatCurrency(val, currency.locale, currency.code);
   };
 
   return (
