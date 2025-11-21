@@ -24,8 +24,11 @@ import {
   CheckCircle2,
   SortAsc,
 } from "lucide-react";
+import { useCurrency } from "../context/CurrencyContext";
+import { formatCurrency as formatCurrencyUtil } from "../utils/currency";
 
 const TransactionsPage = () => {
+  const { currency } = useCurrency();
   const [transactions, setTransactions] = useState([]);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -232,11 +235,7 @@ const TransactionsPage = () => {
   };
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-    }).format(value);
+    return formatCurrencyUtil(value, currency.locale, currency.code);
   };
 
   const getPresetDates = (preset) => {
@@ -1286,6 +1285,8 @@ const StatsCard = ({
   change,
   isCount = false,
 }) => {
+  const { currency } = useCurrency();
+  
   const colorClasses = {
     green:
       "from-emerald-500 to-teal-600 text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20",
@@ -1297,12 +1298,7 @@ const StatsCard = ({
 
   const formatValue = (val) => {
     if (isCount) return val.toLocaleString();
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(val);
+    return formatCurrencyUtil(val, currency.locale, currency.code);
   };
 
   return (
