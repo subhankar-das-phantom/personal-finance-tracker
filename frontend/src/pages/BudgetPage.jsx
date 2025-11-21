@@ -13,13 +13,16 @@ import {
   Loader2,
   RefreshCw,
   Sparkles,
-  TrendingDown
+  TrendingDown,
+  Coins
 } from 'lucide-react';
 import BudgetForm from '../components/BudgetForm';
 import BudgetList from '../components/BudgetList';
 import BudgetProgress from '../components/BudgetProgress';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
+import { useCurrency } from '../context/CurrencyContext';
+import { formatCurrency } from '../utils/currency';
 
 const BudgetPage = () => {
   const [budgetGoals, setBudgetGoals] = useState([]);
@@ -32,6 +35,7 @@ const BudgetPage = () => {
   const [successMessage, setSuccessMessage] = useState('');
   
   const { token } = useContext(AuthContext);
+  const { currency } = useCurrency();
 
   const fetchBudgetGoals = useCallback(async () => {
     if (!token) return;
@@ -281,12 +285,12 @@ const BudgetPage = () => {
               <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white">
                 <div className="flex items-center justify-between mb-4">
                   <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                    <DollarSign className="h-6 w-6" />
+                    <Coins className="h-6 w-6" />
                   </div>
                   <span className="text-sm font-medium opacity-90">Total Budget</span>
                 </div>
                 <p className="text-3xl font-bold mb-1">
-                  ${stats.totalBudget.toFixed(2)}
+                  {formatCurrency(stats.totalBudget, currency.locale, currency.code)}
                 </p>
                 <p className="text-sm opacity-75">Allocated this month</p>
               </div>
@@ -303,7 +307,7 @@ const BudgetPage = () => {
                   <span className="text-sm font-medium opacity-90">Total Spent</span>
                 </div>
                 <p className="text-3xl font-bold mb-1">
-                  ${stats.totalSpent.toFixed(2)}
+                  {formatCurrency(stats.totalSpent, currency.locale, currency.code)}
                 </p>
                 <p className="text-sm opacity-75">
                   {stats.overallPercentageUsed.toFixed(1)}% of budget
@@ -322,7 +326,7 @@ const BudgetPage = () => {
                   <span className="text-sm font-medium opacity-90">Remaining</span>
                 </div>
                 <p className="text-3xl font-bold mb-1">
-                  ${Math.abs(stats.totalRemaining).toFixed(2)}
+                  {formatCurrency(Math.abs(stats.totalRemaining), currency.locale, currency.code)}
                 </p>
                 <p className="text-sm opacity-75">
                   {stats.totalRemaining >= 0 ? 'Still available' : 'Over budget'}
