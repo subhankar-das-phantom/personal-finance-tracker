@@ -13,6 +13,8 @@ import BudgetList from '../components/BudgetList';
 import BudgetProgress from '../components/BudgetProgress';
 import BudgetForm from '../components/BudgetForm';
 import { getBudgets, getBudgetProgress, addBudget, updateBudget, deleteBudget } from '../services/budgetService';
+import { useCurrency } from '../context/CurrencyContext';
+import { formatCurrency } from '../utils/currency';
 
 const COLORS = ['#6366F1', '#22C55E', '#F59E0B', '#EF4444', '#06B6D4', '#A855F7', '#84CC16'];
 
@@ -427,16 +429,11 @@ const AnalyticsPage = () => {
   );
 };
 
-const formatCurrency = (value) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
-};
+
 
 const AnalyticsCard = ({ icon: Icon, title, value, tone = 'brand' }) => {
+  const { currency } = useCurrency();
+  
   const toneMap = {
     brand: { bg: 'from-indigo-500 to-purple-600', text: 'text-indigo-600', chip: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300' },
     success: { bg: 'from-emerald-500 to-teal-600', text: 'text-emerald-600', chip: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300' },
@@ -451,12 +448,13 @@ const AnalyticsCard = ({ icon: Icon, title, value, tone = 'brand' }) => {
         </div>
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${toneMap.chip}`}>{title}</span>
       </div>
-      <p className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">{formatCurrency(value)}</p>
+      <p className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">{formatCurrency(value, currency.locale, currency.code)}</p>
     </motion.div>
   );
 };
 
 const PeriodStat = ({ title, period }) => {
+  const { currency } = useCurrency();
   const { income = 0, expense = 0, netBalance = 0 } = period || {};
   return (
     <div className="rounded-2xl border border-gray-200 dark:border-gray-700 p-5 bg-white dark:bg-gray-900">
@@ -464,7 +462,7 @@ const PeriodStat = ({ title, period }) => {
       <div className="space-y-2 text-sm">
         <div className="flex items-center justify-between">
           <span className="text-gray-500 dark:text-gray-400">Income</span>
-          <span className="font-semibold text-emerald-600">{formatCurrency(income)}</span>
+          <span className="font-semibold text-emerald-600">{formatCurrency(income, currency.locale, currency.code)}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-gray-500 dark:text-gray-400">Expense</span>
@@ -472,7 +470,7 @@ const PeriodStat = ({ title, period }) => {
         </div>
         <div className="flex items-center justify-between">
           <span className="text-gray-600 dark:text-gray-300 font-medium">Net</span>
-          <span className={`font-extrabold ${netBalance >= 0 ? 'text-indigo-600' : 'text-rose-600'}`}>{formatCurrency(netBalance)}</span>
+          <span className={`font-extrabold ${netBalance >= 0 ? 'text-indigo-600' : 'text-rose-600'}`}>{formatCurrency(netBalance, currency.locale, currency.code)}</span>
         </div>
       </div>
     </div>
