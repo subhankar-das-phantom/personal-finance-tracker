@@ -102,15 +102,20 @@ const LoginPage = () => {
     setIsLoading(true);
     
     try {
-      await login(formData.email, formData.password);
+      const result = await login(formData.email, formData.password);
       
-      // Success animation delay
-      setTimeout(() => {
-        navigate('/');
-      }, 500);
+      if (result.success) {
+        // Success animation delay
+        setTimeout(() => {
+          navigate('/');
+        }, 500);
+      } else {
+        setLoginError(result.error || 'Login failed. Please try again.');
+        setIsLoading(false);
+      }
       
     } catch (err) {
-      setLoginError(err.response?.data?.message || 'Login failed. Please try again.');
+      setLoginError('An unexpected error occurred. Please try again.');
       setIsLoading(false);
     }
   };
