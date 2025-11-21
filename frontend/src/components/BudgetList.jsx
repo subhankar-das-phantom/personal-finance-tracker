@@ -1,8 +1,12 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Edit, Trash2, Target, Calendar, DollarSign, TrendingUp, AlertCircle } from 'lucide-react';
+import { Edit, Trash2, Target, Calendar, Coins, TrendingUp, AlertCircle } from 'lucide-react';
+import { useCurrency } from '../context/CurrencyContext';
+import { formatCurrency } from '../utils/currency';
 
 const BudgetList = ({ goals = [], onEdit, onDelete }) => {
+  const { currency } = useCurrency();
+  
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
@@ -103,10 +107,10 @@ const BudgetList = ({ goals = [], onEdit, onDelete }) => {
                     </div>
 
                     <div className="flex items-baseline gap-2">
-                      <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      <Coins className="h-5 w-5 text-green-600 dark:text-green-400" />
                       <span className="text-3xl font-bold text-gray-900 dark:text-white">
-                        ${goal.amount.toFixed(2)}
-                      </span>
+                      {formatCurrency(goal.amount, currency.locale, currency.code)}
+                    </span>
                       <span className="text-sm text-gray-500 dark:text-gray-400">budget</span>
                     </div>
                   </div>
