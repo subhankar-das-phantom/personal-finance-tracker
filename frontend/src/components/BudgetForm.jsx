@@ -1,7 +1,7 @@
 // frontend/src/components/BudgetForm.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Target, DollarSign, Calendar, Tag, Save, Loader, AlertCircle } from 'lucide-react';
+import { X, Target, Coins, Calendar, Tag, Save, Loader, AlertCircle } from 'lucide-react';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 
@@ -193,7 +193,7 @@ const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
             Budget Amount
           </label>
           <div className="relative">
-            <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Coins className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="number"
               step="0.01"
