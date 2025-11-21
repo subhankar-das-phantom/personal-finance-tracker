@@ -81,31 +81,35 @@ const Navbar = () => {
                   label="Budget" 
                   isActive={isActiveLink('/budget')}
                 />
-                {/* User Menu */}
-                <div className="flex items-center space-x-4 ml-6 pl-6 border-l border-gray-200 dark:border-gray-700">
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex items-center space-x-2"
-                  >
-                    <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center">
-                      <User className="h-4 w-4 text-white" />
-                    </div>
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Hi, {user.username}
-                    </span>
-                  </motion.div>
-                  
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={logout}
-                    className="flex items-center space-x-1 px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>Logout</span>
-                  </motion.button>
-                </div>
+                  <div className="flex items-center space-x-4 ml-6 pl-6 border-l border-gray-200 dark:border-gray-700">
+                    <Link to="/profile">
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        whileHover={{ scale: 1.05 }}
+                        className="flex items-center space-x-2 cursor-pointer"
+                      >
+                        <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-bold text-white">
+                            {user.username?.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden lg:block">
+                          {user.username}
+                        </span>
+                      </motion.div>
+                    </Link>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={logout}
+                      className="flex items-center space-x-1 px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span className="hidden lg:inline">Logout</span>
+                    </motion.button>
+                  </div>
               </>
             ) : (
               <>
@@ -176,14 +180,23 @@ const Navbar = () => {
                   
                   {/* User Info */}
                   <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center space-x-3 px-3 py-2">
-                      <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center">
-                        <User className="h-4 w-4 text-white" />
+                    <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>
+                      <div className="flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                        <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-bold text-white">
+                            {user.username?.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {user.username}
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            View Profile
+                          </span>
+                        </div>
                       </div>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Hi, {user.username}
-                      </span>
-                    </div>
+                    </Link>
                     <motion.button
                       whileTap={{ scale: 0.95 }}
                       onClick={() => {
