@@ -11,12 +11,15 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
+import { useCurrency } from "../context/CurrencyContext";
+import { formatCurrency } from "../utils/currency";
 
 // =============================
 // TransactionRow Component
 // =============================
 const TransactionRow = memo(({ transaction, onEdit, onDelete }) => {
   const [isActive, setIsActive] = useState(false);
+  const { currency } = useCurrency();
 
   // Safety check for async/paginated data
   if (!transaction) {
@@ -40,11 +43,7 @@ const TransactionRow = memo(({ transaction, onEdit, onDelete }) => {
       day: "numeric",
     });
 
-  const formatAmount = (amount) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
+
 
   return (
     <motion.div
@@ -83,7 +82,7 @@ const TransactionRow = memo(({ transaction, onEdit, onDelete }) => {
                 }`}
               >
                 {transaction.type === "income" ? "+" : "-"}
-                {formatAmount(transaction.amount)}
+                {formatCurrency(transaction.amount, currency.locale, currency.code)}
               </span>
             </div>
 
