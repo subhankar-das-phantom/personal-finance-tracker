@@ -1,8 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useCurrency } from '../context/CurrencyContext';
+import { formatCurrency } from '../utils/currency';
 
 const Chart = ({ data, title = "Expense Breakdown" }) => {
+  const { currency } = useCurrency();
+  
   // Modern gradient colors for a beautiful look
   const COLORS = [
     '#6366f1', // Indigo
@@ -28,7 +32,7 @@ const Chart = ({ data, title = "Expense Breakdown" }) => {
             {payload[0].name}
           </p>
           <p className="text-indigo-600 dark:text-indigo-400 font-semibold">
-            ${payload[0].value.toLocaleString()}
+            {formatCurrency(payload[0].value, currency.locale, currency.code)}
           </p>
         </motion.div>
       );
@@ -132,7 +136,7 @@ const Chart = ({ data, title = "Expense Breakdown" }) => {
         <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-4 rounded-xl">
           <p className="text-sm text-gray-600 dark:text-gray-400">Total Amount</p>
           <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-            ${data.reduce((sum, item) => sum + item.value, 0).toLocaleString()}
+            {formatCurrency(data.reduce((sum, item) => sum + item.value, 0), currency.locale, currency.code)}
           </p>
         </div>
         <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 p-4 rounded-xl">
