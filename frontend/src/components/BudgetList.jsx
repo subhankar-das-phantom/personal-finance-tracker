@@ -87,7 +87,7 @@ const BudgetList = ({ goals = [], onEdit, onDelete }) => {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2.5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg">
+                      <div className="p-2.5 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg">
                         <Target className="h-5 w-5 text-white" />
                       </div>
                       <div>
@@ -120,7 +120,7 @@ const BudgetList = ({ goals = [], onEdit, onDelete }) => {
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => onEdit(goal)}
-                      className="p-2.5 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors duration-200"
+                      className="p-2.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors duration-200"
                       title="Edit budget goal"
                     >
                       <Edit className="h-5 w-5" />
@@ -138,7 +138,7 @@ const BudgetList = ({ goals = [], onEdit, onDelete }) => {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 px-5 py-3 border-t border-gray-200 dark:border-gray-700">
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 px-5 py-3 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
                     <TrendingUp className="h-4 w-4" />
