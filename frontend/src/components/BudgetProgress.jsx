@@ -103,16 +103,16 @@ const BudgetProgress = ({ progress }) => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-            <Target className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+            <Target className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             Budget Progress
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Current month's spending vs budget goals
           </p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
-          <Clock className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-          <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+          <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
             {daysRemaining} days left
           </span>
         </div>
@@ -130,7 +130,7 @@ const BudgetProgress = ({ progress }) => {
             initial={{ width: 0 }}
             animate={{ width: `${monthProgress}%` }}
             transition={{ duration: 1, ease: "easeOut" }}
-            className="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600"
+            className="h-2 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500"
           />
         </div>
       </div>
@@ -233,7 +233,7 @@ const BudgetProgress = ({ progress }) => {
         className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700"
       >
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4">
+          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="p-2 bg-blue-500 rounded-lg">
                 <Coins className="h-4 w-4 text-white" />
@@ -282,7 +282,7 @@ const BudgetProgress = ({ progress }) => {
           </div>
         </div>
 
-        <div className="mt-4 p-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl text-white">
+        <div className="mt-4 p-4 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl text-white">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm opacity-90 mb-1">Total Remaining</div>
