@@ -9,7 +9,7 @@ const Chart = ({ data, title = "Expense Breakdown" }) => {
   
   // Modern gradient colors for a beautiful look
   const COLORS = [
-    '#6366f1', // Indigo
+    '#2563eb', // Blue
     '#10b981', // Emerald  
     '#f59e0b', // Amber
     '#ef4444', // Red
@@ -31,7 +31,7 @@ const Chart = ({ data, title = "Expense Breakdown" }) => {
           <p className="text-gray-800 dark:text-gray-200 font-medium">
             {payload[0].name}
           </p>
-          <p className="text-indigo-600 dark:text-indigo-400 font-semibold">
+          <p className="text-blue-600 dark:text-blue-400 font-semibold">
             {formatCurrency(payload[0].value, currency.locale, currency.code)}
           </p>
         </motion.div>
@@ -82,7 +82,7 @@ const Chart = ({ data, title = "Expense Breakdown" }) => {
         <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
           {title}
         </h3>
-        <div className="w-16 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" />
+        <div className="w-16 h-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full" />
       </motion.div>
 
       {/* Chart Container */}
@@ -133,9 +133,9 @@ const Chart = ({ data, title = "Expense Breakdown" }) => {
         transition={{ delay: 0.8 }}
         className="mt-6 grid grid-cols-2 gap-4"
       >
-        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-4 rounded-xl">
+        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 p-4 rounded-xl">
           <p className="text-sm text-gray-600 dark:text-gray-400">Total Amount</p>
-          <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+          <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
             {formatCurrency(data.reduce((sum, item) => sum + item.value, 0), currency.locale, currency.code)}
           </p>
         </div>
