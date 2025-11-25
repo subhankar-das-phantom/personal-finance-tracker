@@ -15,6 +15,7 @@ import {
   PieChart,
   PiggyBank
 } from 'lucide-react';
+import Button from './common/Button';
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
@@ -43,10 +44,10 @@ const Navbar = () => {
             className="flex items-center space-x-2"
           >
             <Link to="/" className="flex items-center space-x-2 group">
-              <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                 <Wallet className="h-6 w-6 text-white" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                 FinanceTracker
               </span>
             </Link>
@@ -100,15 +101,14 @@ const Navbar = () => {
                       </motion.div>
                     </Link>
                     
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                    <Button
+                      variant="danger"
                       onClick={logout}
-                      className="flex items-center space-x-1 px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
+                      className="ml-4"
+                      icon={LogOut}
                     >
-                      <LogOut className="h-4 w-4" />
                       <span className="hidden lg:inline">Logout</span>
-                    </motion.button>
+                    </Button>
                   </div>
               </>
             ) : (
@@ -119,18 +119,13 @@ const Navbar = () => {
                   label="Login" 
                   isActive={isActiveLink('/login')}
                 />
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <Link
+                  to="/register"
+                  className="inline-flex items-center justify-center space-x-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl font-semibold hover:shadow-lg transition-shadow duration-200"
                 >
-                  <Link
-                    to="/register"
-                    className="flex items-center space-x-1 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg transition-shadow duration-200"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    <span>Register</span>
-                  </Link>
-                </motion.div>
+                  <UserPlus className="h-4 w-4" />
+                  <span>Register</span>
+                </Link>
               </>
             )}
           </div>
@@ -181,7 +176,7 @@ const Navbar = () => {
                   {/* User Info */}
                   <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
                     <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>
-                      <div className="flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                      <div className="flex items-center space-x-3 px-3 py-2 hover:bg-cyan-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
                         <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center">
                           <span className="text-sm font-bold text-white">
                             {user.username?.charAt(0).toUpperCase()}
@@ -197,17 +192,17 @@ const Navbar = () => {
                         </div>
                       </div>
                     </Link>
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
+                    <Button
+                      variant="danger"
                       onClick={() => {
                         logout();
                         setIsMobileMenuOpen(false);
                       }}
-                      className="w-full flex items-center space-x-2 px-3 py-2 text-left text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
+                      className="w-full justify-start"
+                      icon={LogOut}
                     >
-                      <LogOut className="h-4 w-4" />
-                      <span>Logout</span>
-                    </motion.button>
+                      Logout
+                    </Button>
                   </div>
                 </>
               ) : (
@@ -245,8 +240,8 @@ const NavItem = ({ to, icon: Icon, label, isActive }) => (
       to={to}
       className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
         isActive
-          ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-          : 'text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+          ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+          : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800'
       }`}
     >
       <Icon className="h-4 w-4" />
@@ -268,7 +263,7 @@ const MobileNavItem = ({ to, icon: Icon, label, onClick, isPrimary = false }) =>
       onClick={onClick}
       className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
         isPrimary
-          ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white'
+          ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white'
           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
       }`}
     >
