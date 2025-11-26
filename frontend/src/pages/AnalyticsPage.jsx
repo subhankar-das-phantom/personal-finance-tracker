@@ -15,6 +15,8 @@ import BudgetForm from '../components/BudgetForm';
 import { getBudgets, getBudgetProgress, addBudget, updateBudget, deleteBudget } from '../services/budgetService';
 import { useCurrency } from '../context/CurrencyContext';
 import { formatCurrency } from '../utils/currency';
+import Button from '../components/common/Button';
+import Card from '../components/common/Card';
 
 const COLORS = ['#6366F1', '#22C55E', '#F59E0B', '#EF4444', '#06B6D4', '#A855F7', '#84CC16'];
 
@@ -127,7 +129,7 @@ const AnalyticsPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-900 pt-24 px-6">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900 pt-24 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="h-10 w-64 bg-gray-200 dark:bg-gray-700 rounded-lg" />
@@ -153,7 +155,7 @@ const AnalyticsPage = () => {
           <p className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-2 inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+            className="mt-2 inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
           >
             Retry
           </button>
@@ -169,7 +171,7 @@ const AnalyticsPage = () => {
         <p className="text-gray-600 dark:text-gray-400">Add transactions to see insights.</p>
         <button
           onClick={() => navigate('/')}
-          className="mt-4 inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+          className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
           <ArrowLeft className="h-5 w-5 mr-2" /> Back to Dashboard
         </button>
@@ -188,7 +190,7 @@ const AnalyticsPage = () => {
             onClick={() => setTimeframe(tf)}
             className={`px-3 py-1.5 text-sm font-medium transition-colors ${
               timeframe === tf
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-blue-600 text-white'
                 : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
             }`}
           >
@@ -206,7 +208,7 @@ const AnalyticsPage = () => {
             onClick={() => setChartType(opt.key)}
             className={`px-3 py-1.5 text-sm font-medium transition-colors ${
               chartType === opt.key
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-blue-600 text-white'
                 : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
             }`}
           >
@@ -218,7 +220,7 @@ const AnalyticsPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-900 pt-24 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900 pt-24 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-8">
           {/* Header */}
@@ -226,17 +228,18 @@ const AnalyticsPage = () => {
             <div>
               <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">Financial Analytics</h1>
               <p className="text-gray-600 dark:text-gray-300 mt-1 flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-indigo-500" /> Intelligent insights based on your recent activity
+                <Sparkles className="h-4 w-4 text-blue-500" /> Intelligent insights based on your recent activity
               </p>
             </div>
             <div className="flex items-center gap-3">
               {chartControls}
-              <button
+              <Button
+                variant="outline"
                 onClick={() => navigate('/')}
-                className="inline-flex items-center px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                icon={ArrowLeft}
               >
-                <ArrowLeft className="h-5 w-5 mr-2" /> Back
-              </button>
+                Back
+              </Button>
             </div>
           </motion.div>
 
@@ -254,7 +257,7 @@ const AnalyticsPage = () => {
               <h3 className="text-xl font-bold text-gray-800 dark:text-white">Budget Goals</h3>
               <button
                 onClick={handleAddBudget}
-                className="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
               >
                 Add Budget
               </button>
@@ -277,7 +280,8 @@ const AnalyticsPage = () => {
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
             {/* Trend Chart */}
-            <motion.div variants={itemVariants} className="lg:col-span-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
+            {/* Trend Chart */}
+            <Card className="lg:col-span-3 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-gray-800 dark:text-white">Monthly Trends</h3>
                 <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
@@ -354,13 +358,14 @@ const AnalyticsPage = () => {
                   </AreaChart>
                 )}
               </ResponsiveContainer>
-            </motion.div>
+            </Card>
 
             {/* Pie Chart */}
-            <motion.div variants={itemVariants} className="lg:col-span-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
+            {/* Pie Chart */}
+            <Card className="lg:col-span-2 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-gray-800 dark:text-white">Top 5 Expense Categories</h3>
-                <LineIcon className="h-5 w-5 text-indigo-500" />
+                <LineIcon className="h-5 w-5 text-blue-500" />
               </div>
               <ResponsiveContainer width="100%" height={320}>
                 <PieChart>
@@ -393,15 +398,15 @@ const AnalyticsPage = () => {
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
-            </motion.div>
+            </Card>
           </div>
 
           {/* Insights and Period Comparison */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <motion.div variants={itemVariants} className="bg-white/80 dark:bg-gray-800/80 backdrop-blur rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
+            <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-gray-800 dark:text-white">Key Financial Insights</h3>
-                <Sparkles className="h-5 w-5 text-indigo-500" />
+                <Sparkles className="h-5 w-5 text-blue-500" />
               </div>
               <ul className="space-y-3">
                 {insights.map((insight, idx) => (
@@ -411,9 +416,9 @@ const AnalyticsPage = () => {
                   </li>
                 ))}
               </ul>
-            </motion.div>
+            </Card>
 
-            <motion.div variants={itemVariants} className="bg-white/80 dark:bg-gray-800/80 backdrop-blur rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
+            <Card className="p-6">
               <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Period Comparison</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <PeriodStat title="All Time" period={periods.allTime} />
@@ -421,7 +426,7 @@ const AnalyticsPage = () => {
                 <PeriodStat title="This Month" period={periods.thisMonth} />
                 <PeriodStat title="Last Month" period={periods.lastMonth} />
               </div>
-            </motion.div>
+            </Card>
           </div>
         </motion.div>
       </div>
@@ -435,13 +440,13 @@ const AnalyticsCard = ({ icon: Icon, title, value, tone = 'brand' }) => {
   const { currency } = useCurrency();
   
   const toneMap = {
-    brand: { bg: 'from-indigo-500 to-purple-600', text: 'text-indigo-600', chip: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300' },
+    brand: { bg: 'from-blue-600 to-cyan-500', text: 'text-blue-600', chip: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300' },
     success: { bg: 'from-emerald-500 to-teal-600', text: 'text-emerald-600', chip: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300' },
     danger: { bg: 'from-rose-500 to-red-600', text: 'text-rose-600', chip: 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300' },
   }[tone];
 
   return (
-    <motion.div whileHover={{ y: -3 }} className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 p-5">
+    <Card whileHover={{ y: -3 }} className="p-5">
       <div className="flex items-center justify-between mb-3">
         <div className={`p-3 rounded-xl bg-gradient-to-r ${toneMap.bg}`}>
           <Icon className="h-6 w-6 text-white" />
@@ -449,7 +454,7 @@ const AnalyticsCard = ({ icon: Icon, title, value, tone = 'brand' }) => {
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${toneMap.chip}`}>{title}</span>
       </div>
       <p className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">{formatCurrency(value, currency.locale, currency.code)}</p>
-    </motion.div>
+    </Card>
   );
 };
 
@@ -470,7 +475,7 @@ const PeriodStat = ({ title, period }) => {
         </div>
         <div className="flex items-center justify-between">
           <span className="text-gray-600 dark:text-gray-300 font-medium">Net</span>
-          <span className={`font-extrabold ${netBalance >= 0 ? 'text-indigo-600' : 'text-rose-600'}`}>{formatCurrency(netBalance, currency.locale, currency.code)}</span>
+          <span className={`font-extrabold ${netBalance >= 0 ? 'text-blue-600' : 'text-rose-600'}`}>{formatCurrency(netBalance, currency.locale, currency.code)}</span>
         </div>
       </div>
     </div>
