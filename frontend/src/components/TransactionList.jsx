@@ -50,7 +50,7 @@ const TransactionRow = memo(({ transaction, onEdit, onDelete }) => {
       onHoverStart={() => setIsActive(true)}
       onHoverEnd={() => setIsActive(false)}
       onTap={() => setIsActive(!isActive)}
-      className="mx-4 my-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all duration-200 cursor-pointer"
+      className="mx-4 my-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 cursor-pointer"
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         {/* Left side (icon + details) */}
@@ -116,7 +116,7 @@ const TransactionRow = memo(({ transaction, onEdit, onDelete }) => {
                   e.stopPropagation();
                   onEdit(transaction);
                 }}
-                className="p-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors duration-200"
+                className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
                 title="Edit transaction"
               >
                 <Edit3 className="h-4 w-4" />
@@ -218,7 +218,7 @@ const TransactionList = ({
             <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-2">
               Recent Transactions
             </h2>
-            <div className="w-16 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" />
+            <div className="w-16 h-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full" />
           </div>
           <div className="text-sm text-gray-500 dark:text-gray-400">
             {transactions.length} {hasMore ? "+ " : ""}transactions
@@ -275,7 +275,7 @@ const TransactionList = ({
                     {isLoaderRow ? (
                       hasMore ? (
                         <div className="flex items-center justify-center py-8">
-                          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                           <span className="ml-3 text-sm text-gray-600 dark:text-gray-400">
                             Loading more transactions...
                           </span>
