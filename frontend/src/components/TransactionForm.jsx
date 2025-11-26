@@ -127,7 +127,7 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false }) => {
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
           {transaction ? 'Edit Transaction' : 'Add New Transaction'}
         </h2>
-        <div className="w-16 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" />
+        <div className="w-16 h-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full" />
       </motion.div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -158,7 +158,7 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false }) => {
                     ? type === 'expense'
                       ? 'border-red-400 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'
                       : 'border-green-400 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 text-gray-600 dark:text-gray-400'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 text-gray-600 dark:text-gray-400'
                 }`}
               >
                 <div className="flex items-center justify-center space-x-2">
@@ -194,7 +194,7 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false }) => {
               className={`w-full pl-10 pr-4 py-3 rounded-xl border transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
                 errors.category && isSubmitted
                   ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
-                  : 'border-gray-200 dark:border-gray-700 focus:border-indigo-500 focus:ring-indigo-200 dark:focus:ring-indigo-800'
+                  : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-200 dark:focus:ring-blue-800'
               } focus:ring-2 focus:outline-none`}
             >
               <option value="">Select a category</option>
@@ -229,7 +229,7 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false }) => {
               className={`w-full pl-10 pr-4 py-3 rounded-xl border transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
                 errors.amount && isSubmitted
                   ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
-                  : 'border-gray-200 dark:border-gray-700 focus:border-indigo-500 focus:ring-indigo-200 dark:focus:ring-indigo-800'
+                  : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-200 dark:focus:ring-blue-800'
               } focus:ring-2 focus:outline-none`}
             />
           </FormField>
@@ -256,7 +256,7 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false }) => {
               className={`w-full pl-10 pr-4 py-3 rounded-xl border transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
                 errors.date && isSubmitted
                   ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
-                  : 'border-gray-200 dark:border-gray-700 focus:border-indigo-500 focus:ring-indigo-200 dark:focus:ring-indigo-800'
+                  : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-200 dark:focus:ring-blue-800'
               } focus:ring-2 focus:outline-none`}
             />
           </FormField>
@@ -284,7 +284,7 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false }) => {
               className={`w-full pl-10 pr-4 py-3 rounded-xl border transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none ${
                 errors.description && isSubmitted
                   ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
-                  : 'border-gray-200 dark:border-gray-700 focus:border-indigo-500 focus:ring-indigo-200 dark:focus:ring-indigo-800'
+                  : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-200 dark:focus:ring-blue-800'
               } focus:ring-2 focus:outline-none`}
             />
           </FormField>
@@ -307,7 +307,7 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false }) => {
             className={`w-full py-4 px-6 rounded-xl font-semibold text-white transition-all duration-200 ${
               isLoading
                 ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg hover:shadow-xl'
+                : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 shadow-lg hover:shadow-xl'
             }`}
           >
             <div className="flex items-center justify-center space-x-2">
