@@ -23,6 +23,8 @@ import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { formatCurrency } from '../utils/currency';
+import Button from '../components/common/Button';
+import Card from '../components/common/Card';
 
 const BudgetPage = () => {
   const [budgetGoals, setBudgetGoals] = useState([]);
@@ -206,34 +208,32 @@ const BudgetPage = () => {
             </div>
             
             <div className="flex items-center gap-3">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
+                variant="secondary"
                 onClick={refreshData}
                 disabled={isRefreshing}
-                className="flex items-center gap-2 px-4 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200 dark:border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl"
               >
                 <motion.div
                   animate={isRefreshing ? { rotate: 360 } : {}}
                   transition={{ duration: 1, repeat: isRefreshing ? Infinity : 0, ease: "linear" }}
+                  className="mr-2"
                 >
                   <RefreshCw className="h-5 w-5" />
                 </motion.div>
                 {isRefreshing ? 'Refreshing...' : 'Refresh'}
-              </motion.button>
+              </Button>
 
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
                 onClick={() => {
                   setEditingGoal(null);
                   setShowForm(true);
                 }}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                className="bg-gradient-to-r from-green-500 to-emerald-600 shadow-lg hover:shadow-xl"
+                icon={Plus}
               >
-                <Plus className="h-5 w-5" />
                 New Budget Goal
-              </motion.button>
+              </Button>
             </div>
           </motion.div>
         </div>
@@ -256,7 +256,7 @@ const BudgetPage = () => {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3 text-red-800 dark:text-red-200"
+              className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-blue-500 dark:border-red-800 rounded-xl flex items-center gap-3 text-red-800 dark:text-red-200"
             >
               <AlertCircle className="h-5 w-5" />
               <span>{error}</span>
@@ -282,7 +282,7 @@ const BudgetPage = () => {
             animate="visible"
           >
             <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white">
+              <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none">
                 <div className="flex items-center justify-between mb-4">
                   <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
                     <Coins className="h-6 w-6" />
@@ -293,9 +293,9 @@ const BudgetPage = () => {
                   {formatCurrency(stats.totalBudget, currency.locale, currency.code)}
                 </p>
                 <p className="text-sm opacity-75">Allocated this month</p>
-              </div>
+              </Card>
 
-              <div className={`rounded-2xl shadow-lg p-6 text-white ${
+              <Card className={`text-white border-none ${
                 stats.totalSpent > stats.totalBudget
                   ? 'bg-gradient-to-br from-red-500 to-red-600'
                   : 'bg-gradient-to-br from-orange-500 to-orange-600'
@@ -312,9 +312,9 @@ const BudgetPage = () => {
                 <p className="text-sm opacity-75">
                   {stats.overallPercentageUsed.toFixed(1)}% of budget
                 </p>
-              </div>
+              </Card>
 
-              <div className={`rounded-2xl shadow-lg p-6 text-white ${
+              <Card className={`text-white border-none ${
                 stats.totalRemaining >= 0
                   ? 'bg-gradient-to-br from-green-500 to-green-600'
                   : 'bg-gradient-to-br from-red-500 to-red-600'
@@ -331,9 +331,9 @@ const BudgetPage = () => {
                 <p className="text-sm opacity-75">
                   {stats.totalRemaining >= 0 ? 'Still available' : 'Over budget'}
                 </p>
-              </div>
+              </Card>
 
-              <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
+              <Card className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white border-none">
                 <div className="flex items-center justify-between mb-4">
                   <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
                     <PieChart className="h-6 w-6" />
@@ -344,7 +344,7 @@ const BudgetPage = () => {
                   {stats.categoriesCount}
                 </p>
                 <p className="text-sm opacity-75">Budget goals set</p>
-              </div>
+              </Card>
             </motion.div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -352,22 +352,22 @@ const BudgetPage = () => {
                 {budgetProgress && budgetProgress.budgetProgress.length > 0 ? (
                   <BudgetProgress progress={budgetProgress} />
                 ) : (
-                  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700 text-center">
+                  <Card className="text-center p-8">
                     <TrendingUp className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-600 dark:text-gray-400 text-lg font-medium">
                       No budget progress yet
                     </p>
-                    <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">
                       Create your first budget goal to start tracking
                     </p>
-                  </div>
+                  </Card>
                 )}
               </motion.div>
 
               <motion.div variants={itemVariants}>
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+                <Card className="p-6">
                   <h3 className="text-xl font-bold mb-6 text-gray-800 dark:text-white flex items-center gap-2">
-                    <Target className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                    <Target className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                     Your Budget Goals
                   </h3>
                   {budgetGoals.length > 0 ? (
@@ -382,12 +382,12 @@ const BudgetPage = () => {
                       <p className="text-gray-600 dark:text-gray-400 text-lg font-medium">
                         No budget goals yet
                       </p>
-                      <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">
+                      <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">
                         Click "New Budget Goal" to get started
                       </p>
                     </div>
                   )}
-                </div>
+                </Card>
               </motion.div>
             </div>
           </motion.div>
