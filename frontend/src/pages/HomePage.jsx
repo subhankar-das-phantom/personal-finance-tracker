@@ -25,6 +25,8 @@ import BudgetForm from "../components/BudgetForm";
 import { AuthContext } from "../context/AuthContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { formatCurrency } from "../utils/currency";
+import Button from "../components/common/Button";
+import Card from "../components/common/Card";
 
 const HomePage = () => {
   const [chartData, setChartData] = useState([]);
@@ -383,10 +385,13 @@ const HomePage = () => {
 
             <div className="flex items-center space-x-4 mt-4 md:mt-0">
               {/* Time Filter */}
+              <label htmlFor="time-filter" className="sr-only">Time Filter</label>
               <select
+                id="time-filter"
                 value={timeFilter}
                 onChange={(e) => setTimeFilter(e.target.value)}
-                className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                aria-label="Filter transactions by time period"
+                className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               >
                 <option value="thisWeek">This Week</option>
                 <option value="thisMonth">This Month</option>
@@ -395,31 +400,28 @@ const HomePage = () => {
               </select>
 
               {/* Refresh Button */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
+                variant="secondary"
                 onClick={refreshData}
                 disabled={isRefreshing}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200"
+                className="p-2"
+                aria-label="Refresh data"
               >
                 <RefreshCw
                   className={`h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`}
                 />
-              </motion.button>
+              </Button>
 
               {/* Add Transaction Button */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
                 onClick={() => {
                   setEditTransaction(null);
                   setShowAddForm(true);
                 }}
-                className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg transition-shadow duration-200"
+                icon={Plus}
               >
-                <Plus className="h-5 w-5" />
-                <span>Add Transaction</span>
-              </motion.button>
+                Add Transaction
+              </Button>
             </div>
           </motion.div>
 
@@ -478,13 +480,10 @@ const HomePage = () => {
           </div>
 
           {/* Quick Actions */}
-          <motion.div
-            variants={itemVariants}
-            className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 border border-gray-100 dark:border-gray-800"
-          >
-            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
+          <Card className="p-6">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
               Quick Actions
-            </h3>
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
               <QuickActionCard
                 title="Download PDF Report"
@@ -557,7 +556,7 @@ const HomePage = () => {
                 }}
               />
             </div>
-          </motion.div>
+          </Card>
         </motion.div>
 
         {/* Add/Edit Transaction Modal */}
@@ -676,11 +675,10 @@ const StatsCard = ({
   
   const colorClasses = {
     green:
-      "from-emerald-500 to-teal-600 text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20",
-    red: "from-red-500 to-rose-600 text-red-600 bg-red-50 dark:bg-red-900/20",
-    blue: "from-blue-500 to-cyan-600 text-blue-600 bg-blue-50 dark:bg-blue-900/20",
-    purple:
-      "from-purple-500 to-violet-600 text-purple-600 bg-purple-50 dark:bg-purple-900/20",
+      "from-emerald-500 to-teal-600 text-emerald-700 bg-emerald-50 dark:bg-emerald-600 dark:text-white",
+    red: "bg-gradient-to-r from-blue-600 to-cyan-500 text-red-700 bg-red-50 dark:bg-red-600 dark:text-white",
+    blue: "from-blue-500 to-cyan-600 text-blue-700 bg-blue-50 dark:bg-blue-600 dark:text-white",
+
   };
 
   const formatValue = (val) => {
@@ -689,9 +687,9 @@ const StatsCard = ({
   };
 
   return (
-    <motion.div
+    <Card
       whileHover={{ y: -4 }}
-      className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 transition-all duration-200"
+      className="p-6 transition-all duration-200"
     >
       <div className="flex items-center justify-between mb-4">
         <div
@@ -706,7 +704,7 @@ const StatsCard = ({
             colorClasses[color].split(" ")[2]
           } ${colorClasses[color].split(" ")[3]} ${
             colorClasses[color].split(" ")[4]
-          }`}
+          } ${colorClasses[color].split(" ")[5] || ''} ${colorClasses[color].split(" ")[6] || ''}`}
         >
           {change}
         </div>
@@ -718,7 +716,7 @@ const StatsCard = ({
       <p className="text-2xl font-bold text-gray-900 dark:text-white">
         {formatValue(value)}
       </p>
-    </motion.div>
+    </Card>
   );
 };
 
@@ -733,7 +731,7 @@ const QuickActionCard = ({
   const colorClasses = {
     blue: "text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20",
     green: "text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20",
-    purple: "text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20",
+
   };
 
   return (

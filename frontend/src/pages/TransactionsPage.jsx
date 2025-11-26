@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import { useCurrency } from "../context/CurrencyContext";
 import { formatCurrency as formatCurrencyUtil } from "../utils/currency";
+import Button from "../components/common/Button";
+import Card from "../components/common/Card";
 
 const TransactionsPage = () => {
   const { currency } = useCurrency();
@@ -682,27 +684,31 @@ const TransactionsPage = () => {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
               {/* Search */}
               <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden="true" />
                 <input
                   type="text"
                   placeholder="Search transactions..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
+                  aria-label="Search transactions"
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
                 />
               </div>
 
               {/* Sort Dropdown */}
               <div className="relative min-w-[180px]">
-                <SortAsc className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                <label htmlFor="sort-select" className="sr-only">Sort transactions</label>
+                <SortAsc className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden="true" />
                 <select
+                  id="sort-select"
                   value={`${sortBy}-${sortOrder}`}
                   onChange={(e) => {
                     const [field, order] = e.target.value.split("-");
                     setSortBy(field);
                     setSortOrder(order);
                   }}
-                  className="w-full pl-10 pr-8 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer text-sm sm:text-base"
+                  aria-label="Sort transactions"
+                  className="w-full pl-10 pr-8 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer text-sm sm:text-base"
                 >
                   <option value="date-desc">Date (Newest)</option>
                   <option value="date-asc">Date (Oldest)</option>
@@ -716,58 +722,47 @@ const TransactionsPage = () => {
               {/* Action Buttons */}
               <div className="flex items-center gap-2">
                 {/* Filter Toggle */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <Button
+                  variant={showFilters ? "secondary" : "outline"}
                   onClick={() => setShowFilters(!showFilters)}
-                  className={`p-2 rounded-lg border transition-colors duration-200 ${
-                    showFilters
-                      ? "border-indigo-500 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400"
-                      : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:text-indigo-600"
-                  }`}
-                  title="Toggle filters"
-                >
-                  <Filter className="h-5 w-5" />
-                </motion.button>
+                  className={showFilters ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border-blue-500" : ""}
+                  icon={Filter}
+                  aria-label="Toggle filters"
+                />
 
                 {/* Refresh Button */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <Button
+                  variant="ghost"
                   onClick={refreshData}
                   disabled={isRefreshing}
-                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200"
-                  title="Refresh data"
+                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+                  aria-label="Refresh transactions"
                 >
                   <RefreshCw
                     className={`h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`}
                   />
-                </motion.button>
+                </Button>
 
                 {/* Export Button */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <Button
+                  variant="primary"
                   onClick={handleExportClick}
-                  className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200 text-sm"
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                  icon={Download}
                 >
-                  <Download className="h-4 w-4 sm:h-5 sm:w-5" />
                   <span className="hidden sm:inline">Export</span>
-                </motion.button>
+                </Button>
 
                 {/* Add Transaction Button */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <Button
                   onClick={() => {
                     setEditingTransaction(null);
                     setShowAddForm(true);
                   }}
-                  className="flex items-center space-x-2 px-3 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg transition-shadow duration-200 text-sm"
+                  icon={Plus}
                 >
-                  <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span>Add</span>
-                </motion.button>
+                  <span className="hidden sm:inline">Add</span>
+                </Button>
               </div>
             </div>
           </motion.div>
@@ -775,20 +770,20 @@ const TransactionsPage = () => {
           {/* Advanced Filters */}
           <AnimatePresence>
             {showFilters && (
-              <motion.div
+              <Card
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-4 sm:p-6"
+                className="p-4 sm:p-6 overflow-hidden"
               >
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
                     Advanced Filters
-                  </h3>
+                  </h2>
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={clearFilters}
-                      className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                      className="text-xs sm:text-sm text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                     >
                       Clear All
                     </button>
@@ -809,7 +804,7 @@ const TransactionsPage = () => {
                     <select
                       value={filters.type}
                       onChange={(e) => updateFilter("type", e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm"
                     >
                       <option value="">All Types</option>
                       <option value="income">Income</option>
@@ -824,7 +819,7 @@ const TransactionsPage = () => {
                     <select
                       value={filters.category}
                       onChange={(e) => updateFilter("category", e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm"
                     >
                       <option value="">All Categories</option>
                       {categories.map((cat) => (
@@ -843,7 +838,7 @@ const TransactionsPage = () => {
                       type="date"
                       value={filters.dateFrom}
                       onChange={(e) => updateFilter("dateFrom", e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
 
@@ -855,7 +850,7 @@ const TransactionsPage = () => {
                       type="date"
                       value={filters.dateTo}
                       onChange={(e) => updateFilter("dateTo", e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
 
@@ -871,7 +866,7 @@ const TransactionsPage = () => {
                       onChange={(e) =>
                         updateFilter("minAmount", e.target.value)
                       }
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
 
@@ -887,11 +882,11 @@ const TransactionsPage = () => {
                       onChange={(e) =>
                         updateFilter("maxAmount", e.target.value)
                       }
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
                 </div>
-              </motion.div>
+              </Card>
             )}
           </AnimatePresence>
 
@@ -1221,21 +1216,21 @@ const TransactionsPage = () => {
 
                 {/* Footer */}
                 <div className="bg-gray-50 dark:bg-gray-800 px-4 sm:px-6 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sticky bottom-0">
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => setShowExportModal(false)}
-                    className="px-4 sm:px-6 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors text-sm sm:text-base"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={handleExport}
-                    className="flex items-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all text-sm sm:text-base"
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 border-none"
+                    icon={Download}
                   >
-                    <Download className="h-4 w-4 sm:h-5 sm:w-5" />
                     <span>
                       Export as {exportFormat.toUpperCase()}
                     </span>
-                  </button>
+                  </Button>
                 </div>
               </motion.div>
             </motion.div>
@@ -1288,12 +1283,9 @@ const StatsCard = ({
   const { currency } = useCurrency();
   
   const colorClasses = {
-    green:
-      "from-emerald-500 to-teal-600 text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20",
-    red: "from-red-500 to-rose-600 text-red-600 bg-red-50 dark:bg-red-900/20",
-    blue: "from-blue-500 to-cyan-600 text-blue-600 bg-blue-50 dark:bg-blue-900/20",
-    purple:
-      "from-purple-500 to-violet-600 text-purple-600 bg-purple-50 dark:bg-purple-900/20",
+    green: "from-emerald-500 to-teal-600 text-emerald-700 bg-emerald-50 dark:bg-emerald-600 dark:text-white",
+    red: "from-red-500 to-pink-600 text-red-700 bg-red-50 dark:bg-red-600 dark:text-white",
+    blue: "from-blue-500 to-cyan-600 text-blue-700 bg-blue-50 dark:bg-blue-600 dark:text-white",
   };
 
   const formatValue = (val) => {
@@ -1302,9 +1294,9 @@ const StatsCard = ({
   };
 
   return (
-    <motion.div
+    <Card
       whileHover={{ y: -4 }}
-      className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-4 sm:p-6 transition-all duration-200"
+      className="p-4 sm:p-6 transition-all duration-200"
     >
       <div className="flex items-center justify-between mb-4">
         <div
@@ -1319,7 +1311,7 @@ const StatsCard = ({
             colorClasses[color].split(" ")[2]
           } ${colorClasses[color].split(" ")[3]} ${
             colorClasses[color].split(" ")[4]
-          }`}
+          } ${colorClasses[color].split(" ")[5] || ''} ${colorClasses[color].split(" ")[6] || ''}`}
         >
           {change}
         </div>
@@ -1331,7 +1323,7 @@ const StatsCard = ({
       <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
         {formatValue(value)}
       </p>
-    </motion.div>
+    </Card>
   );
 };
 
