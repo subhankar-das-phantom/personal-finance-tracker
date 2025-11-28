@@ -25,6 +25,7 @@ import {
   SortAsc,
 } from "lucide-react";
 import { useCurrency } from "../context/CurrencyContext";
+import { useTimeFilter } from "../context/TimeFilterContext";
 import { formatCurrency as formatCurrencyUtil } from "../utils/currency";
 import Button from "../components/common/Button";
 import Card from "../components/common/Card";
@@ -67,6 +68,7 @@ const TransactionsPage = () => {
   });
 
   const { token } = useContext(AuthContext);
+  const { timeFilter, setTimeFilter, getDateRange } = useTimeFilter();
 
   // Debounced search term
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -117,6 +119,15 @@ const TransactionsPage = () => {
     try {
       const params = new URLSearchParams();
 
+      // Add global time filter
+      const { startDate, endDate } = getDateRange();
+      if (startDate) {
+        params.append("dateFrom", startDate.toISOString().split('T')[0]);
+      }
+      if (endDate) {
+        params.append("dateTo", endDate.toISOString().split('T')[0]);
+      }
+
       // Add all filter parameters
       if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
       if (filters.type) params.append("type", filters.type);
@@ -160,6 +171,7 @@ const TransactionsPage = () => {
     filters,
     sortBy,
     sortOrder,
+    timeFilter,
   ]);
 
   // Fetch transactions when filters change
@@ -716,6 +728,24 @@ const TransactionsPage = () => {
                   <option value="amount-asc">Amount (Low-High)</option>
                   <option value="category-asc">Category (A-Z)</option>
                   <option value="category-desc">Category (Z-A)</option>
+                </select>
+              </div>
+
+              {/* Time Filter */}
+              <div className="relative min-w-[150px]">
+                <label htmlFor="time-filter-transactions" className="sr-only">Time Filter</label>
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden="true" />
+                <select
+                  id="time-filter-transactions"
+                  value={timeFilter}
+                  onChange={(e) => setTimeFilter(e.target.value)}
+                  aria-label="Filter transactions by time period"
+                  className="w-full pl-10 pr-8 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer text-sm sm:text-base"
+                >
+                  <option value="thisWeek">This Week</option>
+                  <option value="thisMonth">This Month</option>
+                  <option value="thisYear">This Year</option>
+                  <option value="all">All Time</option>
                 </select>
               </div>
 
