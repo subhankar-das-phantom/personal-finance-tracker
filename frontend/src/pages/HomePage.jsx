@@ -24,6 +24,7 @@ import TransactionForm from "../components/TransactionForm";
 import BudgetForm from "../components/BudgetForm";
 import { AuthContext } from "../context/AuthContext";
 import { useCurrency } from "../context/CurrencyContext";
+import { useTimeFilter } from "../context/TimeFilterContext";
 import { formatCurrency } from "../utils/currency";
 import Button from "../components/common/Button";
 import Card from "../components/common/Card";
@@ -44,12 +45,12 @@ const HomePage = () => {
   const [editTransaction, setEditTransaction] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [timeFilter, setTimeFilter] = useState("thisMonth");
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [editingBudgetGoal, setEditingBudgetGoal] = useState(null);
 
   const { token, user } = useContext(AuthContext);
+  const { timeFilter, setTimeFilter } = useTimeFilter();
 
   // Animation variants
   const containerVariants = {
@@ -432,31 +433,31 @@ const HomePage = () => {
           >
             <StatsCard
               title="Total Income"
-              value={stats.totalIncomeAllTime} // Use ALL TIME stats, not current month
+              value={filteredStats.income}
               icon={TrendingUp}
               color="green"
               change={incomeChange}
             />
             <StatsCard
               title="Total Expenses"
-              value={stats.totalExpensesAllTime} // Use ALL TIME stats, not current month
+              value={filteredStats.expenses}
               icon={TrendingDown}
               color="red"
               change={expensesChange}
             />
             <StatsCard
               title="Net Balance"
-              value={stats.netBalanceAllTime} // Use ALL TIME stats, not current month
+              value={filteredStats.netBalance}
               icon={Wallet}
-              color={stats.netBalanceAllTime >= 0 ? "green" : "red"}
+              color={filteredStats.netBalance >= 0 ? "green" : "red"}
               change={netBalanceChange}
             />
             <StatsCard
               title="Transactions"
-              value={stats.transactionCount}
+              value={filteredStats.count}
               icon={BarChart3}
               color="blue"
-              change={`${stats.transactionCount} total`} // Remove the +, just show count
+              change={`${filteredStats.count} total`}
               isCount={true}
             />
           </motion.div>
