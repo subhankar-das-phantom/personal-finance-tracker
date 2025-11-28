@@ -127,7 +127,7 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false }) => {
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
           {transaction ? 'Edit Transaction' : 'Add New Transaction'}
         </h2>
-        <div className="w-16 h-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full" />
+        <div className="w-[185px] h-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full" />
       </motion.div>
 
       <form onSubmit={handleSubmit} className="space-y-6">

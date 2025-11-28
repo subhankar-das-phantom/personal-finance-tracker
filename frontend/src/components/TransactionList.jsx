@@ -70,12 +70,12 @@ const TransactionRow = memo(({ transaction, onEdit, onDelete }) => {
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 mb-1">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate max-w-[200px] sm:max-w-[300px] md:max-w-none md:flex-1">
                 {transaction.description || "No description"}
               </h3>
               <span
-                className={`text-lg sm:text-xl font-bold sm:ml-4 whitespace-nowrap ${
+                className={`text-lg sm:text-xl font-bold whitespace-nowrap flex-shrink-0 ${
                   transaction.type === "income"
                     ? "text-green-600 dark:text-green-400"
                     : "text-red-600 dark:text-red-400"
@@ -218,7 +218,7 @@ const TransactionList = ({
             <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-2">
               Recent Transactions
             </h2>
-            <div className="w-16 h-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full" />
+            <div className="w-[185px] h-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full" />
           </div>
           <div className="text-sm text-gray-500 dark:text-gray-400">
             {transactions.length} {hasMore ? "+ " : ""}transactions

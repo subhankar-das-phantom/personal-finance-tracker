@@ -82,7 +82,7 @@ const Chart = ({ data, title = "Expense Breakdown" }) => {
         <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
           {title}
         </h3>
-        <div className="w-16 h-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full" />
+        <div className="w-[185px] h-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full" />
       </motion.div>
 
       {/* Chart Container */}
