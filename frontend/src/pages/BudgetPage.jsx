@@ -22,6 +22,7 @@ import BudgetProgress from '../components/BudgetProgress';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { useTimeFilter } from '../context/TimeFilterContext';
 import { formatCurrency } from '../utils/currency';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
@@ -38,6 +39,7 @@ const BudgetPage = () => {
   
   const { token } = useContext(AuthContext);
   const { currency } = useCurrency();
+  const { timeFilter } = useTimeFilter();
 
   const fetchBudgetGoals = useCallback(async () => {
     if (!token) return;
@@ -204,6 +206,11 @@ const BudgetPage = () => {
               <p className="text-gray-600 dark:text-gray-400 flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 {currentMonth}
+                {timeFilter !== 'all' && (
+                  <span className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">
+                    Filtered: {timeFilter === 'thisWeek' ? 'This Week' : timeFilter === 'thisMonth' ? 'This Month' : 'This Year'}
+                  </span>
+                )}
               </p>
             </div>
             
