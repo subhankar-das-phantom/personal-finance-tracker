@@ -172,6 +172,12 @@ const Navbar = () => {
                     label="Analytics" 
                     onClick={() => setIsMobileMenuOpen(false)}
                   />
+                  <MobileNavItem 
+                    to="/budget" 
+                    icon={PiggyBank} 
+                    label="Budget" 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  />
                   
                   {/* User Info */}
                   <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
