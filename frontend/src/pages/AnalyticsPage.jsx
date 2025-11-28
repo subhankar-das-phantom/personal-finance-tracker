@@ -14,6 +14,7 @@ import BudgetProgress from '../components/BudgetProgress';
 import BudgetForm from '../components/BudgetForm';
 import { getBudgets, getBudgetProgress, addBudget, updateBudget, deleteBudget } from '../services/budgetService';
 import { useCurrency } from '../context/CurrencyContext';
+import { useTimeFilter } from '../context/TimeFilterContext';
 import { formatCurrency } from '../utils/currency';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
@@ -33,6 +34,7 @@ const AnalyticsPage = () => {
 
   const navigate = useNavigate();
   const { token } = useContext(AuthContext);
+  const { timeFilter } = useTimeFilter();
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -229,6 +231,11 @@ const AnalyticsPage = () => {
               <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">Financial Analytics</h1>
               <p className="text-gray-600 dark:text-gray-300 mt-1 flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-blue-500" /> Intelligent insights based on your recent activity
+                {timeFilter !== 'all' && (
+                  <span className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">
+                    {timeFilter === 'thisWeek' ? 'This Week' : timeFilter === 'thisMonth' ? 'This Month' : 'This Year'}
+                  </span>
+                )}
               </p>
             </div>
             <div className="flex items-center gap-3">
