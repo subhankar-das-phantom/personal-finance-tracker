@@ -83,21 +83,23 @@ const BudgetList = ({ goals = [], onEdit, onDelete }) => {
               whileHover={{ scale: 1.02 }}
               className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-shadow duration-300"
             >
-              <div className="p-5">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2.5 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg">
-                        <Target className="h-5 w-5 text-white" />
+              <div className="p-4 sm:p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-3">
+                      <div className="p-2 sm:p-2.5 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg flex-shrink-0">
+                        <Target className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                       </div>
-                      <div>
-                        <h3 className="font-bold text-lg text-gray-900 dark:text-white">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-bold text-base sm:text-lg text-gray-900 dark:text-white truncate">
                           {goal.category}
                         </h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Calendar className="h-3.5 w-3.5 text-gray-400" />
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
-                            {months[goal.month]} {goal.year}
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400 flex-shrink-0" />
+                            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                              {months[goal.month]} {goal.year}
+                            </span>
                           </span>
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${status.color}`}>
                             {status.label}
@@ -107,20 +109,20 @@ const BudgetList = ({ goals = [], onEdit, onDelete }) => {
                     </div>
 
                     <div className="flex items-baseline gap-2">
-                      <Coins className="h-5 w-5 text-green-600 dark:text-green-400" />
-                      <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                      <Coins className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                      <span className="text-xl sm:text-2xl lg:text-2xl font-bold text-gray-900 dark:text-white truncate">
                       {formatCurrency(goal.amount, currency.locale, currency.code)}
                     </span>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">budget</span>
+                      <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">budget</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 ml-4">
+                  <div className="flex items-center gap-1.5 sm:gap-2 ml-2 flex-shrink-0">
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => onEdit(goal)}
-                      className="p-2.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors duration-200"
+                      className="p-2 sm:p-2.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors duration-200 min-w-[44px] min-h-[44px] flex items-center justify-center"
                       title="Edit budget goal"
                     >
                       <Edit className="h-5 w-5" />
@@ -129,7 +131,7 @@ const BudgetList = ({ goals = [], onEdit, onDelete }) => {
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => onDelete(goal._id)}
-                      className="p-2.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors duration-200"
+                      className="p-2 sm:p-2.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors duration-200 min-w-[44px] min-h-[44px] flex items-center justify-center"
                       title="Delete budget goal"
                     >
                       <Trash2 className="h-5 w-5" />
@@ -138,14 +140,14 @@ const BudgetList = ({ goals = [], onEdit, onDelete }) => {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 px-5 py-3 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between text-sm">
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 px-4 sm:px-5 py-2.5 sm:py-3 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between text-xs sm:text-sm">
                   <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-                    <TrendingUp className="h-4 w-4" />
-                    <span>Track your spending against this goal</span>
+                    <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span className="truncate">Track your spending against this goal</span>
                   </div>
                   {status.label === 'Current' && (
-                    <span className="text-green-600 dark:text-green-400 font-medium">Active Now</span>
+                    <span className="text-green-600 dark:text-green-400 font-medium flex-shrink-0 ml-2">Active Now</span>
                   )}
                 </div>
               </div>
