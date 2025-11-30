@@ -217,20 +217,20 @@ router.get('/stats', auth, async (req, res) => {
 
     // Current month
     const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
     // Previous month
     const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    const currentMonthStartForPrev = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const currentMonthTransactions = transactions.filter(t => {
       const transactionDate = new Date(t.date);
-      return transactionDate >= currentMonthStart && transactionDate <= currentMonthEnd;
+      return transactionDate >= currentMonthStart && transactionDate < nextMonthStart;
     });
 
     const previousMonthTransactions = transactions.filter(t => {
       const transactionDate = new Date(t.date);
-      return transactionDate >= previousMonthStart && transactionDate <= previousMonthEnd;
+      return transactionDate >= previousMonthStart && transactionDate < currentMonthStartForPrev;
     });
 
     // Calculate all-time stats
@@ -393,16 +393,24 @@ function calculateFinancialStats(transactions) {
   
   // Date ranges
   const thisMonth = new Date(currentYear, currentMonth, 1);
+  const nextMonth = new Date(currentYear, currentMonth + 1, 1);
   const lastMonth = new Date(currentYear, currentMonth - 1, 1);
   const thisYear = new Date(currentYear, 0, 1);
+  const nextYear = new Date(currentYear + 1, 0, 1);
   
   // Filter transactions by time periods
-  const thisMonthTxns = transactions.filter(t => new Date(t.date) >= thisMonth);
+  const thisMonthTxns = transactions.filter(t => {
+    const date = new Date(t.date);
+    return date >= thisMonth && date < nextMonth;
+  });
   const lastMonthTxns = transactions.filter(t => {
     const date = new Date(t.date);
     return date >= lastMonth && date < thisMonth;
   });
-  const thisYearTxns = transactions.filter(t => new Date(t.date) >= thisYear);
+  const thisYearTxns = transactions.filter(t => {
+    const date = new Date(t.date);
+    return date >= thisYear && date < nextYear;
+  });
   
   // Calculate totals by period
   const periods = {
