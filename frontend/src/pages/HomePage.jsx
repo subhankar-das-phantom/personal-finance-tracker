@@ -290,19 +290,28 @@ const HomePage = () => {
       case "thisWeek":
         const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         filteredTransactions = allTransactions.filter(
-          (t) => new Date(t.date) >= weekAgo
+          (t) => {
+            const date = new Date(t.date);
+            return date >= weekAgo && date <= now;
+          }
         );
         break;
       case "thisMonth":
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
         filteredTransactions = allTransactions.filter(
-          (t) => new Date(t.date) >= monthStart
+          (t) => {
+            const date = new Date(t.date);
+            return date >= monthStart && date <= now;
+          }
         );
         break;
       case "thisYear":
         const yearStart = new Date(now.getFullYear(), 0, 1);
         filteredTransactions = allTransactions.filter(
-          (t) => new Date(t.date) >= yearStart
+          (t) => {
+            const date = new Date(t.date);
+            return date >= yearStart && date <= now;
+          }
         );
         break;
       default:
