@@ -293,7 +293,10 @@ const BudgetProgress = ({ progress }) => {
             <div className="text-right">
               <div className="text-sm opacity-90 mb-1">Avg per day</div>
               <div className="text-xl font-semibold">
-                {formatCurrency(summary.totalRemaining / daysRemaining, currency.locale, currency.code)}
+                {daysRemaining > 0 
+                  ? formatCurrency(summary.totalRemaining / daysRemaining, currency.locale, currency.code)
+                  : 'Last day!'
+                }
               </div>
             </div>
           </div>
