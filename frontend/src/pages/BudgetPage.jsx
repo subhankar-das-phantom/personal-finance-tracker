@@ -187,7 +187,7 @@ const BudgetPage = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 pt-20 pb-8 px-4 sm:px-6 lg:px-8"
+      className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 pt-20 pb-24 px-4 sm:px-6 lg:px-8"
     >
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
@@ -197,38 +197,40 @@ const BudgetPage = () => {
             className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
           >
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg">
-                  <Target className="h-8 w-8 text-white" />
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                <div className="p-2 sm:p-2.5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
+                  <Target className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                 </div>
-                Budget Management
+                <span className="truncate">Budget Management</span>
               </h1>
-              <p className="text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                {currentMonth}
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 flex flex-wrap items-center gap-2">
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  {currentMonth}
+                </span>
                 {timeFilter !== 'all' && (
-                  <span className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">
+                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">
                     Filtered: {timeFilter === 'thisWeek' ? 'This Week' : timeFilter === 'thisMonth' ? 'This Month' : 'This Year'}
                   </span>
                 )}
               </p>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Button
                 variant="secondary"
                 onClick={refreshData}
                 disabled={isRefreshing}
-                className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl"
+                className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl min-w-[44px]"
               >
                 <motion.div
                   animate={isRefreshing ? { rotate: 360 } : {}}
                   transition={{ duration: 1, repeat: isRefreshing ? Infinity : 0, ease: "linear" }}
-                  className="mr-2"
+                  className="sm:mr-2"
                 >
                   <RefreshCw className="h-5 w-5" />
                 </motion.div>
-                {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                <span className="hidden sm:inline">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
               </Button>
 
               <Button
@@ -236,10 +238,10 @@ const BudgetPage = () => {
                   setEditingGoal(null);
                   setShowForm(true);
                 }}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-green-500 to-emerald-600 shadow-lg hover:shadow-xl min-w-[44px]"
                 icon={Plus}
               >
-                New Budget Goal
+                <span className="hidden sm:inline">New Budget Goal</span>
               </Button>
             </div>
           </motion.div>
@@ -294,12 +296,12 @@ const BudgetPage = () => {
                   <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
                     <Coins className="h-6 w-6" />
                   </div>
-                  <span className="text-sm font-medium opacity-90">Total Budget</span>
+                  <span className="text-xs sm:text-sm font-medium opacity-90">Total Budget</span>
                 </div>
-                <p className="text-3xl font-bold mb-1">
+                <p className="text-2xl sm:text-2xl font-bold mb-1">
                   {formatCurrency(stats.totalBudget, currency.locale, currency.code)}
                 </p>
-                <p className="text-sm opacity-75">Allocated this month</p>
+                <p className="text-xs sm:text-sm opacity-75">Allocated this month</p>
               </Card>
 
               <Card className={`text-white border-none ${
@@ -311,12 +313,12 @@ const BudgetPage = () => {
                   <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
                     <TrendingDown className="h-6 w-6" />
                   </div>
-                  <span className="text-sm font-medium opacity-90">Total Spent</span>
+                  <span className="text-xs sm:text-sm font-medium opacity-90">Total Spent</span>
                 </div>
-                <p className="text-3xl font-bold mb-1">
+                <p className="text-2xl sm:text-2xl font-bold mb-1">
                   {formatCurrency(stats.totalSpent, currency.locale, currency.code)}
                 </p>
-                <p className="text-sm opacity-75">
+                <p className="text-xs sm:text-sm opacity-75">
                   {stats.overallPercentageUsed.toFixed(1)}% of budget
                 </p>
               </Card>
@@ -330,12 +332,12 @@ const BudgetPage = () => {
                   <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
                     <ArrowUp className="h-6 w-6" />
                   </div>
-                  <span className="text-sm font-medium opacity-90">Remaining</span>
+                  <span className="text-xs sm:text-sm font-medium opacity-90">Remaining</span>
                 </div>
-                <p className="text-3xl font-bold mb-1">
+                <p className="text-2xl sm:text-2xl font-bold mb-1">
                   {formatCurrency(Math.abs(stats.totalRemaining), currency.locale, currency.code)}
                 </p>
-                <p className="text-sm opacity-75">
+                <p className="text-xs sm:text-sm opacity-75">
                   {stats.totalRemaining >= 0 ? 'Still available' : 'Over budget'}
                 </p>
               </Card>
@@ -345,12 +347,12 @@ const BudgetPage = () => {
                   <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
                     <PieChart className="h-6 w-6" />
                   </div>
-                  <span className="text-sm font-medium opacity-90">Categories</span>
+                  <span className="text-xs sm:text-sm font-medium opacity-90">Categories</span>
                 </div>
-                <p className="text-3xl font-bold mb-1">
+                <p className="text-2xl sm:text-2xl font-bold mb-1">
                   {stats.categoriesCount}
                 </p>
-                <p className="text-sm opacity-75">Budget goals set</p>
+                <p className="text-xs sm:text-sm opacity-75">Budget goals set</p>
               </Card>
             </motion.div>
 
