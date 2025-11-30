@@ -330,8 +330,25 @@ router.get('/analytics', auth, async (req, res) => {
 
     const transactions = await Transaction.find({ user: req.user }).sort({ date: 'desc' });
 
+    // Return empty analytics data structure if no transactions
     if (transactions.length === 0) {
-      return res.status(404).json({ message: 'No transactions found to generate analytics.' });
+      const emptyAnalytics = {
+        periods: {
+          allTime: { income: 0, expense: 0, netBalance: 0, count: 0, avgTransaction: 0, savingsRate: 0 },
+          thisMonth: { income: 0, expense: 0, netBalance: 0, count: 0, avgTransaction: 0, savingsRate: 0 },
+          lastMonth: { income: 0, expense: 0, netBalance: 0, count: 0, avgTransaction: 0, savingsRate: 0 },
+          thisYear: { income: 0, expense: 0, netBalance: 0, count: 0, avgTransaction: 0, savingsRate: 0 }
+        },
+        categoryBreakdown: {},
+        monthlyTrends: [],
+        topExpenseCategories: [],
+        topIncomeCategories: [],
+        insights: ['Start adding transactions to see insights!'],
+        reportDate: new Date().toISOString(),
+        totalTransactions: 0
+      };
+      cache.set(cacheKey, emptyAnalytics);
+      return res.json(emptyAnalytics);
     }
 
     const analyticsData = calculateFinancialStats(transactions);
