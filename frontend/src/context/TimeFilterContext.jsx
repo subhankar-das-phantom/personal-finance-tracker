@@ -3,7 +3,7 @@ import React, { createContext, useState, useContext } from 'react';
 const TimeFilterContext = createContext();
 
 export const TimeFilterProvider = ({ children }) => {
-  const [timeFilter, setTimeFilter] = useState('thisMonth');
+  const [timeFilter, setTimeFilter] = useState('all');
 
   // Helper function to get date range based on filter
   const getDateRange = () => {
