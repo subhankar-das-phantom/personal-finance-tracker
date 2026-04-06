@@ -16,6 +16,7 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false }) => {
   const [formData, setFormData] = useState({
     type: 'expense',
     category: '',
+    customCategory: '',
     amount: '',
     date: '',
     description: ''
@@ -37,9 +38,14 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false }) => {
 
   useEffect(() => {
     if (transaction) {
+      const type = transaction.type || 'expense';
+      const category = transaction.category || '';
+      const isCustom = category && !categories[type].includes(category) && category !== 'Other';
+      
       setFormData({
-        type: transaction.type || 'expense',
-        category: transaction.category || '',
+        type: type,
+        category: isCustom ? 'Other' : category,
+        customCategory: isCustom ? category : '',
         amount: transaction.amount || '',
         date: transaction.date ? transaction.date.substring(0, 10) : '',
         description: transaction.description || ''
@@ -51,6 +57,9 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false }) => {
     const newErrors = {};
     
     if (!formData.category.trim()) newErrors.category = 'Category is required';
+    if (formData.category === 'Other' && (!formData.customCategory || !formData.customCategory.trim())) {
+      newErrors.customCategory = 'Please specify a category';
+    }
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
       newErrors.amount = 'Amount must be greater than 0';
     }
@@ -80,14 +89,15 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false }) => {
     try {
       await onSubmit({
         ...formData,
+        category: formData.category === 'Other' ? formData.customCategory : formData.category,
         amount: parseFloat(formData.amount)
       });
       
-      // Reset form if not editing
       if (!transaction) {
         setFormData({
           type: 'expense',
           category: '',
+          customCategory: '',
           amount: '',
           date: '',
           description: ''
@@ -203,6 +213,35 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false }) => {
               ))}
             </motion.select>
           </FormField>
+
+          {formData.category === 'Other' && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4"
+            >
+              <FormField
+                label="Specify"
+                icon={Tag}
+                error={errors.customCategory}
+                isSubmitted={isSubmitted}
+              >
+                <motion.input
+                  variants={inputVariants}
+                  whileFocus="focus"
+                  type="text"
+                  value={formData.customCategory}
+                  onChange={(e) => handleChange('customCategory', e.target.value)}
+                  placeholder="Enter custom reason"
+                  className={`w-full pl-10 pr-4 py-3 rounded-xl border transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                    errors.customCategory && isSubmitted
+                      ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
+                      : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-200 dark:focus:ring-blue-800'
+                  } focus:ring-2 focus:outline-none`}
+                />
+              </FormField>
+            </motion.div>
+          )}
         </motion.div>
 
         {/* Amount */}

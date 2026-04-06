@@ -8,6 +8,7 @@ import { AuthContext } from '../context/AuthContext';
 const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
   const [formData, setFormData] = useState({
     category: '',
+    customCategory: '',
     amount: '',
     month: new Date().getMonth(),
     year: new Date().getFullYear()
@@ -34,6 +35,7 @@ const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
     if (goal) {
       setFormData({
         category: goal.category,
+        customCategory: '',
         amount: goal.amount.toString(),
         month: goal.month,
         year: goal.year
@@ -63,6 +65,9 @@ const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
     
     if (!formData.category.trim()) {
       newErrors.category = 'Category is required';
+    }
+    if (formData.category === 'Other' && (!formData.customCategory || !formData.customCategory.trim())) {
+      newErrors.customCategory = 'Please specify a category';
     }
     
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
@@ -96,6 +101,7 @@ const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
     try {
       const budgetData = {
         ...formData,
+        category: formData.category === 'Other' ? formData.customCategory : formData.category,
         amount: parseFloat(formData.amount),
         month: parseInt(formData.month),
         year: parseInt(formData.year)
@@ -194,6 +200,44 @@ const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
             )}
           </AnimatePresence>
         </div>
+
+        {formData.category === 'Other' && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              Specify
+            </label>
+            <div className="relative">
+              <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                value={formData.customCategory}
+                onChange={(e) => handleChange('customCategory', e.target.value)}
+                placeholder="Enter custom reason"
+                className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ${
+                  errors.customCategory && isSubmitted
+                    ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
+                    : 'border-gray-200 dark:border-gray-600 focus:border-green-500 focus:ring-green-200'
+                } focus:ring-4 focus:outline-none`}
+              />
+            </div>
+            <AnimatePresence>
+              {errors.customCategory && isSubmitted && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mt-2 flex items-center space-x-1 text-red-600"
+                >
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="text-sm">{errors.customCategory}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
 
         {/* Amount Field */}
         <div>
