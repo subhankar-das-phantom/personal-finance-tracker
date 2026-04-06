@@ -154,23 +154,31 @@ const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
           </label>
           <div className="relative">
             <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              list="categories"
+            <select
               value={formData.category}
               onChange={(e) => handleChange('category', e.target.value)}
-              placeholder="Select or type category"
-              className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ${
+              className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
                 errors.category && isSubmitted
                   ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
                   : 'border-gray-200 dark:border-gray-600 focus:border-green-500 focus:ring-green-200'
-              } focus:ring-4 focus:outline-none`}
-            />
-            <datalist id="categories">
-              {availableCategories.map((cat) => (
-                <option key={cat.category} value={cat.category} />
+              } focus:ring-4 focus:outline-none cursor-pointer`}
+            >
+              <option value="">Select a category</option>
+              {[
+                'Food & Dining', 'Transportation', 'Shopping', 'Entertainment', 
+                'Bills & Utilities', 'Healthcare', 'Education', 'Travel', 'Other'
+              ].map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
               ))}
-            </datalist>
+              {availableCategories
+                .filter(cat => ![
+                  'Food & Dining', 'Transportation', 'Shopping', 'Entertainment', 
+                  'Bills & Utilities', 'Healthcare', 'Education', 'Travel', 'Other'
+                ].includes(cat.category))
+                .map((cat) => (
+                  <option key={cat.category} value={cat.category}>{cat.category}</option>
+              ))}
+            </select>
           </div>
           <AnimatePresence>
             {errors.category && isSubmitted && (
