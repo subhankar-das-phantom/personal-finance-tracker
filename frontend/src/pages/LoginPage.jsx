@@ -135,7 +135,7 @@ const LoginPage = () => {
         {/* Login Card */}
         <motion.div
           variants={itemVariants}
-          className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 p-8"
+          className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 p-6 sm:p-8"
         >
           {/* Header */}
           <motion.div
@@ -146,7 +146,7 @@ const LoginPage = () => {
               <Wallet className="h-8 w-8 text-white" />
             </div>
             
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
               Welcome Back! 👋
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
@@ -225,7 +225,7 @@ const LoginPage = () => {
               <Button
                 type="submit"
                 isLoading={isLoading}
-                className="w-full py-4"
+                className="w-full py-3 sm:py-4"
                 icon={!isLoading ? LogIn : undefined}
               >
                 Sign In
