@@ -298,7 +298,7 @@ const BudgetPage = () => {
                   </div>
                   <span className="text-xs sm:text-sm font-medium opacity-90">Total Budget</span>
                 </div>
-                <p className="text-2xl sm:text-2xl font-bold mb-1">
+                <p className="text-xl sm:text-2xl font-bold mb-1 truncate">
                   {formatCurrency(stats.totalBudget, currency.locale, currency.code)}
                 </p>
                 <p className="text-xs sm:text-sm opacity-75">Allocated this month</p>
@@ -315,7 +315,7 @@ const BudgetPage = () => {
                   </div>
                   <span className="text-xs sm:text-sm font-medium opacity-90">Total Spent</span>
                 </div>
-                <p className="text-2xl sm:text-2xl font-bold mb-1">
+                <p className="text-xl sm:text-2xl font-bold mb-1 truncate">
                   {formatCurrency(stats.totalSpent, currency.locale, currency.code)}
                 </p>
                 <p className="text-xs sm:text-sm opacity-75">
@@ -334,7 +334,7 @@ const BudgetPage = () => {
                   </div>
                   <span className="text-xs sm:text-sm font-medium opacity-90">Remaining</span>
                 </div>
-                <p className="text-2xl sm:text-2xl font-bold mb-1">
+                <p className="text-xl sm:text-2xl font-bold mb-1 truncate">
                   {formatCurrency(Math.abs(stats.totalRemaining), currency.locale, currency.code)}
                 </p>
                 <p className="text-xs sm:text-sm opacity-75">
@@ -349,7 +349,7 @@ const BudgetPage = () => {
                   </div>
                   <span className="text-xs sm:text-sm font-medium opacity-90">Categories</span>
                 </div>
-                <p className="text-2xl sm:text-2xl font-bold mb-1">
+                <p className="text-xl sm:text-2xl font-bold mb-1 truncate">
                   {stats.categoriesCount}
                 </p>
                 <p className="text-xs sm:text-sm opacity-75">Budget goals set</p>
