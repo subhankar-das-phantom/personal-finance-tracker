@@ -92,7 +92,7 @@ const Chart = ({ data, title = "Expense Breakdown" }) => {
         transition={{ delay: 0.4, duration: 0.6 }}
         className="relative"
       >
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
               data={data}
@@ -102,7 +102,7 @@ const Chart = ({ data, title = "Expense Breakdown" }) => {
               label={({ name, percent }) => 
                 percent > 5 ? `${(percent * 100).toFixed(0)}%` : ''
               }
-              outerRadius={120}
+              outerRadius={90}
               fill="#8884d8"
               dataKey="value"
               animationBegin={600}
