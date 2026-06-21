@@ -52,9 +52,9 @@ const TransactionRow = memo(({ transaction, onEdit, onDelete }) => {
       onTap={() => setIsActive(!isActive)}
       className="mx-4 my-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 cursor-pointer"
     >
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
         {/* Left side (icon + details) */}
-        <div className="flex items-center space-x-4 flex-1 min-w-0">
+        <div className="flex items-start sm:items-center space-x-4 flex-1 min-w-0 w-full">
           <div
             className={`p-2 rounded-lg flex-shrink-0 ${
               transaction.type === "income"
