@@ -44,10 +44,10 @@ const Navbar = () => {
             className="flex items-center space-x-2"
           >
             <Link to="/" className="flex items-center space-x-2 group">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                <Wallet className="h-6 w-6 text-white" />
+              <div className="p-1.5 sm:p-2 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                <Wallet className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+              <span className="text-base sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                 FinanceTracker
               </span>
             </Link>
@@ -134,9 +134,9 @@ const Navbar = () => {
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={toggleMobileMenu}
-            className="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+            className="md:hidden p-1.5 sm:p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
           >
-            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {isMobileMenuOpen ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Menu className="h-5 w-5 sm:h-6 sm:w-6" />}
           </motion.button>
         </div>
       </div>
