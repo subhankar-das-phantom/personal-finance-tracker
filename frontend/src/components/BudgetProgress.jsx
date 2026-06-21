@@ -197,7 +197,7 @@ const BudgetProgress = ({ progress }) => {
                 )}
               </div>
 
-              <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                 <div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">Remaining</div>
                   <div className={`text-sm font-semibold ${
@@ -242,7 +242,7 @@ const BudgetProgress = ({ progress }) => {
                 Total Budget
               </span>
             </div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
               {formatCurrency(summary.totalBudget, currency.locale, currency.code)}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -269,7 +269,7 @@ const BudgetProgress = ({ progress }) => {
                 Total Spent
               </span>
             </div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
               {formatCurrency(summary.totalSpent, currency.locale, currency.code)}
             </div>
             <div className={`text-xs font-medium mt-1 ${
@@ -283,16 +283,16 @@ const BudgetProgress = ({ progress }) => {
         </div>
 
         <div className="mt-4 p-4 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl text-white">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <div className="text-sm opacity-90 mb-1">Total Remaining</div>
-              <div className="text-3xl font-bold">
+              <div className="text-2xl sm:text-3xl font-bold truncate">
                 {formatCurrency(summary.totalRemaining, currency.locale, currency.code)}
               </div>
             </div>
             <div className="text-right">
               <div className="text-sm opacity-90 mb-1">Avg per day</div>
-              <div className="text-xl font-semibold">
+              <div className="text-lg sm:text-xl font-semibold truncate">
                 {daysRemaining > 0 
                   ? formatCurrency(summary.totalRemaining / daysRemaining, currency.locale, currency.code)
                   : 'Last day!'
