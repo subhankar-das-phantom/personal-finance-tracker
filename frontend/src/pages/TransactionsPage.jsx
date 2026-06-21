@@ -1297,6 +1297,10 @@ const TransactionsPage = () => {
                   onSubmit={handleSubmit}
                   transaction={editingTransaction}
                   isLoading={false}
+                  onClose={() => {
+                    setShowAddForm(false);
+                    setEditingTransaction(null);
+                  }}
                 />
               </motion.div>
             </motion.div>

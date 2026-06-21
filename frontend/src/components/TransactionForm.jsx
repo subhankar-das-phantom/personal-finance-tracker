@@ -9,10 +9,11 @@ import {
   TrendingDown,
   Save,
   Plus,
-  AlertCircle
+  AlertCircle,
+  X
 } from 'lucide-react';
 
-const TransactionForm = ({ onSubmit, transaction, isLoading = false }) => {
+const TransactionForm = ({ onSubmit, transaction, isLoading = false, onClose }) => {
   const [formData, setFormData] = useState({
     type: 'expense',
     category: '',
@@ -132,12 +133,25 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="mb-8"
+        className="mb-8 flex items-start justify-between"
       >
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
-          {transaction ? 'Edit Transaction' : 'Add New Transaction'}
-        </h2>
-        <div className="w-[185px] h-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full" />
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+            {transaction ? 'Edit Transaction' : 'Add New Transaction'}
+          </h2>
+          <div className="w-[185px] h-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full" />
+        </div>
+        {onClose && (
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={onClose}
+            type="button"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors text-gray-500 dark:text-gray-400"
+          >
+            <X className="h-5 w-5" />
+          </motion.button>
+        )}
       </motion.div>
 
       <form onSubmit={handleSubmit} className="space-y-6">

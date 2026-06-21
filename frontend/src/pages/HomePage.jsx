@@ -594,6 +594,10 @@ const HomePage = () => {
                   onSubmit={handleAddTransaction}
                   transaction={editTransaction}
                   isLoading={false}
+                  onClose={() => {
+                    setShowAddForm(false);
+                    setEditTransaction(null);
+                  }}
                 />
               </motion.div>
             </motion.div>
