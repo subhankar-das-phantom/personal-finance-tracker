@@ -182,14 +182,14 @@ const RegisterPage = () => {
             variants={itemVariants}
             className="text-center mb-8"
           >
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl shadow-lg mb-4">
-              <UserPlus className="h-8 w-8 text-white" />
+            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl shadow-lg mb-4">
+              <UserPlus className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
             </div>
             
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
               Create Account 🚀
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
               Join thousands managing their finances smartly
             </p>
           </motion.div>

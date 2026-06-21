@@ -142,14 +142,14 @@ const LoginPage = () => {
             variants={itemVariants}
             className="text-center mb-8"
           >
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl shadow-lg mb-4">
-              <Wallet className="h-8 w-8 text-white" />
+            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl shadow-lg mb-4">
+              <Wallet className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
             </div>
             
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
               Welcome Back! 👋
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
               Sign in to access your financial dashboard
             </p>
           </motion.div>
