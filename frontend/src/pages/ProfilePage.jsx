@@ -182,7 +182,7 @@ const ProfilePage = () => {
                 ) : (
                   <>
                     <div className="flex items-center justify-center sm:justify-between mb-2">
-                      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                         {user?.username}
                       </h1>
                       <button
@@ -226,7 +226,7 @@ const ProfilePage = () => {
           {/* Security Section */}
           <Card className="overflow-hidden">
             <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 Security
               </h2>
@@ -286,7 +286,7 @@ const ProfilePage = () => {
           {/* Settings Section (Currency) */}
           <Card className="overflow-hidden">
             <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <Globe className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 Preferences
               </h2>
