@@ -1069,6 +1069,8 @@ const TransactionsPage = () => {
                           icon: FileSpreadsheet,
                           color: "green",
                           desc: "Multiple sheets with analysis",
+                          activeClasses: "border-green-500 bg-green-50 dark:bg-green-900/20",
+                          activeIconClasses: "text-green-600",
                         },
                         {
                           value: "pdf",
@@ -1076,6 +1078,8 @@ const TransactionsPage = () => {
                           icon: FileText,
                           color: "red",
                           desc: "Professional report format",
+                          activeClasses: "border-red-500 bg-red-50 dark:bg-red-900/20",
+                          activeIconClasses: "text-red-600",
                         },
                         {
                           value: "csv",
@@ -1083,6 +1087,8 @@ const TransactionsPage = () => {
                           icon: File,
                           color: "blue",
                           desc: "Simple spreadsheet data",
+                          activeClasses: "border-blue-500 bg-blue-50 dark:bg-blue-900/20",
+                          activeIconClasses: "text-blue-600",
                         },
                       ].map((format) => (
                         <button
@@ -1090,19 +1096,19 @@ const TransactionsPage = () => {
                           onClick={() => setExportFormat(format.value)}
                           className={`relative p-4 rounded-xl border-2 transition-all duration-200 ${
                             exportFormat === format.value
-                              ? `border-${format.color}-500 bg-${format.color}-50 dark:bg-${format.color}-900/20`
+                              ? format.activeClasses
                               : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                           }`}
                         >
                           {exportFormat === format.value && (
                             <div className="absolute top-2 right-2">
-                              <CheckCircle2 className={`h-5 w-5 text-${format.color}-600`} />
+                              <CheckCircle2 className={`h-5 w-5 ${format.activeIconClasses}`} />
                             </div>
                           )}
                           <format.icon
                             className={`h-8 w-8 sm:h-10 sm:w-10 mx-auto mb-2 ${
                               exportFormat === format.value
-                                ? `text-${format.color}-600`
+                                ? format.activeIconClasses
                                 : "text-gray-400"
                             }`}
                           />
@@ -1350,7 +1356,7 @@ const StatsCard = ({
       <h3 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
         {title}
       </h3>
-      <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+      <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
         {formatValue(value)}
       </p>
     </Card>
