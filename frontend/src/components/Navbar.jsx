@@ -267,7 +267,7 @@ const MobileNavItem = ({ to, icon: Icon, label, onClick, isPrimary = false }) =>
     <Link
       to={to}
       onClick={onClick}
-      className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+      className={`flex items-center space-x-2 px-2.5 py-2 sm:px-3 sm:py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
         isPrimary
           ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white'
           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'

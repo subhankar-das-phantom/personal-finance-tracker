@@ -192,7 +192,7 @@ const ProfilePage = () => {
                         <Settings className="h-5 w-5" />
                       </button>
                     </div>
-                    <div className="flex flex-col sm:flex-row items-center gap-4 text-gray-600 dark:text-gray-400">
+                    <div className="flex flex-col sm:flex-row items-center gap-4 text-sm sm:text-base text-gray-600 dark:text-gray-400">
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4" />
                         <span>{user?.email}</span>
@@ -315,10 +315,10 @@ const ProfilePage = () => {
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                       }`}>
-                        <span className="text-lg font-bold">{curr.symbol}</span>
+                        <span className="text-base sm:text-lg font-bold">{curr.symbol}</span>
                       </div>
                       <div className="text-left flex-1">
-                        <div className={`font-semibold ${
+                        <div className={`text-sm sm:text-base font-semibold ${
                           currency.code === curr.code
                             ? 'text-blue-900 dark:text-blue-100'
                             : 'text-gray-900 dark:text-white'
