@@ -491,8 +491,8 @@ const HomePage = () => {
           </div>
 
           {/* Quick Actions */}
-          <Card className="p-6">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
+          <Card className="p-4 sm:p-6">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-4">
               Quick Actions
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -754,15 +754,15 @@ const QuickActionCard = ({
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className={`p-4 rounded-xl border border-gray-200 dark:border-gray-700 transition-all duration-200 text-left ${colorClasses[color]}`}
+      className={`p-3 sm:p-4 rounded-xl border border-gray-200 dark:border-gray-700 transition-all duration-200 text-left ${colorClasses[color]}`}
     >
       <div className="flex items-start space-x-3">
-        <Icon className="h-6 w-6 mt-1" />
+        <Icon className="h-5 w-5 sm:h-6 sm:w-6 mt-1" />
         <div>
-          <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+          <h4 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white mb-1">
             {title}
           </h4>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
             {description}
           </p>
         </div>
