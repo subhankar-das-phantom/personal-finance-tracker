@@ -71,11 +71,11 @@ const TransactionRow = memo(({ transaction, onEdit, onDelete }) => {
 
           <div className="flex-1 min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 mb-1 min-w-0">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate flex-1">
+              <h3 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white truncate flex-1">
                 {transaction.description || "No description"}
               </h3>
               <span
-                className={`text-lg sm:text-xl font-bold whitespace-nowrap flex-shrink-0 ${
+                className={`text-base sm:text-xl font-bold whitespace-nowrap flex-shrink-0 ${
                   transaction.type === "income"
                     ? "text-green-600 dark:text-green-400"
                     : "text-red-600 dark:text-red-400"
