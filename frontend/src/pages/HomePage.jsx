@@ -393,7 +393,7 @@ const HomePage = () => {
               </p>
             </div>
 
-            <div className="flex items-center space-x-4 mt-4 md:mt-0">
+            <div className="flex items-center gap-3 flex-wrap mt-4 md:mt-0">
               {/* Time Filter */}
               <label htmlFor="time-filter" className="sr-only">Time Filter</label>
               <select
@@ -401,7 +401,7 @@ const HomePage = () => {
                 value={timeFilter}
                 onChange={(e) => setTimeFilter(e.target.value)}
                 aria-label="Filter transactions by time period"
-                className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
               >
                 <option value="thisWeek">This Week</option>
                 <option value="thisMonth">This Month</option>
@@ -430,7 +430,8 @@ const HomePage = () => {
                 }}
                 icon={Plus}
               >
-                Add Transaction
+                <span className="hidden sm:inline">Add Transaction</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </div>
           </motion.div>
@@ -494,7 +495,7 @@ const HomePage = () => {
             <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
               Quick Actions
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <QuickActionCard
                 title="Download PDF Report"
                 description="Comprehensive financial analysis"
@@ -723,7 +724,7 @@ const StatsCard = ({
       <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
         {title}
       </h3>
-      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+      <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
         {formatValue(value)}
       </p>
     </Card>
