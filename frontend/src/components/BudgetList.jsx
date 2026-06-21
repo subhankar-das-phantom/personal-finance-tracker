@@ -110,7 +110,7 @@ const BudgetList = ({ goals = [], onEdit, onDelete }) => {
 
                     <div className="flex items-baseline gap-2">
                       <Coins className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
-                      <span className="text-xl sm:text-2xl lg:text-2xl font-bold text-gray-900 dark:text-white truncate">
+                      <span className="text-xl sm:text-2xl lg:text-2xl font-bold text-gray-900 dark:text-white break-words">
                       {formatCurrency(goal.amount, currency.locale, currency.code)}
                     </span>
                       <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">budget</span>

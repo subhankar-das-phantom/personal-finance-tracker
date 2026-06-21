@@ -117,9 +117,13 @@ const Chart = ({ data, title = "Expense Breakdown" }) => {
               ))}
             </Pie>
             <Tooltip content={<CustomTooltip />} />
-            <Legend content={<CustomLegend />} />
           </PieChart>
         </ResponsiveContainer>
+        
+        <CustomLegend payload={data.map((entry, index) => ({
+          color: COLORS[index % COLORS.length],
+          value: entry.name || entry.category
+        }))} />
 
         {/* Decorative elements */}
         <div className="absolute -top-2 -right-2 w-4 h-4 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full opacity-20 animate-pulse" />

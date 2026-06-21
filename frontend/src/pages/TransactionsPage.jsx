@@ -974,7 +974,7 @@ const TransactionsPage = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex flex-col items-center overflow-y-auto p-4 sm:p-6"
               onClick={() => setShowExportModal(false)}
             >
               <motion.div
@@ -982,7 +982,7 @@ const TransactionsPage = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-3xl overflow-hidden max-h-[90vh] overflow-y-auto"
+                className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-3xl my-auto flex-shrink-0 overflow-hidden max-h-[90vh] overflow-y-auto"
               >
                 {/* Export Modal Content - Keep your existing export modal JSX */}
                 {/* Header */}
@@ -1280,7 +1280,7 @@ const TransactionsPage = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex flex-col items-center overflow-y-auto p-4 sm:p-6"
               onClick={() => {
                 setShowAddForm(false);
                 setEditingTransaction(null);
@@ -1291,7 +1291,7 @@ const TransactionsPage = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-md"
+                className="w-full max-w-md my-auto flex-shrink-0"
               >
                 <TransactionForm
                   onSubmit={handleSubmit}
