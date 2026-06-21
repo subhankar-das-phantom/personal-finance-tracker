@@ -131,7 +131,7 @@ const AnalyticsPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900 pt-24 px-6">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900 pt-24 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="h-10 w-64 bg-gray-200 dark:bg-gray-700 rounded-lg" />
@@ -238,7 +238,7 @@ const AnalyticsPage = () => {
                 )}
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               {chartControls}
               <Button
                 variant="outline"
@@ -382,11 +382,14 @@ const AnalyticsPage = () => {
                     nameKey="category"
                     cx="50%"
                     cy="50%"
-                    innerRadius={55}
-                    outerRadius={95}
+                    innerRadius={45}
+                    outerRadius={80}
                     paddingAngle={3}
                     cornerRadius={6}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) => {
+                      if (typeof window !== 'undefined' && window.innerWidth < 640) return `${(percent * 100).toFixed(0)}%`;
+                      return `${name} ${(percent * 100).toFixed(0)}%`;
+                    }}
                   >
                     {topExpenseCategories.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -460,7 +463,7 @@ const AnalyticsCard = ({ icon: Icon, title, value, tone = 'brand' }) => {
         </div>
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${toneMap.chip}`}>{title}</span>
       </div>
-      <p className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">{formatCurrency(value, currency.locale, currency.code)}</p>
+      <p className="text-xl sm:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white truncate">{formatCurrency(value, currency.locale, currency.code)}</p>
     </Card>
   );
 };
