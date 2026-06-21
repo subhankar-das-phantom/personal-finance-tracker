@@ -132,7 +132,7 @@ const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
               <Target className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="text-xl font-bold">
+              <h2 className="text-lg sm:text-xl font-bold">
                 {goal ? 'Edit Budget Goal' : 'Set Budget Goal'}
               </h2>
               <p className="text-green-100 text-sm">

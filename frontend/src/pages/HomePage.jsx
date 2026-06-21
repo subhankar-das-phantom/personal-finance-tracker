@@ -385,7 +385,7 @@ const HomePage = () => {
             className="flex flex-col md:flex-row md:items-center md:justify-between"
           >
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 Welcome back, {user?.username}! 👋
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
@@ -728,7 +728,7 @@ const StatsCard = ({
       <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
         {title}
       </h3>
-      <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
+      <p className="text-base sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
         {formatValue(value)}
       </p>
     </Card>

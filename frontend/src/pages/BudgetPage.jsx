@@ -197,7 +197,7 @@ const BudgetPage = () => {
             className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
           >
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+              <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
                 <div className="p-2 sm:p-2.5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
                   <Target className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                 </div>

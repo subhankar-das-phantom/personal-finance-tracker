@@ -79,7 +79,7 @@ const Chart = ({ data, title = "Expense Breakdown" }) => {
         transition={{ delay: 0.2 }}
         className="mb-6"
       >
-        <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+        <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-2">
           {title}
         </h3>
         <div className="w-[185px] h-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full" />

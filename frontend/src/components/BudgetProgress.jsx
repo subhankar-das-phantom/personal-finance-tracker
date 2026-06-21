@@ -286,7 +286,7 @@ const BudgetProgress = ({ progress }) => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <div className="text-sm opacity-90 mb-1">Total Remaining</div>
-              <div className="text-2xl sm:text-3xl font-bold truncate">
+              <div className="text-xl sm:text-3xl font-bold truncate">
                 {formatCurrency(summary.totalRemaining, currency.locale, currency.code)}
               </div>
             </div>

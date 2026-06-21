@@ -169,7 +169,7 @@ const AnalyticsPage = () => {
   if (!analyticsData) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-24 px-6 text-center">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">No analytics yet</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">No analytics yet</h1>
         <p className="text-gray-600 dark:text-gray-400">Add transactions to see insights.</p>
         <button
           onClick={() => navigate('/')}
@@ -228,7 +228,7 @@ const AnalyticsPage = () => {
           {/* Header */}
           <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">Financial Analytics</h1>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">Financial Analytics</h1>
               <p className="text-gray-600 dark:text-gray-300 mt-1 flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-blue-500" /> Intelligent insights based on your recent activity
                 {timeFilter !== 'all' && (
