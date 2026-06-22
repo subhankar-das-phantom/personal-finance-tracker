@@ -691,7 +691,7 @@ const StatsCard = ({
   const colorClasses = {
     green:
       "from-emerald-500 to-teal-600 text-emerald-700 bg-emerald-50 dark:bg-emerald-600 dark:text-white",
-    red: "bg-gradient-to-r from-blue-600 to-cyan-500 text-red-700 bg-red-50 dark:bg-red-600 dark:text-white",
+    red: "from-red-500 to-rose-600 text-red-700 bg-red-50 dark:bg-red-600 dark:text-white",
     blue: "from-blue-500 to-cyan-600 text-blue-700 bg-blue-50 dark:bg-blue-600 dark:text-white",
 
   };

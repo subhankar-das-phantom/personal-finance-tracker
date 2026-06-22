@@ -90,7 +90,7 @@ const Navbar = () => {
                         whileHover={{ scale: 1.05 }}
                         className="flex items-center space-x-2 cursor-pointer"
                       >
-                        <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center">
                           <span className="text-sm font-bold text-white">
                             {user.username?.charAt(0).toUpperCase()}
                           </span>
@@ -183,7 +183,7 @@ const Navbar = () => {
                   <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
                     <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>
                       <div className="flex items-center space-x-3 px-3 py-2 hover:bg-cyan-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
-                        <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center">
                           <span className="text-sm font-bold text-white">
                             {user.username?.charAt(0).toUpperCase()}
                           </span>
