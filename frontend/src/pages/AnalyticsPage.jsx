@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { useApi, globalMutate } from '../hooks/useApi';
 import { AuthContext } from '../context/AuthContext';
 import BudgetList from '../components/BudgetList';
 import BudgetProgress from '../components/BudgetProgress';
@@ -22,45 +23,31 @@ import Card from '../components/common/Card';
 const COLORS = ['#6366F1', '#22C55E', '#F59E0B', '#EF4444', '#06B6D4', '#A855F7', '#84CC16'];
 
 const AnalyticsPage = () => {
-  const [analyticsData, setAnalyticsData] = useState(null);
-  const [budgetGoals, setBudgetGoals] = useState([]);
-  const [budgetProgress, setBudgetProgress] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { token } = useContext(AuthContext);
+  const { timeFilter } = useTimeFilter();
+
+  const { data: analyticsDataRaw, error: analyticsError, isLoading: isAnalyticsLoading } = useApi(token ? 'transactions/analytics' : null);
+  const { data: budgetGoalsRaw, error: budgetError, isLoading: isBudgetLoading } = useApi(token ? '/budget' : null);
+  const { data: budgetProgressRaw, error: progressError, isLoading: isProgressLoading } = useApi(token ? '/budget/progress' : null);
+
+  const analyticsData = analyticsDataRaw || null;
+  const budgetGoals = budgetGoalsRaw || [];
+  const budgetProgress = budgetProgressRaw || null;
+  
+  const isLoading = isAnalyticsLoading || isBudgetLoading || isProgressLoading;
+  const error = (analyticsError || budgetError || progressError) ? 'Failed to load data. Please try again.' : '';
+
   const [timeframe, setTimeframe] = useState('6m');
   const [chartType, setChartType] = useState('bar');
   const [isBudgetFormOpen, setIsBudgetFormOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
 
   const navigate = useNavigate();
-  const { token } = useContext(AuthContext);
-  const { timeFilter } = useTimeFilter();
 
   useEffect(() => {
-    const fetchAllData = async () => {
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-      setIsLoading(true);
-      setError('');
-      try {
-        const [analytics, budgets, progress] = await Promise.all([
-          api.get('transactions/analytics'),
-          getBudgets(),
-          getBudgetProgress(),
-        ]);
-        setAnalyticsData(analytics.data);
-        setBudgetGoals(budgets);
-        setBudgetProgress(progress);
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError('Failed to load data. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchAllData();
+    if (!token) {
+      navigate('/login');
+    }
   }, [token, navigate]);
 
   const handleAddBudget = () => {
@@ -76,7 +63,7 @@ const AnalyticsPage = () => {
   const handleDeleteBudget = async (id) => {
     try {
       await deleteBudget(id);
-      setBudgetGoals(budgetGoals.filter(goal => goal._id !== id));
+      globalMutate('/budget');
     } catch (error) {
       console.error('Error deleting budget:', error);
     }
@@ -85,12 +72,11 @@ const AnalyticsPage = () => {
   const handleBudgetFormSubmit = async (budgetData) => {
     try {
       if (editingGoal) {
-        const updatedGoal = await updateBudget(editingGoal._id, budgetData);
-        setBudgetGoals(budgetGoals.map(goal => goal._id === editingGoal._id ? updatedGoal : goal));
+        await updateBudget(editingGoal._id, budgetData);
       } else {
-        const newGoal = await addBudget(budgetData);
-        setBudgetGoals([...budgetGoals, newGoal]);
+        await addBudget(budgetData);
       }
+      globalMutate('/budget');
       setIsBudgetFormOpen(false);
     } catch (error) {
       console.error('Error saving budget:', error);
