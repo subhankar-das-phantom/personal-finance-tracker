@@ -5,13 +5,16 @@ import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext';
 import { CurrencyProvider } from './context/CurrencyContext';
 import { TimeFilterProvider } from './context/TimeFilterContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
       <CurrencyProvider>
         <TimeFilterProvider>
-          <App />
+          <ThemeProvider>
+            <App />
+          </ThemeProvider>
         </TimeFilterProvider>
       </CurrencyProvider>
     </AuthProvider>
