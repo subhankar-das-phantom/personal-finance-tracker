@@ -32,8 +32,14 @@ const RegisterPage = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   
-  const { register } = useContext(AuthContext);
+  const { register, token } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (token) {
+      navigate('/');
+    }
+  }, [token, navigate]);
 
   // Animation variants
   const containerVariants = {

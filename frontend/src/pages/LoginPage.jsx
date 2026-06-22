@@ -25,8 +25,14 @@ const LoginPage = () => {
   const [loginError, setLoginError] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   
-  const { login } = useContext(AuthContext);
+  const { login, token } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (token) {
+      navigate('/');
+    }
+  }, [token, navigate]);
 
   // Animation variants
   const containerVariants = {
