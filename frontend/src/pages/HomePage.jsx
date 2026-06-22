@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import { useApi, globalMutate } from "../hooks/useApi";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -30,27 +31,33 @@ import Button from "../components/common/Button";
 import Card from "../components/common/Card";
 
 const HomePage = () => {
-  const [chartData, setChartData] = useState([]);
-  const [recentTransactions, setRecentTransactions] = useState([]);
-  const [allTransactions, setAllTransactions] = useState([]);
-  const [stats, setStats] = useState({
+  const { token, user } = useContext(AuthContext);
+  const { timeFilter, setTimeFilter } = useTimeFilter();
+
+  const { data: allTransactionsRaw, isLoading: isLoadingTransactions, mutate: mutateTransactions, isValidating: isValidatingTransactions } = useApi(token ? 'transactions' : null);
+  const { data: statsRaw, isLoading: isLoadingStats, isValidating: isValidatingStats } = useApi(token ? 'transactions/stats' : null);
+  const { data: chartDataRaw, isLoading: isLoadingChart, isValidating: isValidatingChart } = useApi(token ? 'transactions/chart-data' : null);
+
+  const allTransactions = Array.isArray(allTransactionsRaw?.transactions || allTransactionsRaw) ? (allTransactionsRaw?.transactions || allTransactionsRaw) : [];
+  const recentTransactions = allTransactions.slice(0, 5);
+  const stats = statsRaw || {
     totalIncomeAllTime: 0,
     totalExpensesAllTime: 0,
     netBalanceAllTime: 0,
     transactionCount: 0,
     currentMonth: { income: 0, expenses: 0, netBalance: 0 },
     previousMonth: { income: 0, expenses: 0, netBalance: 0 },
-  });
+  };
+  const chartData = chartDataRaw || [];
+
+  const isLoading = isLoadingTransactions || isLoadingStats || isLoadingChart;
+  const isRefreshing = isValidatingTransactions || isValidatingStats || isValidatingChart;
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [editTransaction, setEditTransaction] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [editingBudgetGoal, setEditingBudgetGoal] = useState(null);
-
-  const { token, user } = useContext(AuthContext);
-  const { timeFilter, setTimeFilter } = useTimeFilter();
 
   // Animation variants
   const containerVariants = {
@@ -162,34 +169,7 @@ const HomePage = () => {
     }, 4000);
   };
 
-  // Fetch all data
-  const fetchAllData = async () => {
-    if (!token) return;
 
-    setIsLoading(true);
-    try {
-      const [transactionsRes, statsRes, chartRes] = await Promise.all([
-        api.get("transactions"),
-        api.get("transactions/stats"),
-        api.get("transactions/chart-data"),
-      ]);
-
-      if (Array.isArray(transactionsRes.data)) {
-        setAllTransactions(transactionsRes.data);
-        setRecentTransactions(transactionsRes.data.slice(0, 5));
-      } else {
-        console.error("Error: transactions data is not an array", transactionsRes.data);
-        setAllTransactions([]);
-        setRecentTransactions([]);
-      }
-      setStats(statsRes.data || stats); // Update to new stats structure
-      setChartData(chartRes.data || []);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Helper to calculate percentage change
   const calculatePercentageChange = (current, previous) => {
@@ -237,9 +217,9 @@ const HomePage = () => {
 
   // Refresh data
   const refreshData = async () => {
-    setIsRefreshing(true);
-    await fetchAllData();
-    setTimeout(() => setIsRefreshing(false), 500);
+    mutateTransactions();
+    globalMutate('transactions/stats');
+    globalMutate('transactions/chart-data');
   };
 
   // Handle form submission
@@ -339,8 +319,6 @@ const HomePage = () => {
   useEffect(() => {
     if (!token) {
       navigate('/login');
-    } else {
-      fetchAllData();
     }
   }, [token, navigate]);
 
