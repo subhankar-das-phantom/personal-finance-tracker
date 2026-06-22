@@ -10,10 +10,14 @@ import {
   LogOut,
   ChevronRight,
   CreditCard,
-  Settings
+  Settings,
+  Moon,
+  Sun,
+  Palette
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { useTheme } from '../context/ThemeContext';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import Input from '../components/common/Input';
@@ -21,6 +25,7 @@ import Input from '../components/common/Input';
 const ProfilePage = () => {
   const { user, token, logout, updateProfile, changePassword } = useContext(AuthContext);
   const { currency, updateCurrency } = useCurrency();
+  const { theme, updateTheme } = useTheme();
   const navigate = useNavigate();
   const [isUpdating, setIsUpdating] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -63,6 +68,18 @@ const ProfilePage = () => {
       showSuccess('Currency preference updated successfully');
     } catch (error) {
       console.error('Failed to update currency:', error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleColorThemeChange = async (colorId) => {
+    setIsUpdating(true);
+    try {
+      await updateTheme({ color: colorId });
+      showSuccess('Color theme updated successfully');
+    } catch (error) {
+      console.error('Failed to update color theme:', error);
     } finally {
       setIsUpdating(false);
     }
@@ -336,6 +353,41 @@ const ProfilePage = () => {
                       )}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Theme Settings */}
+              <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                  <Palette className="h-4 w-4" />
+                  Appearance
+                </label>
+                
+                <div className="space-y-6">
+                  {/* Color Themes */}
+                  <div>
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Color Theme</div>
+                    <div className="flex gap-4 flex-wrap">
+                      {[
+                        { id: 'default', hex: '#2563eb', name: 'Default' },
+                        { id: 'pink', hex: '#ec4899', name: 'Pink' },
+                        { id: 'purple', hex: '#a855f7', name: 'Purple' },
+                        { id: 'emerald', hex: '#10b981', name: 'Emerald' },
+                      ].map((t) => (
+                        <div key={t.id} className="flex flex-col items-center gap-2">
+                          <button
+                            onClick={() => handleColorThemeChange(t.id)}
+                            style={{ backgroundColor: t.hex }}
+                            className={`w-12 h-12 rounded-full flex items-center justify-center transition-transform shadow-sm ${theme.color === t.id ? 'ring-4 ring-offset-2 ring-[var(--color-primary)] dark:ring-offset-gray-900 scale-110' : 'hover:scale-105'}`}
+                            title={t.name}
+                          >
+                            {theme.color === t.id && <Check className="h-5 w-5 text-white" />}
+                          </button>
+                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{t.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
