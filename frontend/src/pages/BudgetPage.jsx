@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useApi, globalMutate } from '../hooks/useApi';
 import { 
   Target, 
   Plus, 
@@ -28,86 +29,27 @@ import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 
 const BudgetPage = () => {
-  const [budgetGoals, setBudgetGoals] = useState([]);
-  const [budgetProgress, setBudgetProgress] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [editingGoal, setEditingGoal] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState('');
-  
   const { token } = useContext(AuthContext);
   const { currency } = useCurrency();
   const { timeFilter } = useTimeFilter();
 
-  const fetchBudgetGoals = useCallback(async () => {
-    if (!token) return;
-    
-    try {
-      setIsLoading(true);
-      const response = await api.get('/budget');
-      setBudgetGoals(response.data);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching budget goals:', err);
-      setError('Failed to load budget goals');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [token]);
+  const { data: budgetGoalsRaw, isLoading: isGoalsLoading, mutate: mutateGoals, isValidating: isGoalsValidating } = useApi(token ? '/budget' : null);
+  const { data: budgetProgressRaw, isLoading: isProgressLoading, mutate: mutateProgress, isValidating: isProgressValidating } = useApi(token ? '/budget/progress' : null, { refreshInterval: 30000 });
 
-  const fetchBudgetProgress = useCallback(async () => {
-    if (!token) return;
-    
-    try {
-      const response = await api.get('/budget/progress');
-      setBudgetProgress(response.data);
-    } catch (err) {
-      console.error('Error fetching budget progress:', err);
-    }
-  }, [token]);
+  const budgetGoals = budgetGoalsRaw || [];
+  const budgetProgress = budgetProgressRaw || null;
+  const isLoading = isGoalsLoading || isProgressLoading;
+  const isRefreshing = isGoalsValidating || isProgressValidating;
 
-  const refreshData = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      await Promise.all([
-        fetchBudgetGoals(),
-        fetchBudgetProgress()
-      ]);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [fetchBudgetGoals, fetchBudgetProgress]);
+  const [showForm, setShowForm] = useState(false);
+  const [editingGoal, setEditingGoal] = useState(null);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
 
-  useEffect(() => {
-    refreshData();
-  }, [refreshData]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchBudgetProgress();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [fetchBudgetProgress]);
-
-  useEffect(() => {
-    const handleTransactionChange = () => {
-      console.log('Transaction changed, refreshing budget progress...');
-      fetchBudgetProgress();
-    };
-
-    window.addEventListener('transactionCreated', handleTransactionChange);
-    window.addEventListener('transactionUpdated', handleTransactionChange);
-    window.addEventListener('transactionDeleted', handleTransactionChange);
-
-    return () => {
-      window.removeEventListener('transactionCreated', handleTransactionChange);
-      window.removeEventListener('transactionUpdated', handleTransactionChange);
-      window.removeEventListener('transactionDeleted', handleTransactionChange);
-    };
-  }, [fetchBudgetProgress]);
+  const refreshData = () => {
+    mutateGoals();
+    mutateProgress();
+  };
 
   const handleSubmit = async (budgetData) => {
     try {
@@ -119,7 +61,7 @@ const BudgetPage = () => {
         setSuccessMessage('Budget goal created successfully!');
       }
       
-      await refreshData();
+      refreshData();
       
       setShowForm(false);
       setEditingGoal(null);
@@ -147,7 +89,7 @@ const BudgetPage = () => {
       await api.delete(`/budget/${goalId}`);
       setSuccessMessage('Budget goal deleted successfully!');
       
-      await refreshData();
+      refreshData();
       
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
