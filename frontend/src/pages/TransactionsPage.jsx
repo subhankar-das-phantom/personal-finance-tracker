@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import api from "../services/api";
+import { useApi, globalMutate } from "../hooks/useApi";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../context/AuthContext";
 import TransactionList from "../components/TransactionList";
@@ -32,11 +33,8 @@ import Card from "../components/common/Card";
 
 const TransactionsPage = () => {
   const { currency } = useCurrency();
-  const [transactions, setTransactions] = useState([]);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportDateRange, setExportDateRange] = useState({
     startDate: "",
@@ -58,14 +56,6 @@ const TransactionsPage = () => {
     maxAmount: "",
   });
   const [showFilters, setShowFilters] = useState(false);
-
-  // Statistics
-  const [stats, setStats] = useState({
-    totalIncome: 0,
-    totalExpenses: 0,
-    netBalance: 0,
-    transactionCount: 0,
-  });
 
   const { token } = useContext(AuthContext);
   const { timeFilter, setTimeFilter, getDateRange } = useTimeFilter();
@@ -111,101 +101,77 @@ const TransactionsPage = () => {
     },
   };
 
-  // Fetch transactions from server with all filters
-  const fetchTransactions = useCallback(async () => {
-    if (!token) return;
+  // Build query string based on filters
+  const buildQueryString = () => {
+    const params = new URLSearchParams();
 
-    setIsLoading(true);
-    try {
-      const params = new URLSearchParams();
-
-      // Add global time filter
-      const { startDate, endDate } = getDateRange();
-      if (startDate) {
-        params.append("dateFrom", startDate.toISOString().split('T')[0]);
-      }
-      if (endDate) {
-        params.append("dateTo", endDate.toISOString().split('T')[0]);
-      }
-
-      // Add all filter parameters
-      if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
-      if (filters.type) params.append("type", filters.type);
-      if (filters.category) params.append("category", filters.category);
-      if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
-      if (filters.dateTo) params.append("dateTo", filters.dateTo);
-      if (filters.minAmount) params.append("minAmount", filters.minAmount);
-      if (filters.maxAmount) params.append("maxAmount", filters.maxAmount);
-      if (sortBy) params.append("sortBy", sortBy);
-      if (sortOrder) params.append("sortOrder", sortOrder);
-
-      const res = await api.get(`transactions?${params.toString()}`);
-
-      // Handle both old and new response formats
-      const transactionsData = res.data.transactions || res.data;
-      setTransactions(transactionsData);
-
-      // Calculate stats
-      const income = transactionsData
-        .filter((t) => t.type === "income")
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-
-      const expenses = transactionsData
-        .filter((t) => t.type === "expense")
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-
-      setStats({
-        totalIncome: income,
-        totalExpenses: expenses,
-        netBalance: income - expenses,
-        transactionCount: transactionsData.length,
-      });
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-    } finally {
-      setIsLoading(false);
+    // Add global time filter
+    const { startDate, endDate } = getDateRange();
+    if (startDate) {
+      params.append("dateFrom", startDate.toISOString().split('T')[0]);
     }
-  }, [
-    token,
-    debouncedSearchTerm,
-    filters,
-    sortBy,
-    sortOrder,
-    timeFilter,
-  ]);
+    if (endDate) {
+      params.append("dateTo", endDate.toISOString().split('T')[0]);
+    }
 
-  // Fetch transactions when filters change
-  useEffect(() => {
-    fetchTransactions();
-  }, [fetchTransactions]);
+    // Add all filter parameters
+    if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
+    if (filters.type) params.append("type", filters.type);
+    if (filters.category) params.append("category", filters.category);
+    if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
+    if (filters.dateTo) params.append("dateTo", filters.dateTo);
+    if (filters.minAmount) params.append("minAmount", filters.minAmount);
+    if (filters.maxAmount) params.append("maxAmount", filters.maxAmount);
+    if (sortBy) params.append("sortBy", sortBy);
+    if (sortOrder) params.append("sortOrder", sortOrder);
+
+    return params.toString();
+  };
+
+  const queryString = buildQueryString();
+  const { data: rawData, isLoading, mutate: mutateTransactions, isValidating } = useApi(
+    token ? `transactions?${queryString}` : null
+  );
+
+  const isRefreshing = isValidating;
+  const transactions = rawData?.transactions || rawData || [];
+
+  // Calculate stats from the current dataset
+  const income = transactions
+    .filter((t) => t.type === "income")
+    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+  const expenses = transactions
+    .filter((t) => t.type === "expense")
+    .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+  const stats = {
+    totalIncome: income,
+    totalExpenses: expenses,
+    netBalance: income - expenses,
+    transactionCount: transactions.length,
+  };
 
   const refreshData = async () => {
-    setIsRefreshing(true);
-    await fetchTransactions();
-    setTimeout(() => setIsRefreshing(false), 500);
+    mutateTransactions();
   };
 
   const handleSubmit = async (transactionData) => {
     try {
       if (editingTransaction) {
-        const res = await api.put(
+        await api.put(
           `transactions/${editingTransaction._id}`,
           transactionData
         );
-
-        setTransactions(
-          transactions.map((t) =>
-            t._id === editingTransaction._id ? res.data : t
-          )
-        );
         setEditingTransaction(null);
       } else {
-        const res = await api.post("transactions", transactionData);
-        setTransactions([res.data, ...transactions]);
+        await api.post("transactions", transactionData);
       }
 
       setShowAddForm(false);
-      await fetchTransactions(); // Refresh to get updated stats
+      mutateTransactions(); // Refresh local list
+      globalMutate('transactions/stats'); // Refresh dashboard stats
+      globalMutate('transactions/chart-data'); // Refresh dashboard charts
     } catch (error) {
       console.error("Error saving transaction:", error);
     }
@@ -218,8 +184,9 @@ const TransactionsPage = () => {
 
     try {
       await api.delete(`transactions/${id}`);
-      setTransactions(transactions.filter((t) => t._id !== id));
-      await fetchTransactions(); // Refresh stats
+      mutateTransactions();
+      globalMutate('transactions/stats');
+      globalMutate('transactions/chart-data');
     } catch (error) {
       console.error("Error deleting transaction:", error);
     }
