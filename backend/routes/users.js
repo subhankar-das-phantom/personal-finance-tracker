@@ -106,6 +106,23 @@ router.put('/me/currency', auth, async (req, res) => {
   }
 });
 
+// Update user theme preferences
+router.put('/me/theme', auth, async (req, res) => {
+  try {
+    const { color, mode } = req.body;
+    const user = await User.findById(req.user);
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
+    if (color) user.theme.color = color;
+    if (mode) user.theme.mode = mode;
+    
+    await user.save();
+    res.json(user.theme);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Update user profile
 router.put('/me', auth, async (req, res) => {
   try {
@@ -121,7 +138,8 @@ router.put('/me', auth, async (req, res) => {
       id: user._id,
       username: user.username,
       email: user.email,
-      currency: user.currency
+      currency: user.currency,
+      theme: user.theme
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

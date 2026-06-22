@@ -26,6 +26,10 @@ const userSchema = new Schema({
     code: { type: String, default: 'INR' },
     locale: { type: String, default: 'en-IN' }
   },
+  theme: {
+    color: { type: String, default: 'default' },
+    mode: { type: String, default: 'light' }
+  },
 }, {
   timestamps: true,
 });
