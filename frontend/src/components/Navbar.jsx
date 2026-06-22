@@ -246,8 +246,8 @@ const NavItem = ({ to, icon: Icon, label, isActive }) => (
       to={to}
       className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
         isActive
-          ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-          : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+          ? 'bg-blue-50 dark:bg-blue-900/60 text-blue-700 dark:text-blue-50'
+          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
       }`}
     >
       <Icon className="h-4 w-4" />
@@ -270,7 +270,7 @@ const MobileNavItem = ({ to, icon: Icon, label, onClick, isPrimary = false }) =>
       className={`flex items-center space-x-2 px-2.5 py-2 sm:px-3 sm:py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
         isPrimary
           ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white'
-          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
       }`}
     >
       <Icon className="h-4 w-4" />
