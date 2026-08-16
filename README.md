@@ -32,8 +32,9 @@ A full-stack web application for managing personal finances, tracking transactio
 ### 📈 Advanced Features
 - **PDF Report Generation**: Export financial reports as PDF
 - **Data Visualization**: Powered by Recharts for beautiful, interactive charts
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
-- **Dark Mode Ready**: Modern UI built with Material-UI and Tailwind CSS
+- **Responsive Design**: Works seamlessly on all devices with a highly optimized mobile-first approach
+- **Dynamic Theming**: Custom theme colors with built-in Light/Dark modes
+- **Fast & Responsive Data**: Powered by SWR for stale-while-revalidate data fetching and caching
 - **Smooth Animations**: Enhanced UX with Framer Motion
 
 ## 🛠️ Tech Stack
@@ -42,6 +43,7 @@ A full-stack web application for managing personal finances, tracking transactio
 - **React 19** - Modern React with latest features
 - **Vite** - Lightning-fast build tool
 - **React Router** - Client-side routing
+- **SWR** - React Hooks for data fetching and caching
 - **Material-UI (MUI)** - Component library with Material Design
 - **Tailwind CSS** - Utility-first CSS framework
 - **Framer Motion** - Animation library
@@ -149,10 +151,15 @@ personal-finance-tracker/
 
 ## 📚 API Endpoints
 
-### Authentication
+### Users & Authentication
 - `POST /api/users/register` - Register new user
 - `POST /api/users/login` - Login user
-- `GET /api/users/profile` - Get user profile (protected)
+- `GET /api/users/me` - Get user data (protected)
+- `PUT /api/users/me` - Update user profile (protected)
+- `PUT /api/users/me/password` - Change password (protected)
+- `PUT /api/users/me/theme` - Update theme preferences (protected)
+- `PUT /api/users/me/currency` - Update currency preferences (protected)
+- `DELETE /api/users/me` - Delete account and associated data (protected)
 
 ### Transactions
 - `GET /api/transactions` - Get all transactions (protected)
@@ -181,9 +188,11 @@ personal-finance-tracker/
 
 ## 🎨 UI/UX Features
 
-- **Modern Design** - Clean, intuitive interface
-- **Responsive Layout** - Mobile-first design approach
+- **Modern Design** - Clean, intuitive interface with dynamic theme gradients
+- **Personalized Appearance** - Customizable theme colors and light/dark modes
+- **Responsive Layout** - Highly optimized mobile-first design approach
 - **Interactive Charts** - Click and hover interactions on charts
+- **Optimistic UI** - Snappy user experience powered by SWR caching
 - **Loading States** - Smooth loading indicators
 - **Error Handling** - User-friendly error messages
 - **Form Validation** - Real-time form validation
