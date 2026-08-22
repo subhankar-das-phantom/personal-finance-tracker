@@ -78,6 +78,7 @@ router.get('/', auth, async (req, res) => {
     const sortField = validSortFields.includes(sortBy) ? sortBy : 'date';
     const sortObj = { [sortField]: sortOrder === 'asc' ? 1 : -1 };
     if (sortField !== 'date') sortObj.date = -1;
+    sortObj.createdAt = -1; // Secondary sort to show most recent entries first on the same date
 
     // If page/pageSize are provided, paginate; otherwise return all
     let query = Transaction.find(filter).sort(sortObj);
