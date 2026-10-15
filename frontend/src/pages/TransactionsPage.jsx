@@ -69,6 +69,7 @@ const TransactionsPage = () => {
   const { token } = useContext(AuthContext);
   const { timeFilter, setTimeFilter, getDateRange } = useTimeFilter();
   const {
+    activeWallet,
     activeWalletId,
     activeWallets,
     isManageWalletsOpen,
