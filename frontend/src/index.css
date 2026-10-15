@@ -40,7 +40,8 @@
   --color-background: var(--background);
   --color-surface: var(--surface);
 
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 :root {
@@ -179,15 +180,61 @@
   }
 }
 
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) #080b11;
+  scrollbar-gutter: stable;
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: var(--color-background);
   color: #1e293b;
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 .dark body {
-  background-color: #0f172a;
+  background-color: #080b11;
   color: #f1f5f9;
+}
+
+/* Global ultra-sleek obsidian scrollbar (eliminates thick grey Windows scrollbars) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #080b11;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+/* Light mode scrollbar */
+html:not(.dark) {
+  scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+html:not(.dark) ::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+html:not(.dark) ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 /* Force hide scrollbars for horizontal pill ribbons */

@@ -1,156 +1,209 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from 'recharts';
+import { TrendingUp, PieChart as PieIcon } from 'lucide-react';
 import { useCurrency } from '../context/CurrencyContext';
 import { formatCurrency } from '../utils/currency';
 
-const Chart = ({ data, title = "Expense Breakdown" }) => {
+const Chart = ({ data = [], trendData = [], title = 'Sales & Expense Breakdown' }) => {
   const { currency } = useCurrency();
-  
-  // Modern gradient colors for a beautiful look
+  const [viewMode, setViewMode] = useState('categories'); // 'categories' | 'trend'
+
+  // Curated modern fintech palette (electric blue, emerald, amber, rose, violet, cyan)
   const COLORS = [
-    '#2563eb', // Blue
-    '#10b981', // Emerald  
+    '#3b82f6', // Electric Blue
+    '#10b981', // Emerald
     '#f59e0b', // Amber
-    '#ef4444', // Red
+    '#ef4444', // Rose
     '#8b5cf6', // Violet
     '#06b6d4', // Cyan
-    '#f97316', // Orange
-    '#84cc16'  // Lime
+    '#ec4899', // Pink
+    '#14b8a6', // Teal
   ];
 
-  // Custom tooltip component
-  const CustomTooltip = ({ active, payload, label }) => {
+  // Derive trend series from category data if explicit trendData isn't provided
+  const activeTrendData = trendData.length > 0 ? trendData : data.map((item, idx) => ({
+    name: item.name || item.category || `Period ${idx + 1}`,
+    amount: item.value || 0,
+  }));
+
+  const totalAmount = data.reduce((sum, item) => sum + (parseFloat(item.value) || 0), 0);
+
+  // Modern Obsidian Tooltip
+  const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
+      const item = payload[0];
       return (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
-        >
-          <p className="text-gray-800 dark:text-gray-200 font-medium">
-            {payload[0].name}
+        <div className="bg-[#0c101a]/95 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-white/10 shadow-2xl">
+          <p className="text-xs font-medium text-zinc-400 mb-0.5">{item.name || item.payload?.name}</p>
+          <p className="text-sm font-bold font-mono text-white tracking-tight">
+            {formatCurrency(item.value, currency.locale, currency.code)}
           </p>
-          <p className="text-blue-600 dark:text-blue-400 font-semibold">
-            {formatCurrency(payload[0].value, currency.locale, currency.code)}
-          </p>
-        </motion.div>
+        </div>
       );
     }
     return null;
   };
 
-  // Custom legend component
-  const CustomLegend = ({ payload }) => {
-    return (
-      <div className="flex flex-wrap justify-center gap-4 mt-4">
-        {payload.map((entry, index) => (
-          <motion.div
-            key={`legend-${index}`}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="flex items-center gap-2"
-          >
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-sm text-gray-600 dark:text-gray-300 font-medium">
-              {entry.value}
-            </span>
-          </motion.div>
-        ))}
-      </div>
-    );
-  };
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 border border-gray-100 dark:border-gray-800 backdrop-blur-sm"
-    >
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="mb-6"
-      >
-        <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-2">
-          {title}
-        </h3>
-        <div className="w-[185px] h-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full" />
-      </motion.div>
+    <div className="bg-white dark:bg-[#10141e] rounded-2xl border border-slate-200/80 dark:border-white/[0.07] p-5 sm:p-6 transition-all duration-200">
+      {/* Header with Icon, Title, and Segmented Toggle */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+        <div className="flex items-center space-x-3">
+          <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-[#161c2b] border border-blue-200/60 dark:border-white/5 flex items-center justify-center text-blue-600 dark:text-blue-400 flex-shrink-0 shadow-2xs">
+            {viewMode === 'trend' ? <TrendingUp className="w-4 h-4" /> : <PieIcon className="w-4 h-4" />}
+          </div>
+          <div>
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+              {title}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-zinc-400">
+              {viewMode === 'trend' ? 'Inflow & outflow volume over time' : 'Category distribution and volume'}
+            </p>
+          </div>
+        </div>
 
-      {/* Chart Container */}
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.4, duration: 0.6 }}
-        className="relative"
-      >
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={({ name, percent }) => 
-                percent > 5 ? `${(percent * 100).toFixed(0)}%` : ''
-              }
-              outerRadius={90}
-              fill="#8884d8"
-              dataKey="value"
-              animationBegin={600}
-              animationDuration={1000}
-            >
-              {data.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={COLORS[index % COLORS.length]}
-                  className="hover:opacity-80 transition-opacity duration-200"
+        {/* Segmented Control (Matching Reference Screenshot) */}
+        <div className="inline-flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-[#0c101a] border border-slate-200/70 dark:border-white/5 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setViewMode('categories')}
+            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 ${
+              viewMode === 'categories'
+                ? 'bg-white dark:bg-[#1a2233] text-slate-900 dark:text-white shadow-xs border border-slate-200/60 dark:border-white/10'
+                : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Categories
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('trend')}
+            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 ${
+              viewMode === 'trend'
+                ? 'bg-white dark:bg-[#1a2233] text-slate-900 dark:text-white shadow-xs border border-slate-200/60 dark:border-white/10'
+                : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Trend
+          </button>
+        </div>
+      </div>
+
+      {/* Chart Canvas */}
+      {data.length === 0 ? (
+        <div className="h-64 flex flex-col items-center justify-center text-slate-400 dark:text-zinc-500">
+          <PieIcon className="w-8 h-8 mb-2 opacity-30" />
+          <p className="text-xs">No transaction data available for this range</p>
+        </div>
+      ) : viewMode === 'trend' ? (
+        <div className="h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={activeTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1f293d" vertical={false} opacity={0.6} />
+              <XAxis
+                dataKey="name"
+                stroke="#64748b"
+                fontSize={11}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                stroke="#64748b"
+                fontSize={11}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(val) => `₹${val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}`}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Area
+                type="monotone"
+                dataKey="amount"
+                stroke="#3b82f6"
+                strokeWidth={2.5}
+                fillOpacity={1}
+                fill="url(#trendGradient)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      ) : (
+        <div>
+          <div className="h-56 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={data}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={55}
+                  outerRadius={80}
+                  paddingAngle={3}
+                  dataKey="value"
+                  animationDuration={600}
+                >
+                  {data.map((_, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                      stroke="transparent"
+                      className="transition-opacity duration-150 hover:opacity-80"
+                    />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Micro Legend & Category Pills */}
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2 pt-3 border-t border-slate-100 dark:border-white/[0.05]">
+            {data.slice(0, 6).map((item, index) => (
+              <div
+                key={`cat-${index}`}
+                className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-[#141b29] border border-slate-200/60 dark:border-white/5 text-xs"
+              >
+                <span
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
                 />
-              ))}
-            </Pie>
-            <Tooltip content={<CustomTooltip />} />
-          </PieChart>
-        </ResponsiveContainer>
-        
-        <CustomLegend payload={data.map((entry, index) => ({
-          color: COLORS[index % COLORS.length],
-          value: entry.name || entry.category
-        }))} />
-
-        {/* Decorative elements */}
-        <div className="absolute -top-2 -right-2 w-4 h-4 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full opacity-20 animate-pulse" />
-        <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full opacity-20 animate-pulse" style={{ animationDelay: '1s' }} />
-      </motion.div>
-
-      {/* Summary Stats */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
-        className="mt-6 grid grid-cols-2 gap-4"
-      >
-        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 p-4 rounded-xl">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Total Amount</p>
-          <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
-            {formatCurrency(data.reduce((sum, item) => sum + item.value, 0), currency.locale, currency.code)}
-          </p>
+                <span className="text-slate-700 dark:text-zinc-300 font-medium truncate max-w-[90px]">
+                  {item.name || item.category}
+                </span>
+                <span className="font-mono text-[11px] text-slate-500 dark:text-zinc-400 font-semibold">
+                  {formatCurrency(item.value, currency.locale, currency.code)}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 p-4 rounded-xl">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Categories</p>
-          <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-            {data.length}
-          </p>
-        </div>
-      </motion.div>
-    </motion.div>
+      )}
+
+      {/* Footer Total Metric Pill */}
+      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/[0.05] flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400">
+        <span>Total Analyzed</span>
+        <span className="font-mono font-bold text-slate-900 dark:text-white text-sm">
+          {formatCurrency(totalAmount, currency.locale, currency.code)}
+        </span>
+      </div>
+    </div>
   );
 };
 

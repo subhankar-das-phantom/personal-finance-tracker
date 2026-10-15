@@ -1,22 +1,25 @@
 import React, { useState, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useApi, globalMutate } from '../hooks/useApi';
+import { useApi } from '../hooks/useApi';
 import { 
   Target, 
   Plus, 
   TrendingUp, 
   AlertCircle, 
-  DollarSign, 
+  Coins, 
   Calendar,
   PieChart,
   ArrowUp,
-  ArrowDown,
   Loader2,
   RefreshCw,
   Sparkles,
   TrendingDown,
-  Coins
+  Clock,
+  ShieldCheck,
+  PlusCircle,
+  ArrowLeft
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import BudgetForm from '../components/BudgetForm';
 import BudgetList from '../components/BudgetList';
 import BudgetProgress from '../components/BudgetProgress';
@@ -26,12 +29,12 @@ import { useCurrency } from '../context/CurrencyContext';
 import { useTimeFilter } from '../context/TimeFilterContext';
 import { formatCurrency } from '../utils/currency';
 import Button from '../components/common/Button';
-import Card from '../components/common/Card';
 
 const BudgetPage = () => {
   const { token } = useContext(AuthContext);
   const { currency } = useCurrency();
   const { timeFilter } = useTimeFilter();
+  const navigate = useNavigate();
 
   const { data: budgetGoalsRaw, isLoading: isGoalsLoading, mutate: mutateGoals, isValidating: isGoalsValidating } = useApi(token ? '/budget' : null);
   const { data: budgetProgressRaw, isLoading: isProgressLoading, mutate: mutateProgress, isValidating: isProgressValidating } = useApi(token ? '/budget/progress' : null, { refreshInterval: 30000 });
@@ -88,9 +91,7 @@ const BudgetPage = () => {
     try {
       await api.delete(`/budget/${goalId}`);
       setSuccessMessage('Budget goal deleted successfully!');
-      
       refreshData();
-      
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       console.error('Error deleting budget goal:', err);
@@ -107,220 +108,291 @@ const BudgetPage = () => {
     categoriesCount: 0
   };
 
-  const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+  // Fiscal Quarter and Date formatting
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+  const currentMonth = today.toLocaleString('default', { month: 'long', year: 'numeric' });
+  const currentMonthIdx = today.getMonth();
+  const currentYear = today.getFullYear();
+  const fiscalQuarter = currentMonthIdx >= 3 && currentMonthIdx <= 5 ? 'Q1' :
+                        currentMonthIdx >= 6 && currentMonthIdx <= 8 ? 'Q2' :
+                        currentMonthIdx >= 9 && currentMonthIdx <= 11 ? 'Q3' : 'Q4';
+  const fyYear = currentMonthIdx >= 3 ? `${currentYear}-${(currentYear + 1).toString().slice(-2)}` : `${currentYear - 1}-${currentYear.toString().slice(-2)}`;
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
+    visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
+    hidden: { opacity: 0, y: 14 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.25 } }
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 pt-20 pb-24 px-4 sm:px-6 lg:px-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="min-h-screen bg-slate-50 dark:bg-[#080b11] pt-20 pb-20 px-4 sm:px-6 lg:px-8 font-sans antialiased text-slate-900 dark:text-slate-100"
     >
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-          >
-            <div>
-              <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                <div className="p-2 sm:p-2.5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
-                  <Target className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
-                </div>
-                <span className="truncate">Budget Management</span>
-              </h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 flex flex-wrap items-center gap-2">
-                <span className="flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  {currentMonth}
-                </span>
-                {timeFilter !== 'all' && (
-                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">
-                    Filtered: {timeFilter === 'thisWeek' ? 'This Week' : timeFilter === 'thisMonth' ? 'This Month' : 'This Year'}
-                  </span>
-                )}
-              </p>
+      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+        
+        {/* Top Hero Card - Obsidian billing reference style */}
+        <motion.div
+          variants={itemVariants}
+          initial="hidden"
+          animate="visible"
+          className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-2xl p-5 sm:p-7 shadow-xl shadow-black/5 dark:shadow-black/40 relative overflow-hidden"
+        >
+          {/* Top row: Capsule date badge + Live status */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-100 dark:bg-[#161c2b] border border-slate-200 dark:border-white/[0.06] text-xs font-mono font-medium text-slate-700 dark:text-zinc-300">
+              <Calendar className="w-3.5 h-3.5 text-blue-500" />
+              <span>{formattedDate} • {fiscalQuarter} FY{fyYear}</span>
             </div>
-            
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Button
-                variant="secondary"
+
+            <div className="flex items-center gap-3">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live Budgeting
+              </div>
+
+              <button
                 onClick={refreshData}
                 disabled={isRefreshing}
-                className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl min-w-[44px]"
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-zinc-400 transition-colors"
+                title="Refresh budget metrics"
               >
-                <motion.div
-                  animate={isRefreshing ? { rotate: 360 } : {}}
-                  transition={{ duration: 1, repeat: isRefreshing ? Infinity : 0, ease: "linear" }}
-                  className="sm:mr-2"
-                >
-                  <RefreshCw className="h-5 w-5" />
-                </motion.div>
-                <span className="hidden sm:inline">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
-              </Button>
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-blue-500' : ''}`} />
+              </button>
+            </div>
+          </div>
 
-              <Button
+          {/* Middle row: Title & Primary Action Button (+ New Budget Goal matching screenshot) */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                Budget Management
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                Track monthly spending limits, monitor category pacing and prevent overruns for {currentMonth}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
                 onClick={() => {
                   setEditingGoal(null);
                   setShowForm(true);
                 }}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 shadow-lg hover:shadow-xl min-w-[44px]"
-                icon={Plus}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm shadow-lg shadow-blue-600/25 transition-all duration-150 active:scale-[0.98]"
               >
-                <span className="hidden sm:inline">New Budget Goal</span>
-              </Button>
+                <Plus className="w-4 h-4 stroke-[2.5]" />
+                <span>+ Budget Goal</span>
+              </button>
             </div>
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
 
+        {/* Success / Error Alerts */}
         <AnimatePresence>
           {successMessage && (
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl flex items-center gap-3 text-green-800 dark:text-green-200"
+              exit={{ opacity: 0, y: -10 }}
+              className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-2.5 text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm font-medium"
             >
-              <Sparkles className="h-5 w-5" />
+              <ShieldCheck className="h-4 w-4 flex-shrink-0" />
               <span>{successMessage}</span>
             </motion.div>
           )}
           
           {error && (
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-blue-500 dark:border-red-800 rounded-xl flex items-center gap-3 text-red-800 dark:text-red-200"
+              exit={{ opacity: 0, y: -10 }}
+              className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-2.5 text-rose-600 dark:text-rose-400 text-xs sm:text-sm font-medium"
             >
-              <AlertCircle className="h-5 w-5" />
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
               <span>{error}</span>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {isLoading && (
-          <div className="flex items-center justify-center py-20">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            >
-              <Loader2 className="h-12 w-12 text-green-600" />
-            </motion.div>
+        {isLoading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 animate-pulse">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-28 bg-white dark:bg-[#10141e] rounded-2xl border border-slate-200 dark:border-white/[0.07]" />
+            ))}
           </div>
-        )}
-
-        {!isLoading && (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-              <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none p-3.5 sm:p-5 lg:p-6">
-                <div className="flex items-center justify-between mb-2 sm:mb-4">
-                  <div className="p-2 sm:p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                    <Coins className="h-4 w-4 sm:h-6 sm:w-6" />
+        ) : (
+          <div className="space-y-6 sm:space-y-8">
+            
+            {/* 4-Card Metric Grid - Obsidian Fintech Style */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              
+              {/* Card 1: Total Budget */}
+              <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/15 transition-all duration-200 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-lg shadow-black/5 dark:shadow-black/20">
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
+                    <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">
+                      Total Allocated
+                    </span>
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#161c2b] border border-slate-200 dark:border-white/5 flex items-center justify-center text-blue-500 flex-shrink-0">
+                      <Coins className="w-4 h-4" />
+                    </div>
                   </div>
-                  <span className="text-[10px] sm:text-xs md:text-sm font-medium opacity-90 truncate max-w-[85px] sm:max-w-none">Total Budget</span>
-                </div>
-                <p className="text-sm sm:text-xl lg:text-2xl font-bold mb-0.5 sm:mb-1 truncate">
-                  {formatCurrency(stats.totalBudget, currency.locale, currency.code)}
-                </p>
-                <p className="text-[10px] sm:text-xs opacity-75 truncate">Allocated this month</p>
-              </Card>
-
-              <Card className={`text-white border-none p-3.5 sm:p-5 lg:p-6 ${
-                stats.totalSpent > stats.totalBudget
-                  ? 'bg-gradient-to-br from-red-500 to-red-600'
-                  : 'bg-gradient-to-br from-orange-500 to-orange-600'
-              }`}>
-                <div className="flex items-center justify-between mb-2 sm:mb-4">
-                  <div className="p-2 sm:p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                    <TrendingDown className="h-4 w-4 sm:h-6 sm:w-6" />
+                  <div className="font-mono font-extrabold text-xl sm:text-2xl lg:text-3xl tracking-tight text-slate-900 dark:text-white truncate">
+                    {formatCurrency(stats.totalBudget, currency.locale, currency.code)}
                   </div>
-                  <span className="text-[10px] sm:text-xs md:text-sm font-medium opacity-90 truncate max-w-[85px] sm:max-w-none">Total Spent</span>
                 </div>
-                <p className="text-sm sm:text-xl lg:text-2xl font-bold mb-0.5 sm:mb-1 truncate">
-                  {formatCurrency(stats.totalSpent, currency.locale, currency.code)}
-                </p>
-                <p className="text-[10px] sm:text-xs opacity-75 truncate">
-                  {stats.overallPercentageUsed.toFixed(1)}% of budget
-                </p>
-              </Card>
+                <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.04]">
+                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
+                    Monthly spending cap
+                  </span>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md border font-mono bg-blue-500/10 text-blue-500 border-blue-500/20 flex-shrink-0">
+                    Total Cap
+                  </span>
+                </div>
+              </div>
 
-              <Card className={`text-white border-none p-3.5 sm:p-5 lg:p-6 ${
-                stats.totalRemaining >= 0
-                  ? 'bg-gradient-to-br from-green-500 to-green-600'
-                  : 'bg-gradient-to-br from-red-500 to-red-600'
-              }`}>
-                <div className="flex items-center justify-between mb-2 sm:mb-4">
-                  <div className="p-2 sm:p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                    <ArrowUp className="h-4 w-4 sm:h-6 sm:w-6" />
+              {/* Card 2: Total Spent */}
+              <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/15 transition-all duration-200 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-lg shadow-black/5 dark:shadow-black/20">
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
+                    <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">
+                      Actual Outflow
+                    </span>
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#161c2b] border border-slate-200 dark:border-white/5 flex items-center justify-center text-amber-500 flex-shrink-0">
+                      <TrendingDown className="w-4 h-4" />
+                    </div>
                   </div>
-                  <span className="text-[10px] sm:text-xs md:text-sm font-medium opacity-90 truncate max-w-[85px] sm:max-w-none">Remaining</span>
-                </div>
-                <p className="text-sm sm:text-xl lg:text-2xl font-bold mb-0.5 sm:mb-1 truncate">
-                  {formatCurrency(Math.abs(stats.totalRemaining), currency.locale, currency.code)}
-                </p>
-                <p className="text-[10px] sm:text-xs opacity-75 truncate">
-                  {stats.totalRemaining >= 0 ? 'Still available' : 'Over budget'}
-                </p>
-              </Card>
-
-              <Card className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white border-none p-3.5 sm:p-5 lg:p-6">
-                <div className="flex items-center justify-between mb-2 sm:mb-4">
-                  <div className="p-2 sm:p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                    <PieChart className="h-4 w-4 sm:h-6 sm:w-6" />
+                  <div className="font-mono font-extrabold text-xl sm:text-2xl lg:text-3xl tracking-tight text-slate-900 dark:text-white truncate">
+                    {formatCurrency(stats.totalSpent, currency.locale, currency.code)}
                   </div>
-                  <span className="text-[10px] sm:text-xs md:text-sm font-medium opacity-90 truncate max-w-[85px] sm:max-w-none">Categories</span>
                 </div>
-                <p className="text-sm sm:text-xl lg:text-2xl font-bold mb-0.5 sm:mb-1 truncate">
-                  {stats.categoriesCount}
-                </p>
-                <p className="text-[10px] sm:text-xs opacity-75 truncate">Budget goals set</p>
-              </Card>
-            </motion.div>
+                <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.04]">
+                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
+                    {stats.overallPercentageUsed.toFixed(1)}% consumed
+                  </span>
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border font-mono flex-shrink-0 ${
+                    stats.totalSpent > stats.totalBudget
+                      ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                      : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                  }`}>
+                    {stats.totalSpent > stats.totalBudget ? 'Exceeded' : 'On Track'}
+                  </span>
+                </div>
+              </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <motion.div variants={itemVariants}>
+              {/* Card 3: Remaining */}
+              <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/15 transition-all duration-200 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-lg shadow-black/5 dark:shadow-black/20">
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
+                    <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">
+                      Remaining Cap
+                    </span>
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#161c2b] border border-slate-200 dark:border-white/5 flex items-center justify-center text-emerald-500 flex-shrink-0">
+                      <ArrowUp className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className={`font-mono font-extrabold text-xl sm:text-2xl lg:text-3xl tracking-tight truncate ${
+                    stats.totalRemaining < 0 ? 'text-rose-500' : 'text-slate-900 dark:text-white'
+                  }`}>
+                    {formatCurrency(Math.abs(stats.totalRemaining), currency.locale, currency.code)}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.04]">
+                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
+                    {stats.totalRemaining >= 0 ? 'Available surplus' : 'Exceeded budget'}
+                  </span>
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border font-mono flex-shrink-0 ${
+                    stats.totalRemaining >= 0
+                      ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                      : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                  }`}>
+                    {stats.totalRemaining >= 0 ? 'Surplus' : 'Deficit'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 4: Categories */}
+              <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/15 transition-all duration-200 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-lg shadow-black/5 dark:shadow-black/20">
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
+                    <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">
+                      Monitored Categories
+                    </span>
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#161c2b] border border-slate-200 dark:border-white/5 flex items-center justify-center text-purple-500 flex-shrink-0">
+                      <PieChart className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="font-mono font-extrabold text-xl sm:text-2xl lg:text-3xl tracking-tight text-slate-900 dark:text-white truncate">
+                    {stats.categoriesCount}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.04]">
+                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
+                    Active monthly targets
+                  </span>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md border font-mono bg-purple-500/10 text-purple-500 border-purple-500/20 flex-shrink-0">
+                    {stats.categoriesCount} Set
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Split Section: Budget Progress vs Goals List */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+              
+              {/* Left Column: Real-time Category Progress Bars */}
+              <div>
                 {budgetProgress && budgetProgress.budgetProgress.length > 0 ? (
                   <BudgetProgress progress={budgetProgress} />
                 ) : (
-                  <Card className="text-center p-8">
-                    <TrendingUp className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 dark:text-gray-400 text-lg font-medium">
+                  <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-2xl p-8 text-center shadow-xl shadow-black/5 dark:shadow-black/30">
+                    <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#161c2b] border border-slate-200 dark:border-white/5 flex items-center justify-center text-slate-400 mx-auto mb-3">
+                      <TrendingUp className="h-6 w-6" />
+                    </div>
+                    <p className="text-slate-800 dark:text-zinc-200 text-base font-bold">
                       No budget progress yet
                     </p>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">
-                      Create your first budget goal to start tracking
+                    <p className="text-slate-500 dark:text-zinc-400 text-xs mt-1 max-w-xs mx-auto">
+                      Create your first category budget cap to activate live spending pace tracking.
                     </p>
-                  </Card>
+                  </div>
                 )}
-              </motion.div>
+              </div>
 
-              <motion.div variants={itemVariants}>
-                <Card className="p-6">
-                  <h3 className="text-xl font-bold mb-6 text-gray-800 dark:text-white flex items-center gap-2">
-                    <Target className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                    Your Budget Goals
-                  </h3>
+              {/* Right Column: Goal Management Card */}
+              <div>
+                <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-2xl p-5 sm:p-6 shadow-xl shadow-black/5 dark:shadow-black/30">
+                  <div className="flex items-center justify-between mb-5 pb-3 border-b border-slate-100 dark:border-white/[0.06]">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
+                        <Target className="w-3.5 h-3.5" />
+                      </div>
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">Active Budget Targets</h3>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setEditingGoal(null);
+                        setShowForm(true);
+                      }}
+                      className="text-xs font-semibold text-blue-500 hover:text-blue-400 transition-colors inline-flex items-center gap-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Add Target
+                    </button>
+                  </div>
+
                   {budgetGoals.length > 0 ? (
                     <BudgetList 
                       goals={budgetGoals} 
@@ -328,46 +400,62 @@ const BudgetPage = () => {
                       onDelete={handleDelete} 
                     />
                   ) : (
-                    <div className="text-center py-12">
-                      <Target className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600 dark:text-gray-400 text-lg font-medium">
-                        No budget goals yet
+                    <div className="text-center py-10">
+                      <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#161c2b] border border-slate-200 dark:border-white/5 flex items-center justify-center text-slate-400 mx-auto mb-3">
+                        <Target className="h-6 w-6" />
+                      </div>
+                      <p className="text-slate-800 dark:text-zinc-200 text-sm font-semibold">
+                        No targets defined
                       </p>
-                      <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">
-                        Click "New Budget Goal" to get started
+                      <p className="text-slate-500 dark:text-zinc-400 text-xs mt-1">
+                        Click "+ Budget Goal" to create limits for Dining, Shopping, Bills & more.
                       </p>
                     </div>
                   )}
-                </Card>
-              </motion.div>
+                </div>
+              </div>
             </div>
-          </motion.div>
+          </div>
         )}
       </div>
 
+      {/* Modal Dialog for Budget Form (Stable, Jitter-Free) */}
       <AnimatePresence>
         {showForm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex flex-col items-center overflow-y-auto p-4 sm:p-6"
-            onClick={() => {
-              setShowForm(false);
-              setEditingGoal(null);
-            }}
-          >
-            <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md my-auto flex-shrink-0">
-              <BudgetForm
-                onClose={() => {
-                  setShowForm(false);
-                  setEditingGoal(null);
-                }}
-                onSubmit={handleSubmit}
-                goal={editingGoal}
-              />
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              className="fixed inset-0 bg-black/70"
+              onClick={() => {
+                setShowForm(false);
+                setEditingGoal(null);
+              }}
+            />
+            {/* Centering Wrapper */}
+            <div className="min-h-full flex items-center justify-center p-4 sm:p-6 relative pointer-events-none">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="w-full max-w-md pointer-events-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <BudgetForm
+                  onClose={() => {
+                    setShowForm(false);
+                    setEditingGoal(null);
+                  }}
+                  onSubmit={handleSubmit}
+                  goal={editingGoal}
+                />
+              </motion.div>
             </div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </motion.div>

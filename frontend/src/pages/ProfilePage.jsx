@@ -9,11 +9,12 @@ import {
   Check, 
   LogOut,
   ChevronRight,
-  CreditCard,
   Settings,
-  Moon,
-  Sun,
-  Palette
+  Palette,
+  Calendar,
+  Sparkles,
+  KeyRound,
+  ShieldCheck
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -41,11 +42,8 @@ const ProfilePage = () => {
     { code: 'CAD', locale: 'en-CA', name: 'Canadian Dollar (C$)', symbol: 'C$' },
   ];
   
-  // Edit Profile State
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ username: '', email: '' });
-
-  // Change Password State
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [showPasswordSection, setShowPasswordSection] = useState(false);
 
@@ -65,7 +63,7 @@ const ProfilePage = () => {
     setIsUpdating(true);
     try {
       await updateCurrency(newCurrency);
-      showSuccess('Currency preference updated successfully');
+      showSuccess('Display currency updated successfully');
     } catch (error) {
       console.error('Failed to update currency:', error);
     } finally {
@@ -77,7 +75,7 @@ const ProfilePage = () => {
     setIsUpdating(true);
     try {
       await updateTheme({ color: colorId });
-      showSuccess('Color theme updated successfully');
+      showSuccess('Accent theme updated successfully');
     } catch (error) {
       console.error('Failed to update color theme:', error);
     } finally {
@@ -92,7 +90,7 @@ const ProfilePage = () => {
     
     const res = await updateProfile(editForm);
     if (res.success) {
-      showSuccess('Profile updated successfully');
+      showSuccess('Profile details updated successfully');
       setIsEditing(false);
     } else {
       setError(res.error);
@@ -116,7 +114,7 @@ const ProfilePage = () => {
     });
 
     if (res.success) {
-      showSuccess('Password changed successfully');
+      showSuccess('Password updated successfully');
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setShowPasswordSection(false);
     } else {
@@ -130,299 +128,291 @@ const ProfilePage = () => {
     setTimeout(() => setSuccessMessage(''), 3000);
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.5, staggerChildren: 0.1 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: { opacity: 1, x: 0 }
-  };
+  // Date and Quarter badge
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+  const currentMonthIdx = today.getMonth();
+  const currentYear = today.getFullYear();
+  const fiscalQuarter = currentMonthIdx >= 3 && currentMonthIdx <= 5 ? 'Q1' :
+                        currentMonthIdx >= 6 && currentMonthIdx <= 8 ? 'Q2' :
+                        currentMonthIdx >= 9 && currentMonthIdx <= 11 ? 'Q3' : 'Q4';
+  const fyYear = currentMonthIdx >= 3 ? `${currentYear}-${(currentYear + 1).toString().slice(-2)}` : `${currentYear - 1}-${currentYear.toString().slice(-2)}`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 pt-24 pb-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="space-y-8"
-        >
-          {/* Header Section */}
-          <Card className="p-8 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-bl-full" />
-            
-            <div className="flex flex-col sm:flex-row items-center gap-6 relative z-10">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center shadow-xl ring-4 ring-white dark:ring-gray-800">
-                <span className="text-4xl font-bold text-white">
-                  {user?.username?.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              
-              <div className="text-center sm:text-left flex-1 w-full">
-                {isEditing ? (
-                  <form onSubmit={handleUpdateProfile} className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <Input
-                        label="Username"
-                        value={editForm.username}
-                        onChange={(e) => setEditForm({...editForm, username: e.target.value})}
-                      />
-                      <Input
-                        label="Email"
-                        type="email"
-                        value={editForm.email}
-                        onChange={(e) => setEditForm({...editForm, email: e.target.value})}
-                      />
-                    </div>
-                    <div className="flex gap-2 justify-center sm:justify-start">
-                      <Button
-                        type="submit"
-                        disabled={isUpdating}
-                      >
-                        Save Changes
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={() => setIsEditing(false)}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </form>
-                ) : (
-                  <>
-                    <div className="flex items-center justify-center sm:justify-between mb-2">
-                      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                        {user?.username}
-                      </h1>
-                      <button
-                        onClick={() => setIsEditing(true)}
-                        className="ml-4 p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                      >
-                        <Settings className="h-5 w-5" />
-                      </button>
-                    </div>
-                    <div className="flex flex-col sm:flex-row items-center gap-4 text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4" />
-                        <span>{user?.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Shield className="h-4 w-4" />
-                        <span>Account Active</span>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#080b11] pt-20 pb-20 px-4 sm:px-6 lg:px-8 font-sans antialiased text-slate-900 dark:text-slate-100">
+      <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
+        
+        {/* Top Hero Card - Obsidian style */}
+        <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-2xl p-5 sm:p-7 shadow-xl shadow-black/5 dark:shadow-black/40 relative overflow-hidden">
+          {/* Top row: Capsule date badge + Live status */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-100 dark:bg-[#161c2b] border border-slate-200 dark:border-white/[0.06] text-xs font-mono font-medium text-slate-700 dark:text-zinc-300">
+              <Calendar className="w-3.5 h-3.5 text-blue-500" />
+              <span>{formattedDate} • {fiscalQuarter} FY{fyYear}</span>
             </div>
-          </Card>
 
-          {/* Error Message */}
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl flex items-center gap-2"
-              >
-                <Shield className="h-5 w-5" />
-                <span>{error}</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Security Section */}
-          <Card className="overflow-hidden">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-between items-center">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                Security
-              </h2>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Active Profile
             </div>
-            
-            <div className="p-6">
-              {!showPasswordSection ? (
-                <button
-                  onClick={() => setShowPasswordSection(true)}
-                  className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium hover:underline"
-                >
-                  Change Password
-                </button>
-              ) : (
-                <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
-                  <Input
-                    label="Current Password"
-                    type="password"
-                    required
-                    value={passwordForm.currentPassword}
-                    onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
-                  />
-                  <Input
-                    label="New Password"
-                    type="password"
-                    required
-                    value={passwordForm.newPassword}
-                    onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
-                  />
-                  <Input
-                    label="Confirm New Password"
-                    type="password"
-                    required
-                    value={passwordForm.confirmPassword}
-                    onChange={(e) => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
-                  />
-                  <div className="flex gap-3">
-                    <Button
+          </div>
+
+          {/* User Details row */}
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white text-3xl font-extrabold shadow-lg shadow-blue-600/20 flex-shrink-0">
+              {user?.username?.charAt(0).toUpperCase()}
+            </div>
+
+            <div className="text-center sm:text-left flex-1 min-w-0 w-full">
+              {isEditing ? (
+                <form onSubmit={handleUpdateProfile} className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Input
+                      label="Username"
+                      value={editForm.username}
+                      onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                    />
+                    <Input
+                      label="Email"
+                      type="email"
+                      value={editForm.email}
+                      onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex gap-2 justify-center sm:justify-start pt-1">
+                    <button
                       type="submit"
                       disabled={isUpdating}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold shadow-md transition-colors"
                     >
-                      Update Password
-                    </Button>
-                    <Button
+                      Save Changes
+                    </button>
+                    <button
                       type="button"
-                      variant="secondary"
-                      onClick={() => setShowPasswordSection(false)}
+                      onClick={() => setIsEditing(false)}
+                      className="px-4 py-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-semibold hover:bg-slate-200/50 transition-colors"
                     >
                       Cancel
-                    </Button>
+                    </button>
                   </div>
                 </form>
+              ) : (
+                <>
+                  <div className="flex items-center justify-center sm:justify-between gap-3 mb-1">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white truncate">
+                      {user?.username}
+                    </h1>
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                      title="Edit Profile"
+                    >
+                      <Settings className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-slate-500 dark:text-zinc-400">
+                    <span className="flex items-center gap-1.5 font-mono">
+                      <Mail className="w-3.5 h-3.5 text-blue-500" />
+                      {user?.email}
+                    </span>
+                    <span className="flex items-center gap-1.5 font-semibold text-emerald-500">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      Verified Personal Account
+                    </span>
+                  </div>
+                </>
               )}
             </div>
-          </Card>
+          </div>
+        </div>
 
-          {/* Settings Section (Currency) */}
-          <Card className="overflow-hidden">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Globe className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                Preferences
-              </h2>
-            </div>
-            
-            <div className="p-6 space-y-6">
-              {/* Currency Selector */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
-                  Display Currency
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {currencies.map((curr) => (
-                    <button
-                      key={curr.code}
-                      onClick={() => handleCurrencyChange(curr)}
-                      disabled={isUpdating}
-                      className={`relative flex items-center p-4 rounded-xl border-2 transition-all duration-200 ${
-                        currency.code === curr.code
-                          ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-gray-50 dark:hover:bg-gray-800'
-                      }`}
-                    >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 ${
-                        currency.code === curr.code
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                      }`}>
-                        <span className="text-base sm:text-lg font-bold">{curr.symbol}</span>
-                      </div>
-                      <div className="text-left flex-1">
-                        <div className={`text-sm sm:text-base font-semibold ${
-                          currency.code === curr.code
-                            ? 'text-blue-900 dark:text-blue-100'
-                            : 'text-gray-900 dark:text-white'
-                        }`}>
-                          {curr.code}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {curr.name}
-                        </div>
-                      </div>
-                      {currency.code === curr.code && (
-                        <div className="absolute top-4 right-4">
-                          <Check className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
+        {/* Feedback Alerts */}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2"
+            >
+              <Shield className="w-4 h-4 flex-shrink-0" />
+              <span>{error}</span>
+            </motion.div>
+          )}
+
+          {successMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2"
+            >
+              <Check className="w-4 h-4 flex-shrink-0" />
+              <span>{successMessage}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Preferences Section (Display Currency) */}
+        <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-2xl p-5 sm:p-6 shadow-xl shadow-black/5 dark:shadow-black/30">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-white/[0.06]">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
+                <Globe className="w-3.5 h-3.5" />
               </div>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">Currency & Number Formatting</h2>
+            </div>
+            <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-[#161c2b] text-slate-500 dark:text-zinc-400">
+              Active: {currency.code} ({currency.symbol})
+            </span>
+          </div>
 
-              {/* Theme Settings */}
-              <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
-                  <Palette className="h-4 w-4" />
-                  Appearance
-                </label>
-                
-                <div className="space-y-6">
-                  {/* Color Themes */}
-                  <div>
-                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Color Theme</div>
-                    <div className="flex gap-4 flex-wrap">
-                      {[
-                        { id: 'default', hex: '#2563eb', name: 'Default' },
-                        { id: 'pink', hex: '#ec4899', name: 'Pink' },
-                        { id: 'purple', hex: '#a855f7', name: 'Purple' },
-                        { id: 'emerald', hex: '#10b981', name: 'Emerald' },
-                      ].map((t) => (
-                        <div key={t.id} className="flex flex-col items-center gap-2">
-                          <button
-                            onClick={() => handleColorThemeChange(t.id)}
-                            style={{ backgroundColor: t.hex }}
-                            className={`w-12 h-12 rounded-full flex items-center justify-center transition-transform shadow-sm ${theme.color === t.id ? 'ring-4 ring-offset-2 ring-[var(--color-primary)] dark:ring-offset-gray-900 scale-110' : 'hover:scale-105'}`}
-                            title={t.name}
-                          >
-                            {theme.color === t.id && <Check className="h-5 w-5 text-white" />}
-                          </button>
-                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{t.name}</span>
-                        </div>
-                      ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {currencies.map((curr) => {
+              const isSelected = currency.code === curr.code;
+              return (
+                <button
+                  key={curr.code}
+                  onClick={() => handleCurrencyChange(curr)}
+                  disabled={isUpdating}
+                  className={`p-3.5 rounded-xl border text-left transition-all duration-150 flex items-center justify-between ${
+                    isSelected
+                      ? 'border-blue-500 bg-blue-500/10 text-white'
+                      : 'border-slate-200/80 dark:border-white/[0.05] bg-slate-50/70 dark:bg-[#0b0e17] hover:border-slate-300 dark:hover:border-white/10 text-slate-700 dark:text-zinc-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-mono font-bold text-sm ${
+                      isSelected ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-[#161c2b] text-slate-700 dark:text-zinc-300'
+                    }`}>
+                      {curr.symbol}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">{curr.code}</div>
+                      <div className="text-[11px] text-slate-400 dark:text-zinc-500 truncate">{curr.name}</div>
                     </div>
                   </div>
-                </div>
+                  {isSelected && (
+                    <Check className="w-4 h-4 text-blue-500 flex-shrink-0 ml-2" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Accent Color Theme */}
+          <div className="mt-6 pt-5 border-t border-slate-100 dark:border-white/[0.06]">
+            <div className="flex items-center gap-2 mb-3">
+              <Palette className="w-4 h-4 text-slate-400" />
+              <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300 uppercase tracking-wider">
+                Accent Theme Highlights
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              {[
+                { id: 'default', hex: '#2563eb', name: 'Obsidian Blue' },
+                { id: 'pink', hex: '#ec4899', name: 'Ruby Pink' },
+                { id: 'purple', hex: '#8b5cf6', name: 'Electric Purple' },
+                { id: 'emerald', hex: '#10b981', name: 'Fintech Emerald' },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => handleColorThemeChange(t.id)}
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
+                    theme.color === t.id
+                      ? 'ring-2 ring-offset-2 ring-blue-500 dark:ring-offset-[#10141e] scale-110'
+                      : 'hover:scale-105 opacity-80 hover:opacity-100'
+                  }`}
+                  style={{ backgroundColor: t.hex }}
+                  title={t.name}
+                >
+                  {theme.color === t.id && <Check className="w-4 h-4 text-white" />}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Security Section (Password) */}
+        <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-2xl p-5 sm:p-6 shadow-xl shadow-black/5 dark:shadow-black/30">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-white/[0.06]">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+                <KeyRound className="w-3.5 h-3.5" />
               </div>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">Security & Password</h2>
             </div>
-          </Card>
+          </div>
 
-          {/* Success Message Toast */}
-          <AnimatePresence>
-            {successMessage && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                className="fixed bottom-8 right-8 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 z-50"
-              >
-                <Check className="h-5 w-5" />
-                <span className="font-medium">{successMessage}</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {!showPasswordSection ? (
+            <button
+              onClick={() => setShowPasswordSection(true)}
+              className="text-xs font-semibold text-blue-500 hover:text-blue-400 transition-colors"
+            >
+              Change Account Password →
+            </button>
+          ) : (
+            <form onSubmit={handleChangePassword} className="space-y-3 max-w-md">
+              <Input
+                label="Current Password"
+                type="password"
+                required
+                value={passwordForm.currentPassword}
+                onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+              />
+              <Input
+                label="New Password"
+                type="password"
+                required
+                value={passwordForm.newPassword}
+                onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+              />
+              <Input
+                label="Confirm New Password"
+                type="password"
+                required
+                value={passwordForm.confirmPassword}
+                onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+              />
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold shadow-md transition-colors"
+                >
+                  Update Password
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordSection(false)}
+                  className="px-4 py-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-semibold hover:bg-slate-200/50 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
 
-          {/* Logout Button */}
-          <Card className="overflow-hidden">
-            <div className="p-6">
-              <Button
-                onClick={logout}
-                variant="secondary"
-                size="lg"
-                className="w-full flex items-center justify-center gap-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
-                icon={LogOut}
-              >
-                Sign Out
-              </Button>
-            </div>
-          </Card>
-        </motion.div>
+        {/* Sign Out Card */}
+        <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-2xl p-5 shadow-xl shadow-black/5 dark:shadow-black/30 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Sign Out Session</h3>
+            <p className="text-xs text-slate-500 dark:text-zinc-400">Safely log out of this device</p>
+          </div>
+          <button
+            onClick={logout}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-rose-500/20 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 text-xs font-semibold transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Sign Out</span>
+          </button>
+        </div>
       </div>
     </div>
   );

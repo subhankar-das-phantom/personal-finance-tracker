@@ -20,17 +20,14 @@ const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
   
   const { token } = useContext(AuthContext);
 
-  // Month names for display
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  // Generate year options (current year + 2 future years)
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 3 }, (_, i) => currentYear + i);
 
-  // Load existing goal data if editing
   useEffect(() => {
     if (goal) {
       setFormData({
@@ -43,11 +40,9 @@ const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
     }
   }, [goal]);
 
-  // Fetch available categories from existing transactions
   useEffect(() => {
     const fetchCategories = async () => {
       if (!token) return;
-      
       try {
         const response = await api.get('/budget/categories');
         setAvailableCategories(response.data);
@@ -55,49 +50,37 @@ const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
         console.error('Error fetching categories:', error);
       }
     };
-
     fetchCategories();
   }, [token]);
 
-  // Form validation
   const validateForm = () => {
     const newErrors = {};
-    
     if (!formData.category.trim()) {
       newErrors.category = 'Category is required';
     }
     if (formData.category === 'Other' && (!formData.customCategory || !formData.customCategory.trim())) {
       newErrors.customCategory = 'Please specify a category';
     }
-    
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
       newErrors.amount = 'Amount must be greater than 0';
     }
-    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle input changes
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear errors when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitted(true);
-    
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsLoading(true);
-    
     try {
       const budgetData = {
         ...formData,
@@ -106,68 +89,57 @@ const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
         month: parseInt(formData.month),
         year: parseInt(formData.year)
       };
-
       await onSubmit(budgetData);
-      
     } catch (error) {
       console.error('Error saving budget goal:', error);
-      // The error will be handled by the parent component
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden max-w-md w-full"
-    >
+    <div className="bg-white dark:bg-[#10141e] rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden max-w-md w-full font-sans text-slate-900 dark:text-slate-100">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-white/20 rounded-lg">
-              <Target className="h-6 w-6" />
-            </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-bold">
-                {goal ? 'Edit Budget Goal' : 'Set Budget Goal'}
-              </h2>
-              <p className="text-green-100 text-sm">
-                Plan your monthly spending limits
-              </p>
-            </div>
+      <div className="bg-slate-50 dark:bg-[#161c2b] p-5 sm:p-6 border-b border-slate-200 dark:border-white/[0.06] flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
+            <Target className="w-5 h-5" />
           </div>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={onClose}
-            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </motion.button>
+          <div>
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+              {goal ? 'Edit Budget Target' : 'Define Spending Cap'}
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-zinc-400">
+              Set monthly category limits to control outflows
+            </p>
+          </div>
         </div>
+        <button
+          onClick={onClose}
+          type="button"
+          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/5 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4">
         {/* Category Field */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            Category
+          <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-300 mb-1.5 uppercase tracking-wider">
+            Expense Category
           </label>
           <div className="relative">
-            <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <select
               value={formData.category}
               onChange={(e) => handleChange('category', e.target.value)}
-              className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+              className={`w-full pl-9 pr-4 py-2.5 rounded-xl border text-sm transition-all duration-150 bg-slate-50 dark:bg-[#0b0e17] text-slate-900 dark:text-white ${
                 errors.category && isSubmitted
-                  ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
-                  : 'border-gray-200 dark:border-gray-600 focus:border-green-500 focus:ring-green-200'
-              } focus:ring-4 focus:outline-none cursor-pointer`}
+                  ? 'border-rose-500 focus:ring-1 focus:ring-rose-500'
+                  : 'border-slate-200 dark:border-white/10 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+              } focus:outline-none`}
             >
               <option value="">Select a category</option>
               {[
@@ -186,66 +158,39 @@ const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
               ))}
             </select>
           </div>
-          <AnimatePresence>
-            {errors.category && isSubmitted && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="mt-2 flex items-center space-x-1 text-red-600"
-              >
-                <AlertCircle className="h-4 w-4" />
-                <span className="text-sm">{errors.category}</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {errors.category && isSubmitted && (
+            <p className="mt-1 text-xs text-rose-500 flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5" /> {errors.category}
+            </p>
+          )}
         </div>
 
         {formData.category === 'Other' && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Specify
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-300 mb-1.5 uppercase tracking-wider">
+              Custom Category Label
             </label>
-            <div className="relative">
-              <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                value={formData.customCategory}
-                onChange={(e) => handleChange('customCategory', e.target.value)}
-                placeholder="Enter custom reason"
-                className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ${
-                  errors.customCategory && isSubmitted
-                    ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
-                    : 'border-gray-200 dark:border-gray-600 focus:border-green-500 focus:ring-green-200'
-                } focus:ring-4 focus:outline-none`}
-              />
-            </div>
-            <AnimatePresence>
-              {errors.customCategory && isSubmitted && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="mt-2 flex items-center space-x-1 text-red-600"
-                >
-                  <AlertCircle className="h-4 w-4" />
-                  <span className="text-sm">{errors.customCategory}</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+            <input
+              type="text"
+              value={formData.customCategory}
+              onChange={(e) => handleChange('customCategory', e.target.value)}
+              placeholder="e.g. Subscriptions"
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition-all duration-150 bg-slate-50 dark:bg-[#0b0e17] text-slate-900 dark:text-white ${
+                errors.customCategory && isSubmitted
+                  ? 'border-rose-500 focus:ring-1 focus:ring-rose-500'
+                  : 'border-slate-200 dark:border-white/10 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+              } focus:outline-none`}
+            />
+          </div>
         )}
 
         {/* Amount Field */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            Budget Amount
+          <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-300 mb-1.5 uppercase tracking-wider">
+            Monthly Cap Limit
           </label>
           <div className="relative">
-            <Coins className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Coins className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="number"
               step="0.01"
@@ -253,38 +198,30 @@ const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
               value={formData.amount}
               onChange={(e) => handleChange('amount', e.target.value)}
               placeholder="0.00"
-              className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ${
+              className={`w-full pl-9 pr-4 py-2.5 rounded-xl border text-sm font-mono font-semibold transition-all duration-150 bg-slate-50 dark:bg-[#0b0e17] text-slate-900 dark:text-white ${
                 errors.amount && isSubmitted
-                  ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
-                  : 'border-gray-200 dark:border-gray-600 focus:border-green-500 focus:ring-green-200'
-              } focus:ring-4 focus:outline-none`}
+                  ? 'border-rose-500 focus:ring-1 focus:ring-rose-500'
+                  : 'border-slate-200 dark:border-white/10 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+              } focus:outline-none`}
             />
           </div>
-          <AnimatePresence>
-            {errors.amount && isSubmitted && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="mt-2 flex items-center space-x-1 text-red-600"
-              >
-                <AlertCircle className="h-4 w-4" />
-                <span className="text-sm">{errors.amount}</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {errors.amount && isSubmitted && (
+            <p className="mt-1 text-xs text-rose-500 flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5" /> {errors.amount}
+            </p>
+          )}
         </div>
 
         {/* Month and Year Selection */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Month
+            <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-300 mb-1.5 uppercase tracking-wider">
+              Cycle Month
             </label>
             <select
               value={formData.month}
               onChange={(e) => handleChange('month', e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-green-500 focus:ring-green-200 focus:ring-4 focus:outline-none transition-all duration-200"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0b0e17] text-slate-900 dark:text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             >
               {months.map((month, index) => (
                 <option key={index} value={index}>
@@ -295,13 +232,13 @@ const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Year
+            <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-300 mb-1.5 uppercase tracking-wider">
+              Fiscal Year
             </label>
             <select
               value={formData.year}
               onChange={(e) => handleChange('year', e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-green-500 focus:ring-green-200 focus:ring-4 focus:outline-none transition-all duration-200"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0b0e17] text-slate-900 dark:text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             >
               {years.map((year) => (
                 <option key={year} value={year}>
@@ -313,48 +250,40 @@ const BudgetForm = ({ onClose, onSubmit, goal = null }) => {
         </div>
 
         {/* Selected Month/Year Display */}
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
-          <div className="flex items-center space-x-2">
-            <Calendar className="h-5 w-5 text-green-600 dark:text-green-400" />
-            <span className="text-sm text-green-800 dark:text-green-200">
-              Budget for <strong>{months[formData.month]} {formData.year}</strong>
-            </span>
-          </div>
+        <div className="bg-slate-50 dark:bg-[#0b0e17] border border-slate-200 dark:border-white/[0.06] rounded-xl p-3 flex items-center gap-2 text-xs text-slate-600 dark:text-zinc-400">
+          <Calendar className="w-4 h-4 text-blue-500" />
+          <span>Active for <strong className="text-slate-900 dark:text-white">{months[formData.month]} {formData.year}</strong></span>
         </div>
 
-        {/* Submit Button */}
-        <motion.button
-          type="submit"
-          disabled={isLoading}
-          whileHover={!isLoading ? { scale: 1.02 } : {}}
-          whileTap={!isLoading ? { scale: 0.98 } : {}}
-          className={`w-full py-3 px-6 rounded-xl font-semibold text-white transition-all duration-200 ${
-            isLoading
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl'
-          }`}
-        >
-          <div className="flex items-center justify-center space-x-2">
+        {/* Submit Actions */}
+        <div className="pt-2 flex items-center justify-end gap-2.5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-700 dark:text-zinc-300 text-xs sm:text-sm font-semibold hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-blue-600/20 transition-all active:scale-[0.98] disabled:opacity-50"
+          >
             {isLoading ? (
               <>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                >
-                  <Loader className="h-5 w-5" />
-                </motion.div>
-                <span>{goal ? 'Updating...' : 'Creating...'}</span>
+                <Loader className="w-4 h-4 animate-spin" />
+                <span>Saving...</span>
               </>
             ) : (
               <>
-                <Save className="h-5 w-5" />
-                <span>{goal ? 'Update Budget Goal' : 'Create Budget Goal'}</span>
+                <Save className="w-4 h-4" />
+                <span>{goal ? 'Update Target' : 'Set Cap Target'}</span>
               </>
             )}
-          </div>
-        </motion.button>
+          </button>
+        </div>
       </form>
-    </motion.div>
+    </div>
   );
 };
 

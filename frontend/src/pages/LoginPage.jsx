@@ -9,7 +9,8 @@ import {
   EyeOff, 
   LogIn,
   Wallet,
-  AlertCircle
+  AlertCircle,
+  Sparkles
 } from 'lucide-react';
 import Input from '../components/common/Input';
 import Button from '../components/common/Button';
@@ -34,37 +35,8 @@ const LoginPage = () => {
     }
   }, [token, navigate]);
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.6,
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.4 }
-    }
-  };
-
-  const inputVariants = {
-    focus: { scale: 1.02, transition: { duration: 0.2 } },
-    blur: { scale: 1, transition: { duration: 0.2 } }
-  };
-
-  // Form validation
   const validateForm = () => {
     const newErrors = {};
-    
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -81,10 +53,8 @@ const LoginPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle input changes
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear errors when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -93,205 +63,153 @@ const LoginPage = () => {
     }
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitted(true);
     setLoginError('');
     
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setIsLoading(true);
     
     try {
       const result = await login(formData.email, formData.password);
-      
       if (result.success) {
-        // Success animation delay
         setTimeout(() => {
           navigate('/');
-        }, 500);
+        }, 300);
       } else {
-        setLoginError(result.error || 'Login failed. Please try again.');
+        setLoginError(result.error || 'Invalid credentials. Please verify and try again.');
         setIsLoading(false);
       }
-      
     } catch (err) {
-      setLoginError('An unexpected error occurred. Please try again.');
+      setLoginError('An unexpected server error occurred. Please try again.');
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900 flex items-center justify-center px-4 py-8">
-      {/* Background decorations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full opacity-20 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-blue-400 to-cyan-600 rounded-full opacity-20 blur-3xl" />
-      </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#080b11] flex items-center justify-center px-4 py-12 font-sans antialiased text-slate-900 dark:text-slate-100 relative overflow-hidden">
+      {/* Subtle background glow */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
       <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
         className="relative w-full max-w-md"
       >
-        {/* Login Card */}
-        <motion.div
-          variants={itemVariants}
-          className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 p-6 sm:p-8"
-        >
+        <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black/50 p-6 sm:p-8">
+          
           {/* Header */}
-          <motion.div
-            variants={itemVariants}
-            className="text-center mb-8"
-          >
-            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl shadow-lg mb-4">
-              <Wallet className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+          <div className="text-center mb-7">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-600/30 mb-3">
+              <Wallet className="h-6 w-6" />
             </div>
             
-            <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Welcome Back! 👋
+            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
+              Finance Tracker
             </h1>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-              Sign in to access your financial dashboard
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">
+              Sign in to access your obsidian financial dashboard
             </p>
-          </motion.div>
+          </div>
 
           {/* Login Error Alert */}
           <AnimatePresence>
             {loginError && (
               <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="mb-5 p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2"
               >
-                <div className="flex items-center space-x-2">
-                  <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                  <span className="text-sm font-medium text-red-800 dark:text-red-200">
-                    {loginError}
-                  </span>
-                </div>
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <span>{loginError}</span>
               </motion.div>
             )}
           </AnimatePresence>
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email Field */}
-            <motion.div variants={itemVariants}>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
               <Input
                 label="Email Address"
                 icon={Mail}
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
-                placeholder="Enter your email"
+                placeholder="name@domain.com"
                 error={isSubmitted ? errors.email : ''}
               />
-            </motion.div>
+            </div>
 
-            {/* Password Field */}
-            <motion.div variants={itemVariants}>
+            <div>
               <Input
                 label="Password"
                 icon={Lock}
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
                 onChange={(e) => handleChange('password', e.target.value)}
-                placeholder="Enter your password"
+                placeholder="••••••••"
                 error={isSubmitted ? errors.password : ''}
                 rightIcon={
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 focus:outline-none"
+                    className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 transition-colors"
                   >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 }
               />
-            </motion.div>
+            </div>
 
-            {/* Forgot Password Link */}
-            <motion.div variants={itemVariants} className="text-right">
-              <Link
-                to="/forgot-password"
-                className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-200"
-              >
-                Forgot your password?
-              </Link>
-            </motion.div>
-
-            {/* Submit Button */}
-            <motion.div variants={itemVariants}>
-              <Button
+            <div className="pt-2">
+              <button
                 type="submit"
-                isLoading={isLoading}
-                className="w-full py-3 sm:py-4"
-                icon={!isLoading ? LogIn : undefined}
+                disabled={isLoading}
+                className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm shadow-lg shadow-blue-600/25 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                Sign In
-              </Button>
-            </motion.div>
+                {isLoading ? (
+                  <span>Authenticating...</span>
+                ) : (
+                  <>
+                    <LogIn className="w-4 h-4" />
+                    <span>Sign In</span>
+                  </>
+                )}
+              </button>
+            </div>
           </form>
 
           {/* Register Link */}
-          <motion.div
-            variants={itemVariants}
-            className="mt-8 text-center"
-          >
-            <p className="text-gray-600 dark:text-gray-400">
-              Don't have an account?{' '}
-              <Link
-                to="/register"
-                className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-200"
-              >
-                Create one here
-              </Link>
-            </p>
-          </motion.div>
+          <div className="mt-6 text-center text-xs text-slate-500 dark:text-zinc-400">
+            Don't have an account?{' '}
+            <Link
+              to="/register"
+              className="font-semibold text-blue-500 hover:text-blue-400 transition-colors"
+            >
+              Create one here
+            </Link>
+          </div>
 
           {/* Demo Credentials */}
-          <motion.div
-            variants={itemVariants}
-            className="mt-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700"
-          >
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center mb-2 font-medium">
-              Demo Credentials
+          <div className="mt-5 p-3 rounded-xl bg-slate-50 dark:bg-[#0b0e17] border border-slate-200 dark:border-white/[0.05]">
+            <p className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 text-center mb-1 uppercase tracking-wider">
+              Quick Test Credentials
             </p>
-            <div className="text-xs text-gray-600 dark:text-gray-300 space-y-1">
+            <div className="text-xs font-mono text-slate-600 dark:text-zinc-400 space-y-1">
               <div className="flex justify-between">
                 <span>Email:</span>
-                <span className="font-mono">demo@example.com</span>
+                <span className="font-bold text-slate-900 dark:text-white">demo@example.com</span>
               </div>
               <div className="flex justify-between">
                 <span>Password:</span>
-                <span className="font-mono">123456</span>
+                <span className="font-bold text-slate-900 dark:text-white">123456</span>
               </div>
             </div>
-          </motion.div>
-        </motion.div>
-
-        {/* Footer */}
-        <motion.div
-          variants={itemVariants}
-          className="mt-8 text-center"
-        >
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            By signing in, you agree to our{' '}
-            <Link to="/terms" className="text-blue-600 hover:text-blue-700 dark:text-blue-400">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link to="/privacy" className="text-blue-600 hover:text-blue-700 dark:text-blue-400">
-              Privacy Policy
-            </Link>
-          </p>
-        </motion.div>
+          </div>
+        </div>
       </motion.div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useContext, useCallback } from "react";
+import React, { useState, useContext, useCallback, useMemo } from "react";
 import api from "../services/api";
 import { useApi, globalMutate } from "../hooks/useApi";
 import { motion, AnimatePresence } from "framer-motion";
@@ -681,77 +681,168 @@ const TransactionsPage = () => {
     setShowExportModal(true);
   };
 
+  const currentDateFormatted = useMemo(() => {
+    return new Date().toLocaleDateString("en-US", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }, []);
+
+  const fiscalQuarter = useMemo(() => {
+    const month = new Date().getMonth();
+    const year = new Date().getFullYear();
+    let q = "Q3";
+    let fy = `FY${year}-${String(year + 1).slice(-2)}`;
+    if (month >= 3 && month <= 5) q = "Q1";
+    else if (month >= 6 && month <= 8) q = "Q2";
+    else if (month >= 9 && month <= 11) q = "Q3";
+    else {
+      q = "Q4";
+      fy = `FY${year - 1}-${String(year).slice(-2)}`;
+    }
+    return `${q} ${fy}`;
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 pt-20 px-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#080b11] pt-20 px-4 pb-12 transition-colors duration-200">
       <div className="max-w-7xl mx-auto">
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="space-y-8"
+          className="space-y-6"
         >
-          {/* Header Section */}
+          {/* Header Card (Matching Premium Obsidian Reference) */}
           <motion.div
             variants={itemVariants}
-            className="flex flex-col space-y-4"
+            className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-2xl p-5 sm:p-6 shadow-xs"
           >
-            <div>
-              <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                All Transactions 📊
+            {/* Top Row: Date capsule + Live pill + Actions */}
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div className="flex items-center space-x-2 flex-wrap gap-y-1.5">
+                <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#151c2a] border border-slate-200 dark:border-white/10 text-xs text-slate-700 dark:text-zinc-300 font-medium">
+                  <Calendar className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
+                  <span>
+                    {currentDateFormatted} • {fiscalQuarter}
+                  </span>
+                </span>
+
+                <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Live</span>
+                </span>
+
+                {/* View Mode Segmented Switch */}
+                <div className="inline-flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-[#0c101a] border border-slate-200/70 dark:border-white/5 ml-1">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("transactions")}
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 ${
+                      viewMode === "transactions"
+                        ? "bg-white dark:bg-[#1a2233] text-slate-900 dark:text-white shadow-xs border border-slate-200/60 dark:border-white/10"
+                        : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  >
+                    Transactions ({transactions.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("transfers")}
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 ${
+                      viewMode === "transfers"
+                        ? "bg-white dark:bg-[#1a2233] text-slate-900 dark:text-white shadow-xs border border-slate-200/60 dark:border-white/10"
+                        : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  >
+                    Transfers ({transfers.length})
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 flex-wrap gap-y-1.5">
+                {/* Wallet Selector */}
+                <WalletSelector />
+
+                {/* Refresh Button */}
+                <button
+                  type="button"
+                  onClick={refreshData}
+                  disabled={isRefreshing}
+                  className="p-2 rounded-xl text-slate-600 dark:text-zinc-300 bg-slate-100 dark:bg-[#151c2a] hover:bg-slate-200 dark:hover:bg-[#1c2538] border border-slate-200/80 dark:border-white/5 transition-colors"
+                  aria-label="Refresh transactions"
+                  title="Refresh data"
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+                  />
+                </button>
+
+                {/* Transfer Funds Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsTransferModalOpen(true)}
+                  className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-[#151c2a] text-slate-700 dark:text-zinc-200 hover:bg-slate-200 dark:hover:bg-[#1c2538] border border-slate-200/80 dark:border-white/5 transition-colors"
+                >
+                  <ArrowLeftRight className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Transfer</span>
+                </button>
+
+                {/* Export Button */}
+                <button
+                  type="button"
+                  onClick={handleExportClick}
+                  className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-colors"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Export</span>
+                </button>
+
+                {/* Add Transaction Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingTransaction(null);
+                    setShowAddForm(true);
+                  }}
+                  className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow-sm shadow-blue-600/20 transition-all duration-150"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Transaction</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Middle: Title & Subtitle */}
+            <div className="mb-4">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                {viewMode === "transactions" ? "Transactions" : "Wallet Transfers"}
               </h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                Manage and analyze your financial transactions
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
+                {viewMode === "transactions"
+                  ? `Filtering transactions for ${activeWallet ? activeWallet.name : "all wallets"}. Search, sort, or export.`
+                  : "Internal balance movements between your personal wallets."}
               </p>
             </div>
 
-            {/* Controls Row */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
-              {/* Wallet Selector */}
-              <WalletSelector />
-
-              {/* View Mode Toggle: Transactions vs Transfers */}
-              <div className="flex bg-gray-200/70 dark:bg-gray-800 p-1 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => setViewMode("transactions")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    viewMode === "transactions"
-                      ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                      : "text-gray-500 hover:text-gray-800 dark:text-gray-400"
-                  }`}
-                >
-                  Transactions ({transactions.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("transfers")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    viewMode === "transfers"
-                      ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                      : "text-gray-500 hover:text-gray-800 dark:text-gray-400"
-                  }`}
-                >
-                  Transfers ({transfers.length})
-                </button>
-              </div>
-
+            {/* Filter and Search Bar Strip */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-3 border-t border-slate-100 dark:border-white/[0.05]">
               {/* Search */}
-              <div className="relative flex-1 min-w-[180px]">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden="true" />
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" aria-hidden="true" />
                 <input
                   type="text"
-                  placeholder="Search transactions..."
+                  placeholder="Search descriptions, notes..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   aria-label="Search transactions"
-                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
+                  className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0c101a] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
                 />
               </div>
 
               {/* Sort Dropdown */}
-              <div className="relative min-w-[160px]">
-                <label htmlFor="sort-select" className="sr-only">Sort transactions</label>
-                <SortAsc className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden="true" />
+              <div className="relative min-w-[150px]">
                 <select
                   id="sort-select"
                   value={`${sortBy}-${sortOrder}`}
@@ -761,7 +852,7 @@ const TransactionsPage = () => {
                     setSortOrder(order);
                   }}
                   aria-label="Sort transactions"
-                  className="w-full pl-10 pr-8 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer text-sm sm:text-base"
+                  className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0c101a] text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                 >
                   <option value="date-desc">Date (Newest)</option>
                   <option value="date-asc">Date (Oldest)</option>
@@ -772,78 +863,37 @@ const TransactionsPage = () => {
                 </select>
               </div>
 
-              {/* Time Filter */}
+              {/* Time Filter Select */}
               <div className="relative min-w-[130px]">
-                <label htmlFor="time-filter-transactions" className="sr-only">Time Filter</label>
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden="true" />
                 <select
                   id="time-filter-transactions"
                   value={timeFilter}
                   onChange={(e) => setTimeFilter(e.target.value)}
                   aria-label="Filter transactions by time period"
-                  className="w-full pl-10 pr-8 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer text-sm sm:text-base"
+                  className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0c101a] text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                 >
-                  <option value="thisWeek">This Week</option>
+                  <option value="today">Today</option>
+                  <option value="7D">7 Days</option>
+                  <option value="30D">30 Days</option>
                   <option value="thisMonth">This Month</option>
                   <option value="thisYear">This Year</option>
                   <option value="all">All Time</option>
                 </select>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2">
-                {/* Filter Toggle */}
-                <Button
-                  variant={showFilters ? "secondary" : "outline"}
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={showFilters ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border-blue-500" : ""}
-                  icon={Filter}
-                  aria-label="Toggle filters"
-                />
-
-                {/* Refresh Button */}
-                <Button
-                  variant="ghost"
-                  onClick={refreshData}
-                  disabled={isRefreshing}
-                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
-                  aria-label="Refresh transactions"
-                >
-                  <RefreshCw
-                    className={`h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`}
-                  />
-                </Button>
-
-                {/* Transfer Button */}
-                <Button
-                  variant="secondary"
-                  onClick={() => setIsTransferModalOpen(true)}
-                  icon={ArrowLeftRight}
-                >
-                  <span className="hidden sm:inline">Transfer</span>
-                </Button>
-
-                {/* Export Button */}
-                <Button
-                  variant="primary"
-                  onClick={handleExportClick}
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-                  icon={Download}
-                >
-                  <span className="hidden sm:inline">Export</span>
-                </Button>
-
-                {/* Add Transaction Button */}
-                <Button
-                  onClick={() => {
-                    setEditingTransaction(null);
-                    setShowAddForm(true);
-                  }}
-                  icon={Plus}
-                >
-                  <span className="hidden sm:inline">Add</span>
-                </Button>
-              </div>
+              {/* Filter Drawer Toggle */}
+              <button
+                type="button"
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors ${
+                  showFilters
+                    ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-cyan-400 border-blue-500/40"
+                    : "bg-slate-50 dark:bg-[#0c101a] text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-white/10 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                <Filter className="w-3.5 h-3.5" />
+                <span>Filters</span>
+              </button>
             </div>
           </motion.div>
 
@@ -988,38 +1038,46 @@ const TransactionsPage = () => {
             )}
           </AnimatePresence>
 
-          {/* Statistics Cards */}
+          {/* Statistics Cards (4-Card Metric Grid) */}
           <motion.div
             variants={itemVariants}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5"
           >
             <StatsCard
               title="Total Income"
               value={stats.totalIncome}
               icon={TrendingUp}
               color="green"
-              change="+12.5%"
+              change="+12.5% vs last mo"
+              badgeText="Inflow"
             />
             <StatsCard
               title="Total Expenses"
               value={stats.totalExpenses}
               icon={TrendingDown}
               color="red"
-              change="-8.2%"
+              change="-8.2% vs last mo"
+              badgeText="Outflow"
             />
             <StatsCard
-              title="Net Balance"
+              title={
+                activeWallet
+                  ? `${activeWallet.name} Balance`
+                  : "Net Balance"
+              }
               value={stats.netBalance}
               icon={Wallet}
               color={stats.netBalance >= 0 ? "green" : "red"}
-              change={stats.netBalance >= 0 ? "+4.3%" : "-4.3%"}
+              change={stats.netBalance >= 0 ? "+4.3% healthy" : "-4.3% deficit"}
+              badgeText={activeWallet ? activeWallet.currency : "Combined"}
             />
             <StatsCard
-              title="Total Transactions"
+              title="Transactions"
               value={stats.transactionCount}
               icon={BarChart3}
               color="blue"
-              change={`${stats.transactionCount} items`}
+              change={`${stats.transactionCount} records in scope`}
+              badgeText={`${stats.transactionCount} txns`}
               isCount={true}
             />
           </motion.div>
@@ -1413,37 +1471,44 @@ const TransactionsPage = () => {
           )}
         </AnimatePresence>
 
-        {/* Add/Edit Transaction Modal */}
+        {/* Add/Edit Transaction Modal (Stable, Jitter-Free) */}
         <AnimatePresence>
           {showAddForm && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex flex-col items-center overflow-y-auto p-4 sm:p-6"
-              onClick={() => {
-                setShowAddForm(false);
-                setEditingTransaction(null);
-              }}
-            >
+            <div className="fixed inset-0 z-50 overflow-y-auto">
+              {/* Backdrop */}
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-md my-auto flex-shrink-0"
-              >
-                <TransactionForm
-                  onSubmit={handleSubmit}
-                  transaction={editingTransaction}
-                  isLoading={false}
-                  onClose={() => {
-                    setShowAddForm(false);
-                    setEditingTransaction(null);
-                  }}
-                />
-              </motion.div>
-            </motion.div>
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="fixed inset-0 bg-black/70"
+                onClick={() => {
+                  setShowAddForm(false);
+                  setEditingTransaction(null);
+                }}
+              />
+              {/* Centering Wrapper */}
+              <div className="min-h-full flex items-center justify-center p-4 sm:p-6 relative pointer-events-none">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
+                  className="w-full max-w-lg pointer-events-auto shadow-2xl"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <TransactionForm
+                    onSubmit={handleSubmit}
+                    transaction={editingTransaction}
+                    isLoading={false}
+                    onClose={() => {
+                      setShowAddForm(false);
+                      setEditingTransaction(null);
+                    }}
+                  />
+                </motion.div>
+              </div>
+            </div>
           )}
         </AnimatePresence>
 
@@ -1467,22 +1532,19 @@ const TransactionsPage = () => {
   );
 };
 
-// Stats Card Component
+// ============================================
+// Premium StatsCard Component (Obsidian Fintech)
+// ============================================
 const StatsCard = ({
   title,
   value,
   icon: Icon,
-  color,
+  color = "blue",
   change,
+  badgeText,
   isCount = false,
 }) => {
   const { currency } = useCurrency();
-  
-  const colorClasses = {
-    green: "from-emerald-500 to-teal-600 text-emerald-700 bg-emerald-50 dark:bg-emerald-600 dark:text-white",
-    red: "from-red-500 to-pink-600 text-red-700 bg-red-50 dark:bg-red-600 dark:text-white",
-    blue: "from-blue-500 to-cyan-600 text-blue-700 bg-blue-50 dark:bg-blue-600 dark:text-white",
-  };
 
   const formatValue = (val) => {
     if (isCount) return val.toLocaleString();
@@ -1491,34 +1553,52 @@ const StatsCard = ({
 
   return (
     <Card
-      whileHover={{ y: -4 }}
-      className="p-3.5 sm:p-5 lg:p-6 transition-all duration-200"
+      whileHover={{ y: -2 }}
+      className="p-4 sm:p-5 transition-all duration-200 bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-2xl flex flex-col justify-between"
     >
-      <div className="flex items-center justify-between mb-2 sm:mb-4">
-        <div
-          className={`p-2 sm:p-3 rounded-xl bg-gradient-to-r ${
-            colorClasses[color].split(" ")[0]
-          } ${colorClasses[color].split(" ")[1]}`}
-        >
-          <Icon className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-        </div>
-        <div
-          className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium truncate max-w-[85px] sm:max-w-none ${
-            colorClasses[color].split(" ")[2]
-          } ${colorClasses[color].split(" ")[3]} ${
-            colorClasses[color].split(" ")[4]
-          } ${colorClasses[color].split(" ")[5] || ''} ${colorClasses[color].split(" ")[6] || ''}`}
-        >
-          {change}
+      {/* Top: Title on left, Dark Squircle Icon on right */}
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">
+          {title}
+        </span>
+        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#161c2b] border border-slate-200/70 dark:border-white/5 flex items-center justify-center text-slate-700 dark:text-zinc-300 flex-shrink-0 shadow-2xs">
+          <Icon className="w-4 h-4" />
         </div>
       </div>
 
-      <h3 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-0.5 sm:mb-1 truncate">
-        {title}
-      </h3>
-      <p className="text-sm sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white truncate">
-        {formatValue(value)}
-      </p>
+      {/* Middle: Prominent Tabular Numeral */}
+      <div className="my-1.5">
+        <div className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white font-mono tracking-tight tabular-nums truncate">
+          {formatValue(value)}
+        </div>
+      </div>
+
+      {/* Bottom: Trend on left, Micro badge on right */}
+      <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-white/[0.04] text-xs">
+        <div className="flex items-center space-x-1 truncate mr-2">
+          {change && (
+            <span
+              className={`font-semibold flex items-center gap-0.5 text-[11px] sm:text-xs ${
+                color === "green"
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : color === "red"
+                  ? "text-rose-600 dark:text-rose-400"
+                  : "text-blue-600 dark:text-cyan-400"
+              }`}
+            >
+              {change.includes("+") && <span>↗</span>}
+              {change.includes("-") && <span>↘</span>}
+              <span>{change}</span>
+            </span>
+          )}
+        </div>
+
+        {badgeText && (
+          <span className="px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-medium bg-slate-100 dark:bg-[#161c2b] text-slate-600 dark:text-zinc-300 border border-slate-200/60 dark:border-white/5 flex-shrink-0">
+            {badgeText}
+          </span>
+        )}
+      </div>
     </Card>
   );
 };

@@ -148,28 +148,28 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false, onClose }) 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 border border-gray-100 dark:border-gray-800"
+      className="bg-white dark:bg-[#10141e] rounded-2xl shadow-2xl p-6 border border-slate-200/80 dark:border-white/[0.08]"
     >
       {/* Header */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="mb-8 flex items-start justify-between"
+        className="mb-6 flex items-start justify-between"
       >
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-2">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mb-1">
             {transaction ? 'Edit Transaction' : 'Add New Transaction'}
           </h2>
-          <div className="w-[185px] h-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full" />
+          <p className="text-xs text-slate-500 dark:text-zinc-400">Record an expense or income entry into your ledger</p>
         </div>
         {onClose && (
           <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={onClose}
             type="button"
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors text-gray-500 dark:text-gray-400"
+            className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-white"
           >
             <X className="h-5 w-5" />
           </motion.button>

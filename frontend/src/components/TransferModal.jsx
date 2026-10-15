@@ -112,17 +112,17 @@ const TransferModal = ({ isOpen, onClose }) => {
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-        className="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden"
+        className="relative w-full max-w-lg bg-white dark:bg-[#10141e] rounded-3xl shadow-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden"
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-gradient-to-r from-blue-50/50 to-cyan-50/50 dark:from-gray-800/50 dark:to-gray-900/50">
+        <div className="px-6 py-5 border-b border-slate-200 dark:border-white/[0.06] flex items-center justify-between bg-slate-50/80 dark:bg-[#161c2b]">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-white shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-600/30">
               <ArrowLeftRight className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Transfer Funds</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">Transfer Funds</h3>
+              <p className="text-xs text-slate-500 dark:text-zinc-400">
                 Move money seamlessly between your personal wallets
               </p>
             </div>
@@ -130,7 +130,7 @@ const TransferModal = ({ isOpen, onClose }) => {
           <button
             type="button"
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>

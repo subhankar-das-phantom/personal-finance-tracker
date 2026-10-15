@@ -11,9 +11,17 @@ export const TimeFilterProvider = ({ children }) => {
     let startDate, endDate;
 
     switch (timeFilter) {
+      case 'today':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        endDate = now;
+        break;
+      case '7D':
       case 'thisWeek':
-        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        startDate = weekAgo;
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        endDate = now;
+        break;
+      case '30D':
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         endDate = now;
         break;
       case 'thisMonth':

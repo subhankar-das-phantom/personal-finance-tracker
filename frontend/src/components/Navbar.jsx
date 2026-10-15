@@ -33,21 +33,21 @@ const Navbar = () => {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50"
+      className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-[#080b11]/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-white/[0.07]"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             className="flex items-center space-x-2"
           >
-            <Link to="/" className="flex items-center space-x-2 group">
-              <div className="p-1.5 sm:p-2 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                <Wallet className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+            <Link to="/" className="flex items-center space-x-2.5 group">
+              <div className="w-8 h-8 rounded-lg bg-blue-600/15 dark:bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-sm transition-all duration-200">
+                <Wallet className="h-4 w-4" />
               </div>
-              <span className="text-base sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+              <span className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white">
                 FinanceTracker
               </span>
             </Link>
@@ -239,15 +239,15 @@ const Navbar = () => {
 // Desktop Navigation Item Component
 const NavItem = ({ to, icon: Icon, label, isActive }) => (
   <motion.div
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
+    whileHover={{ scale: 1.02 }}
+    whileTap={{ scale: 0.98 }}
   >
     <Link
       to={to}
-      className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-150 ${
         isActive
-          ? 'bg-blue-50 dark:bg-blue-900/60 text-blue-700 dark:text-blue-50'
-          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
+          ? 'bg-slate-100 dark:bg-[#151c2a] text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 font-semibold shadow-xs'
+          : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 border border-transparent'
       }`}
     >
       <Icon className="h-4 w-4" />
@@ -259,18 +259,18 @@ const NavItem = ({ to, icon: Icon, label, isActive }) => (
 // Mobile Navigation Item Component
 const MobileNavItem = ({ to, icon: Icon, label, onClick, isPrimary = false }) => (
   <motion.div
-    whileTap={{ scale: 0.95 }}
-    initial={{ opacity: 0, x: -20 }}
+    whileTap={{ scale: 0.98 }}
+    initial={{ opacity: 0, x: -10 }}
     animate={{ opacity: 1, x: 0 }}
-    transition={{ duration: 0.3 }}
+    transition={{ duration: 0.2 }}
   >
     <Link
       to={to}
       onClick={onClick}
-      className={`flex items-center space-x-2 px-2.5 py-2 sm:px-3 sm:py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+      className={`flex items-center space-x-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors duration-150 ${
         isPrimary
-          ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white'
-          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
+          ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-sm'
+          : 'text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#151c2a]'
       }`}
     >
       <Icon className="h-4 w-4" />

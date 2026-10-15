@@ -3,17 +3,17 @@ import { motion } from 'framer-motion';
 import { Loader } from 'lucide-react';
 
 const variants = {
-  primary: 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white shadow-lg hover:shadow-xl',
-  secondary: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm',
-  outline: 'bg-transparent border-2 border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20',
-  ghost: 'bg-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 border border-transparent',
-  danger: 'bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg',
+  primary: 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/25 border border-transparent',
+  secondary: 'bg-slate-100 dark:bg-[#161c2b] text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-white/10 hover:bg-slate-200/60 dark:hover:bg-white/5 shadow-sm',
+  outline: 'bg-transparent border border-slate-200 dark:border-white/10 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-white/5',
+  ghost: 'bg-transparent text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent',
+  danger: 'bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-600/20 border border-transparent',
 };
 
 const sizes = {
-  sm: 'px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm',
-  md: 'px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base',
-  lg: 'px-5 sm:px-6 py-2.5 sm:py-3.5 text-base sm:text-lg',
+  sm: 'px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold',
+  md: 'px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-semibold',
+  lg: 'px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold',
 };
 
 const Button = ({ 
@@ -28,12 +28,11 @@ const Button = ({
   onClick,
   ...props 
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyles = 'inline-flex items-center justify-center rounded-xl transition-all duration-150 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed';
   
   return (
     <motion.button
       type={type}
-      whileHover={!disabled && !isLoading ? { scale: 1.02 } : {}}
       whileTap={!disabled && !isLoading ? { scale: 0.98 } : {}}
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
       disabled={disabled || isLoading}
@@ -42,12 +41,12 @@ const Button = ({
     >
       {isLoading ? (
         <>
-          <Loader className="w-5 h-5 mr-2 animate-spin" />
+          <Loader className="w-4 h-4 mr-2 animate-spin" />
           <span>Loading...</span>
         </>
       ) : (
         <>
-          {Icon && <Icon className={`w-5 h-5 ${children ? 'mr-2' : ''}`} />}
+          {Icon && <Icon className={`w-4 h-4 ${children ? 'mr-1.5' : ''}`} />}
           {children}
         </>
       )}
