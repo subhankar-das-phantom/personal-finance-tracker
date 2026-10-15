@@ -101,8 +101,8 @@ const TransactionsPage = () => {
     }
   }, [showAddForm, showExportModal]);
 
-  // Predefined categories
-  const categories = [
+  // Standard categories reference
+  const standardExpenseCategories = [
     "Food & Dining",
     "Transportation",
     "Shopping",
@@ -111,12 +111,67 @@ const TransactionsPage = () => {
     "Healthcare",
     "Education",
     "Travel",
+  ];
+  const standardIncomeCategories = [
     "Salary",
     "Freelance",
     "Business",
     "Investments",
-    "Other",
+    "Rental",
+    "Gifts",
+    "Bonus",
   ];
+
+  // Dynamic categories from backend history
+  const { data: categoriesData } = useApi(token ? "transactions/categories" : null);
+
+  // Compute available categories matching current type filter
+  const availableCategories = useMemo(() => {
+    let standard = [];
+    let custom = [];
+
+    if (filters.type === "expense") {
+      standard = standardExpenseCategories;
+      custom = categoriesData?.customExpense || [];
+    } else if (filters.type === "income") {
+      standard = standardIncomeCategories;
+      custom = categoriesData?.customIncome || [];
+    } else {
+      standard = Array.from(
+        new Set([...standardExpenseCategories, ...standardIncomeCategories])
+      ).sort();
+      custom = Array.from(
+        new Set([
+          ...(categoriesData?.customExpense || []),
+          ...(categoriesData?.customIncome || []),
+        ])
+      ).sort();
+    }
+
+    // Also scan loaded transactions for any category not yet indexed
+    const customSet = new Set(custom);
+    if (Array.isArray(transactions)) {
+      transactions.forEach((t) => {
+        if (
+          t.category &&
+          typeof t.category === "string" &&
+          t.category.trim() &&
+          t.category !== "Other"
+        ) {
+          const cat = t.category.trim();
+          if (!standard.includes(cat)) {
+            customSet.add(cat);
+          }
+        }
+      });
+    }
+
+    return {
+      standard,
+      custom: Array.from(customSet).sort(),
+    };
+  }, [filters.type, categoriesData, transactions]);
+
 
   // Animation variants
   const containerVariants = {
@@ -143,14 +198,15 @@ const TransactionsPage = () => {
   const buildQueryString = () => {
     const params = new URLSearchParams();
 
-    // Add global time filter
+    // Determine effective date range (custom filter inputs take precedence over global preset)
     const { startDate, endDate } = getDateRange();
-    if (startDate) {
-      params.append("dateFrom", startDate.toISOString().split('T')[0]);
-    }
-    if (endDate) {
-      params.append("dateTo", endDate.toISOString().split('T')[0]);
-    }
+    const effectiveDateFrom =
+      filters.dateFrom || (startDate ? startDate.toISOString().split("T")[0] : "");
+    const effectiveDateTo =
+      filters.dateTo || (endDate ? endDate.toISOString().split("T")[0] : "");
+
+    if (effectiveDateFrom) params.append("dateFrom", effectiveDateFrom);
+    if (effectiveDateTo) params.append("dateTo", effectiveDateTo);
 
     // Add wallet scoping (global active wallet or filter specific)
     const effectiveWallet = filters.walletId || (activeWalletId !== "all" ? activeWalletId : "");
@@ -162,8 +218,6 @@ const TransactionsPage = () => {
     if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
     if (filters.type) params.append("type", filters.type);
     if (filters.category) params.append("category", filters.category);
-    if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
-    if (filters.dateTo) params.append("dateTo", filters.dateTo);
     if (filters.minAmount) params.append("minAmount", filters.minAmount);
     if (filters.maxAmount) params.append("maxAmount", filters.maxAmount);
     if (sortBy) params.append("sortBy", sortBy);
@@ -266,6 +320,7 @@ const TransactionsPage = () => {
       dateTo: "",
       minAmount: "",
       maxAmount: "",
+      walletId: "",
     });
   };
 
@@ -964,11 +1019,22 @@ const TransactionsPage = () => {
                       className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm"
                     >
                       <option value="">All Categories</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
+                      <optgroup label="Standard Categories">
+                        {availableCategories.standard.map((cat) => (
+                          <option key={cat} value={cat}>
+                            {cat}
+                          </option>
+                        ))}
+                      </optgroup>
+                      {availableCategories.custom.length > 0 && (
+                        <optgroup label="Custom Categories">
+                          {availableCategories.custom.map((cat) => (
+                            <option key={cat} value={cat}>
+                              {cat}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
                     </select>
                   </div>
 

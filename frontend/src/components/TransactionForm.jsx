@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { 
   Coins, 
   Calendar, 
@@ -14,11 +14,19 @@ import {
 } from 'lucide-react';
 import { useWallet } from '../context/WalletContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { AuthContext } from '../context/AuthContext';
+import { useApi, globalMutate } from '../hooks/useApi';
 import { formatCurrency } from '../utils/currency';
 
 const TransactionForm = ({ onSubmit, transaction, isLoading = false, onClose }) => {
   const { activeWallets, activeWalletId } = useWallet();
   const { currency } = useCurrency();
+  const { token } = useContext(AuthContext);
+
+  // Dynamic categories from user history
+  const { data: categoriesData, mutate: mutateCategories } = useApi(
+    token ? 'transactions/categories' : null
+  );
 
   const [formData, setFormData] = useState({
     type: 'expense',
@@ -32,29 +40,47 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false, onClose }) 
   const [errors, setErrors] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // Predefined categories
-  const categories = {
+  // Predefined baseline categories
+  const standardCategories = {
     expense: [
       'Food & Dining', 'Transportation', 'Shopping', 'Entertainment', 
-      'Bills & Utilities', 'Healthcare', 'Education', 'Travel', 'Other'
+      'Bills & Utilities', 'Healthcare', 'Education', 'Travel'
     ],
     income: [
       'Salary', 'Freelance', 'Business', 'Investments', 
-      'Rental', 'Gifts', 'Bonus', 'Other'
+      'Rental', 'Gifts', 'Bonus'
     ]
   };
+
+  // Dynamic custom categories derived from past transactions
+  const customCategories = useMemo(() => {
+    const list = formData.type === 'expense'
+      ? (categoriesData?.customExpense || [])
+      : (categoriesData?.customIncome || []);
+    
+    // Also include transaction.category if it's custom and not yet indexed
+    if (transaction?.category) {
+      const cat = transaction.category.trim();
+      const stdList = standardCategories[formData.type] || [];
+      if (cat && cat !== 'Other' && !stdList.includes(cat) && !list.includes(cat)) {
+        return [...list, cat].sort();
+      }
+    }
+    return list;
+  }, [categoriesData, formData.type, transaction]);
 
   useEffect(() => {
     if (transaction) {
       const type = transaction.type || 'expense';
-      const category = transaction.category || '';
-      const isCustom = category && !categories[type].includes(category) && category !== 'Other';
+      const category = transaction.category ? transaction.category.trim() : '';
+      const stdList = standardCategories[type] || [];
+      const isKnown = stdList.includes(category) || customCategories.includes(category);
       const txWalletId = transaction.wallet?._id || transaction.wallet || '';
       
       setFormData({
         type: type,
-        category: isCustom ? 'Other' : category,
-        customCategory: isCustom ? category : '',
+        category: category,
+        customCategory: (!isKnown && category !== 'Other') ? category : '',
         amount: transaction.amount || '',
         date: transaction.date ? transaction.date.substring(0, 10) : '',
         description: transaction.description || '',
@@ -67,7 +93,7 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false, onClose }) 
         walletId: prev.walletId || defaultWallet
       }));
     }
-  }, [transaction, activeWalletId, activeWallets]);
+  }, [transaction, activeWalletId, activeWallets, customCategories]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -105,12 +131,20 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false, onClose }) 
     }
 
     try {
+      const finalCategory =
+        formData.category === 'Other'
+          ? (formData.customCategory || '').trim()
+          : formData.category.trim();
+
       await onSubmit({
         ...formData,
-        category: formData.category === 'Other' ? formData.customCategory : formData.category,
+        category: finalCategory,
         amount: parseFloat(formData.amount),
         walletId: formData.walletId || activeWallets[0]?._id
       });
+      
+      mutateCategories();
+      globalMutate('transactions/categories');
       
       if (!transaction) {
         setFormData({
@@ -244,7 +278,13 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false, onClose }) 
               <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <select
                 value={formData.category}
-                onChange={(e) => handleChange('category', e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  handleChange('category', val);
+                  if (val !== 'Other') {
+                    handleChange('customCategory', '');
+                  }
+                }}
                 className={`w-full pl-9 pr-4 py-2.5 rounded-xl border text-sm transition-all duration-150 bg-slate-50 dark:bg-[#0b0e17] text-slate-900 dark:text-white ${
                   errors.category && isSubmitted
                     ? 'border-rose-500 focus:ring-1 focus:ring-rose-500'
@@ -252,9 +292,19 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false, onClose }) 
                 } focus:outline-none`}
               >
                 <option value="">Select category</option>
-                {categories[formData.type].map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
+                <optgroup label="Standard Categories">
+                  {standardCategories[formData.type].map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </optgroup>
+                {customCategories.length > 0 && (
+                  <optgroup label="Your Custom Categories">
+                    {customCategories.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </optgroup>
+                )}
+                <option value="Other">+ New Custom Category / Other...</option>
               </select>
             </div>
             {errors.category && isSubmitted && (
@@ -263,6 +313,7 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false, onClose }) 
               </p>
             )}
           </div>
+
 
           {/* Amount */}
           <div>

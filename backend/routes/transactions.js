@@ -78,13 +78,26 @@ router.get('/', auth, async (req, res) => {
     }
 
     if (type) filter.type = type;
-    if (category) filter.category = category;
+    if (category && typeof category === 'string' && category.trim()) {
+      const cleanCategory = category.trim();
+      // Case-insensitive exact category matching
+      filter.category = new RegExp(
+        `^${cleanCategory.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`,
+        'i'
+      );
+    }
 
-    if (dateFrom || dateTo) {
+    // Sanitize dates in case query parameters were passed multiple times (as arrays)
+    const rawDateFrom = Array.isArray(dateFrom) ? dateFrom[dateFrom.length - 1] : dateFrom;
+    const rawDateTo = Array.isArray(dateTo) ? dateTo[dateTo.length - 1] : dateTo;
+
+    if (rawDateFrom || rawDateTo) {
       filter.date = {};
-      if (dateFrom) filter.date.$gte = new Date(dateFrom);
-      if (dateTo) {
-        const end = new Date(dateTo);
+      if (rawDateFrom && !isNaN(new Date(rawDateFrom).getTime())) {
+        filter.date.$gte = new Date(rawDateFrom);
+      }
+      if (rawDateTo && !isNaN(new Date(rawDateTo).getTime())) {
+        const end = new Date(rawDateTo);
         end.setHours(23, 59, 59, 999);
         filter.date.$lte = end;
       }
@@ -291,6 +304,102 @@ router.delete('/:id', auth, async (req, res) => {
     res.json(deletedTransaction);
   } catch (err) {
     console.error('Error deleting transaction:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 4b. Get unique categories (standard + custom from past user transactions)
+router.get('/categories', auth, async (req, res) => {
+  try {
+    const { walletId } = req.query;
+    const cacheKey = getCacheKey('categories', req.user, req.query);
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
+    const baseFilter = { user: req.user };
+    if (walletId && walletId !== 'all' && mongoose.Types.ObjectId.isValid(walletId)) {
+      baseFilter.wallet = new mongoose.Types.ObjectId(walletId);
+    }
+
+    const expenseCategories = await Transaction.find({
+      ...baseFilter,
+      type: 'expense',
+    }).distinct('category');
+
+    const incomeCategories = await Transaction.find({
+      ...baseFilter,
+      type: 'income',
+    }).distinct('category');
+
+    const standardCategories = {
+      expense: [
+        'Food & Dining',
+        'Transportation',
+        'Shopping',
+        'Entertainment',
+        'Bills & Utilities',
+        'Healthcare',
+        'Education',
+        'Travel',
+      ],
+      income: [
+        'Salary',
+        'Freelance',
+        'Business',
+        'Investments',
+        'Rental',
+        'Gifts',
+        'Bonus',
+      ],
+    };
+
+    const customExpense = expenseCategories
+      .filter(
+        (c) =>
+          c &&
+          typeof c === 'string' &&
+          c.trim() &&
+          !standardCategories.expense.includes(c.trim()) &&
+          c.trim() !== 'Other'
+      )
+      .map((c) => c.trim());
+
+    const customIncome = incomeCategories
+      .filter(
+        (c) =>
+          c &&
+          typeof c === 'string' &&
+          c.trim() &&
+          !standardCategories.income.includes(c.trim()) &&
+          c.trim() !== 'Other'
+      )
+      .map((c) => c.trim());
+
+    const uniqueCustomExpense = Array.from(new Set(customExpense)).sort();
+    const uniqueCustomIncome = Array.from(new Set(customIncome)).sort();
+
+    const allExpenses = Array.from(
+      new Set([...standardCategories.expense, ...uniqueCustomExpense])
+    );
+    const allIncome = Array.from(
+      new Set([...standardCategories.income, ...uniqueCustomIncome])
+    );
+    const all = Array.from(new Set([...allExpenses, ...allIncome])).sort();
+
+    const result = {
+      expense: allExpenses,
+      income: allIncome,
+      customExpense: uniqueCustomExpense,
+      customIncome: uniqueCustomIncome,
+      all,
+    };
+
+    cache.set(cacheKey, result);
+    res.json(result);
+  } catch (err) {
+    console.error('Error fetching categories:', err);
     res.status(500).json({ error: err.message });
   }
 });
