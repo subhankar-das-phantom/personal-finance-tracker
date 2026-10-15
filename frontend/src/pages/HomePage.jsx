@@ -53,6 +53,17 @@ const HomePage = () => {
     refreshAllFinancialData,
   } = useWallet();
 
+  // Prevent background scroll jitter when modal is open
+  useEffect(() => {
+    if (showAddForm) {
+      const orig = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = orig;
+      };
+    }
+  }, [showAddForm]);
+
   // Dynamic SWR endpoints based on active wallet selection
   const transactionsEndpoint = token
     ? activeWalletId !== "all"

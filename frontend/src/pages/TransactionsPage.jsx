@@ -90,6 +90,17 @@ const TransactionsPage = () => {
   // Debounced search term
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
+  // Prevent background scroll jitter when any modal is open
+  useEffect(() => {
+    if (showAddForm || showExportModal) {
+      const orig = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = orig;
+      };
+    }
+  }, [showAddForm, showExportModal]);
+
   // Predefined categories
   const categories = [
     "Food & Dining",
@@ -1169,20 +1180,26 @@ const TransactionsPage = () => {
         {/* Export Modal - Keep the same as your original */}
         <AnimatePresence>
           {showExportModal && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex flex-col items-center overflow-y-auto p-4 sm:p-6"
-              onClick={() => setShowExportModal(false)}
-            >
+            <div className="fixed inset-0 z-50 overflow-y-auto">
+              {/* Backdrop */}
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-3xl my-auto flex-shrink-0 overflow-hidden max-h-[90vh] overflow-y-auto"
-              >
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="fixed inset-0 bg-black/70"
+                onClick={() => setShowExportModal(false)}
+              />
+              {/* Centering Wrapper */}
+              <div className="min-h-full flex items-center justify-center p-4 sm:p-6 relative pointer-events-none">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.97, y: 6 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.97, y: 6 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="bg-white dark:bg-[#10141e] rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 w-full max-w-3xl pointer-events-auto overflow-hidden max-h-[90vh] flex flex-col"
+                >
                 {/* Export Modal Content - Keep your existing export modal JSX */}
                 {/* Header */}
                 <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-4 sm:p-6 text-white sticky top-0 z-10">
@@ -1468,9 +1485,10 @@ const TransactionsPage = () => {
                   </Button>
                 </div>
               </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
 
         {/* Add/Edit Transaction Modal (Stable, Jitter-Free) */}
         <AnimatePresence>

@@ -53,7 +53,15 @@ const TransferModal = ({ isOpen, onClose }) => {
     }
   }, [isOpen, activeWalletId, activeWallets]);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) {
+      const orig = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = orig;
+      };
+    }
+  }, [isOpen]);
 
   const fromWallet = activeWallets.find((w) => w._id === fromWalletId);
   const toWallet = activeWallets.find((w) => w._id === toWalletId);
@@ -107,13 +115,28 @@ const TransferModal = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-        className="relative w-full max-w-lg bg-white dark:bg-[#10141e] rounded-3xl shadow-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden"
-      >
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="fixed inset-0 bg-black/70"
+            onClick={onClose}
+          />
+          {/* Centering Wrapper */}
+          <div className="min-h-full flex items-center justify-center p-4 sm:p-6 relative pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.97, y: 6 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: 6 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              className="relative w-full max-w-lg bg-white dark:bg-[#10141e] rounded-3xl shadow-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden pointer-events-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-200 dark:border-white/[0.06] flex items-center justify-between bg-slate-50/80 dark:bg-[#161c2b]">
           <div className="flex items-center space-x-3">
@@ -335,8 +358,11 @@ const TransferModal = ({ isOpen, onClose }) => {
             </div>
           </form>
         )}
-      </motion.div>
-    </div>
+            </motion.div>
+          </div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 };
 

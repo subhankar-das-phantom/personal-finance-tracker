@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApi } from '../hooks/useApi';
 import { 
@@ -48,6 +48,17 @@ const BudgetPage = () => {
   const [editingGoal, setEditingGoal] = useState(null);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Lock body scroll when budget modal is open to eliminate jitter
+  useEffect(() => {
+    if (showForm) {
+      const orig = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = orig;
+      };
+    }
+  }, [showForm]);
 
   const refreshData = () => {
     mutateGoals();
