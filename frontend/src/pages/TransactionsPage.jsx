@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useCallback } from "react";
 import api from "../services/api";
 import { useApi, globalMutate } from "../hooks/useApi";
 import { motion, AnimatePresence } from "framer-motion";
@@ -219,7 +219,7 @@ const TransactionsPage = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = useCallback(async (id) => {
     if (!window.confirm("Are you sure you want to delete this transaction?")) {
       return;
     }
@@ -232,12 +232,12 @@ const TransactionsPage = () => {
     } catch (error) {
       console.error("Error deleting transaction:", error);
     }
-  };
+  }, [mutateTransactions]);
 
-  const handleEdit = (transaction) => {
+  const handleEdit = useCallback((transaction) => {
     setEditingTransaction(transaction);
     setShowAddForm(true);
-  };
+  }, []);
 
   const updateFilter = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));

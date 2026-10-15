@@ -433,6 +433,7 @@ const HomePage = () => {
             <motion.div
               variants={itemVariants}
               className="flex items-center space-x-2 overflow-x-auto pb-1 pt-0.5 no-scrollbar"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               <button
                 type="button"
@@ -561,6 +562,7 @@ const HomePage = () => {
                     transactions={recentTransactions}
                     onEdit={handleEditTransaction}
                     onDelete={handleDeleteTransaction}
+                    showHeader={false}
                   />
                 )}
               </div>

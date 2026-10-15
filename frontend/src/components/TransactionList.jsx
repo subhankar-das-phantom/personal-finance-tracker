@@ -19,15 +19,14 @@ import { formatCurrency } from "../utils/currency";
 // TransactionRow Component
 // =============================
 const TransactionRow = memo(({ transaction, onEdit, onDelete }) => {
-  const [isActive, setIsActive] = useState(false);
   const { currency } = useCurrency();
 
   // Safety check for async/paginated data
   if (!transaction) {
     return (
-      <div className="mx-4 my-2 bg-gray-100 dark:bg-gray-800 rounded-xl p-4 animate-pulse">
-        <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+      <div className="bg-gray-100 dark:bg-gray-800/60 rounded-xl p-3 sm:p-3.5 animate-pulse">
+        <div className="flex items-center space-x-3 sm:space-x-4">
+          <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg flex-shrink-0"></div>
           <div className="flex-1 space-y-2">
             <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
             <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
@@ -44,107 +43,94 @@ const TransactionRow = memo(({ transaction, onEdit, onDelete }) => {
       day: "numeric",
     });
 
+  const isIncome = transaction.type === "income";
+
   return (
-    <motion.div
-      onHoverStart={() => setIsActive(true)}
-      onHoverEnd={() => setIsActive(false)}
-      onTap={() => setIsActive(!isActive)}
-      className="mx-4 my-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 cursor-pointer"
-    >
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-        {/* Left side (icon + details) */}
-        <div className="flex items-start sm:items-center space-x-4 flex-1 min-w-0 w-full">
-          <div
-            className={`p-2 rounded-lg flex-shrink-0 ${
-              transaction.type === "income"
-                ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
-                : "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
-            }`}
-          >
-            {transaction.type === "income" ? (
-              <TrendingUp className="h-5 w-5" />
-            ) : (
-              <TrendingDown className="h-5 w-5" />
-            )}
-          </div>
+    <div className="group bg-white dark:bg-gray-800/90 hover:bg-gray-50/90 dark:hover:bg-gray-800 rounded-xl p-3 sm:p-3.5 border border-gray-200/80 dark:border-gray-700/80 hover:border-blue-300 dark:hover:border-blue-600 transition-colors duration-150 shadow-sm flex items-center justify-between gap-3 w-full">
+      {/* Left side: Icon + Details */}
+      <div className="flex items-center space-x-3 sm:space-x-3.5 flex-1 min-w-0">
+        <div
+          className={`p-2 rounded-lg flex-shrink-0 ${
+            isIncome
+              ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
+              : "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+          }`}
+        >
+          {isIncome ? (
+            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
+          ) : (
+            <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5" />
+          )}
+        </div>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 mb-1 min-w-0">
-              <h3 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white truncate flex-1">
-                {transaction.description || "No description"}
-              </h3>
-              <span
-                className={`text-base sm:text-xl font-bold whitespace-nowrap flex-shrink-0 ${
-                  transaction.type === "income"
-                    ? "text-green-600 dark:text-green-400"
-                    : "text-red-600 dark:text-red-400"
-                }`}
-              >
-                {transaction.type === "income" ? "+" : "-"}
-                {formatCurrency(transaction.amount, currency.locale, currency.code)}
-              </span>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white truncate">
+            {transaction.description || "No description"}
+          </h3>
+
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            <div className="flex items-center space-x-1">
+              <Tag className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="truncate max-w-[120px]">{transaction.category}</span>
             </div>
-
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
+            {transaction.wallet && (
               <div className="flex items-center space-x-1">
-                <Tag className="h-4 w-4 flex-shrink-0" />
-                <span className="truncate">{transaction.category}</span>
+                <Wallet className="h-3 w-3 flex-shrink-0 text-blue-500" />
+                <span className="truncate max-w-[130px] px-1.5 py-0.2 rounded bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-cyan-300 text-[11px] font-medium">
+                  {transaction.wallet.name}
+                </span>
               </div>
-              {transaction.wallet && (
-                <div className="flex items-center space-x-1">
-                  <Wallet className="h-3.5 w-3.5 flex-shrink-0 text-blue-500" />
-                  <span className="truncate px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-cyan-300 text-xs font-semibold">
-                    {transaction.wallet.name}
-                  </span>
-                </div>
-              )}
-              <div className="flex items-center space-x-1">
-                <Calendar className="h-4 w-4 flex-shrink-0" />
-                <span>{formatDate(transaction.date)}</span>
-              </div>
+            )}
+            <div className="flex items-center space-x-1">
+              <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
+              <span>{formatDate(transaction.date)}</span>
             </div>
           </div>
         </div>
-
-        {/* Edit/Delete Buttons */}
-        <AnimatePresence>
-          {isActive && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.2 }}
-              className="flex items-center space-x-2 flex-shrink-0"
-            >
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(transaction);
-                }}
-                className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
-                title="Edit transaction"
-              >
-                <Edit3 className="h-4 w-4" />
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(transaction._id);
-                }}
-                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
-                title="Delete transaction"
-              >
-                <Trash2 className="h-4 w-4" />
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
-    </motion.div>
+
+      {/* Right side: Amount + Actions (zero layout shift) */}
+      <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0 ml-2">
+        <div
+          className={`text-sm sm:text-base font-bold whitespace-nowrap text-right ${
+            isIncome
+              ? "text-green-600 dark:text-green-400"
+              : "text-red-600 dark:text-red-400"
+          }`}
+        >
+          {isIncome ? "+" : "-"}
+          {formatCurrency(transaction.amount, currency.locale, currency.code)}
+        </div>
+
+        {/* Action buttons: CSS-only opacity, never causes layout shifts or remeasures */}
+        <div className="flex items-center space-x-0.5 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-150">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(transaction);
+            }}
+            className="p-1.5 text-gray-400 hover:text-blue-600 dark:hover:text-cyan-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+            title="Edit transaction"
+            aria-label="Edit transaction"
+          >
+            <Edit3 className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(transaction._id);
+            }}
+            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+            title="Delete transaction"
+            aria-label="Delete transaction"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 });
 TransactionRow.displayName = "TransactionRow";
@@ -159,15 +145,23 @@ const TransactionList = ({
   isLoading = false,
   hasMore = false,
   onLoadMore,
+  showHeader = true,
 }) => {
   const parentRef = useRef(null);
 
-  // Configure the virtualizer with TanStack Virtual
+  // Configure the virtualizer with stable estimation and larger overscan buffer
   const rowVirtualizer = useVirtualizer({
     count: hasMore ? transactions.length + 1 : transactions.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: useCallback(() => 120, []), // Height per row
-    overscan: 5, // Number of items to render outside viewport for smooth scrolling
+    estimateSize: useCallback(() => 76, []), // Height per row including container padding
+    overscan: 10, // Pre-render 10 items outside viewport for zero jitter
+    getItemKey: useCallback(
+      (index) => {
+        if (index >= transactions.length) return "virtual-loader-row";
+        return transactions[index]?._id || `tx-row-${index}`;
+      },
+      [transactions]
+    ),
   });
 
   // Get virtual items
@@ -206,6 +200,82 @@ const TransactionList = ({
     );
   }
 
+  const listContent = (
+    <div className={showHeader ? "p-2 sm:p-4" : ""}>
+      {transactions.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400"
+        >
+          <AlertCircle className="h-12 w-12 mb-4 opacity-50" />
+          <p className="text-lg font-medium mb-2">No transactions found</p>
+          <p className="text-sm text-center px-4">
+            Try adjusting your filters or search terms
+          </p>
+        </motion.div>
+      ) : (
+        <div
+          ref={parentRef}
+          className="h-[600px] overflow-y-auto overflow-x-hidden custom-scrollbar"
+          style={{
+            willChange: "scroll-position",
+          }}
+        >
+          <div
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              width: "100%",
+              position: "relative",
+            }}
+          >
+            {virtualItems.map((virtualRow) => {
+              const isLoaderRow = virtualRow.index > transactions.length - 1;
+              const transaction = transactions[virtualRow.index];
+
+              return (
+                <div
+                  key={virtualRow.key}
+                  data-index={virtualRow.index}
+                  ref={rowVirtualizer.measureElement}
+                  className="px-2 sm:px-3 py-1.5"
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  {isLoaderRow ? (
+                    hasMore ? (
+                      <div className="flex items-center justify-center py-6">
+                        <Loader2 className="h-7 w-7 animate-spin text-blue-600" />
+                        <span className="ml-3 text-sm text-gray-600 dark:text-gray-400">
+                          Loading more transactions...
+                        </span>
+                      </div>
+                    ) : null
+                  ) : (
+                    <TransactionRow
+                      transaction={transaction}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  if (!showHeader) {
+    return listContent;
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -234,74 +304,7 @@ const TransactionList = ({
       </div>
 
       {/* Virtualized List Section */}
-      <div className="p-2 sm:p-4">
-        {transactions.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400"
-          >
-            <AlertCircle className="h-12 w-12 mb-4 opacity-50" />
-            <p className="text-lg font-medium mb-2">No transactions found</p>
-            <p className="text-sm text-center px-4">
-              Try adjusting your filters or search terms
-            </p>
-          </motion.div>
-        ) : (
-          <div
-            ref={parentRef}
-            className="h-[600px] overflow-auto custom-scrollbar"
-            style={{
-              contain: "strict",
-            }}
-          >
-            <div
-              style={{
-                height: `${rowVirtualizer.getTotalSize()}px`,
-                width: "100%",
-                position: "relative",
-              }}
-            >
-              {virtualItems.map((virtualRow) => {
-                const isLoaderRow = virtualRow.index > transactions.length - 1;
-                const transaction = transactions[virtualRow.index];
-
-                return (
-                  <div
-                    key={virtualRow.key}
-                    data-index={virtualRow.index}
-                    ref={rowVirtualizer.measureElement}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      transform: `translateY(${virtualRow.start}px)`,
-                    }}
-                  >
-                    {isLoaderRow ? (
-                      hasMore ? (
-                        <div className="flex items-center justify-center py-8">
-                          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                          <span className="ml-3 text-sm text-gray-600 dark:text-gray-400">
-                            Loading more transactions...
-                          </span>
-                        </div>
-                      ) : null
-                    ) : (
-                      <TransactionRow
-                        transaction={transaction}
-                        onEdit={onEdit}
-                        onDelete={onDelete}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
+      {listContent}
     </motion.div>
   );
 };

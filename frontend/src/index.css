@@ -5,7 +5,7 @@
   --color-blue-50: var(--primary-light);
   --color-blue-100: var(--primary-light);
   --color-blue-200: var(--primary-light);
-  --color-blue-300: var(--primary-hover);
+  --color-blue-300: var(--primary-light);
   --color-blue-400: var(--primary);
   --color-blue-500: var(--primary);
   --color-blue-600: var(--primary);
@@ -16,7 +16,7 @@
   --color-cyan-50: var(--secondary-light);
   --color-cyan-100: var(--secondary-light);
   --color-cyan-200: var(--secondary-light);
-  --color-cyan-300: var(--secondary-hover);
+  --color-cyan-300: var(--secondary-light);
   --color-cyan-400: var(--secondary);
   --color-cyan-500: var(--secondary);
   --color-cyan-600: var(--secondary-hover);
@@ -92,6 +92,17 @@
 
 /* Custom scrollbar styling */
 @layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
   .scrollbar-thin::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -177,4 +188,16 @@ body {
 .dark body {
   background-color: #0f172a;
   color: #f1f5f9;
+}
+
+/* Force hide scrollbars for horizontal pill ribbons */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none !important; /* IE and Edge */
+  scrollbar-width: none !important; /* Firefox */
 }

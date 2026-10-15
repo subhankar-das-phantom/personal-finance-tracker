@@ -94,13 +94,13 @@ const WalletSelector = ({ className = '' }) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-0 mt-2 w-72 sm:w-80 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700/80 shadow-2xl z-50 overflow-hidden"
+            className="absolute left-0 mt-2 w-80 sm:w-96 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700/80 shadow-2xl z-50 overflow-hidden"
           >
             {/* Header / Summary */}
             <div className="p-3 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-gray-800 dark:to-gray-800/80 border-b border-gray-100 dark:border-gray-700">
               <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
                 <span className="font-semibold uppercase tracking-wider flex items-center">
-                  <Sparkles className="w-3 h-3 mr-1 text-blue-600 dark:text-cyan-400" />
+                  <Sparkles className="w-3.5 h-3.5 mr-1 text-blue-600 dark:text-cyan-400" />
                   Your Wallets ({activeWallets.length})
                 </span>
                 <button
@@ -109,16 +109,16 @@ const WalletSelector = ({ className = '' }) => {
                     setIsOpen(false);
                     setIsTransferModalOpen(true);
                   }}
-                  className="text-blue-600 dark:text-cyan-400 hover:underline flex items-center space-x-1 font-medium"
+                  className="text-blue-600 dark:text-cyan-400 hover:underline flex items-center space-x-1 font-semibold"
                 >
-                  <ArrowLeftRight className="w-3 h-3" />
+                  <ArrowLeftRight className="w-3.5 h-3.5" />
                   <span>Transfer</span>
                 </button>
               </div>
             </div>
 
             {/* Wallets List */}
-            <div className="max-h-64 overflow-y-auto p-1.5 space-y-1">
+            <div className="max-h-64 overflow-y-auto p-2 space-y-1.5 custom-scrollbar">
               {/* Option: All Wallets Combined Overview */}
               <button
                 type="button"
@@ -126,33 +126,51 @@ const WalletSelector = ({ className = '' }) => {
                   setActiveWalletId('all');
                   setIsOpen(false);
                 }}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-colors duration-150 ${
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-colors duration-150 ${
                   activeWalletId === 'all'
-                    ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-semibold'
-                    : 'hover:bg-gray-50 dark:hover:bg-gray-700/60 text-gray-700 dark:text-gray-200'
+                    ? 'bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-700/70 shadow-sm'
+                    : 'hover:bg-gray-50 dark:hover:bg-gray-700/60 text-gray-700 dark:text-gray-200 border border-transparent'
                 }`}
               >
-                <div className="flex items-center space-x-3 min-w-0">
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
                   <div
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs flex-shrink-0 ${
                       activeWalletId === 'all'
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-gradient-to-tr from-blue-600 to-cyan-500 text-white shadow-sm'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
                     }`}
                   >
-                    <Globe className="w-3.5 h-3.5" />
+                    <Globe className="w-4 h-4" />
                   </div>
-                  <div className="truncate">
-                    <div className="text-sm truncate">All Wallets Overview</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Combined net balance</div>
+                  <div className="min-w-0 flex-1">
+                    <div
+                      className={`text-sm truncate ${
+                        activeWalletId === 'all'
+                          ? 'text-gray-900 dark:text-white font-bold'
+                          : 'text-gray-800 dark:text-gray-200 font-medium'
+                      }`}
+                    >
+                      All Wallets Overview
+                    </div>
+                    <div
+                      className={`text-xs truncate ${
+                        activeWalletId === 'all'
+                          ? 'text-blue-600 dark:text-cyan-400 font-medium'
+                          : 'text-gray-500 dark:text-gray-400'
+                      }`}
+                    >
+                      Combined net balance
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
+                <div className="flex items-center space-x-2 flex-shrink-0 ml-3">
                   <span className="text-xs font-bold text-gray-900 dark:text-white">
                     {formatCurrency(summary.totalBalance, currency)}
                   </span>
-                  {activeWalletId === 'all' && <Check className="w-4 h-4 text-blue-600 dark:text-cyan-400" />}
+                  {activeWalletId === 'all' && (
+                    <Check className="w-4 h-4 text-blue-600 dark:text-cyan-400 flex-shrink-0" />
+                  )}
                 </div>
               </button>
 
@@ -167,31 +185,45 @@ const WalletSelector = ({ className = '' }) => {
                       setActiveWalletId(wallet._id);
                       setIsOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-colors duration-150 ${
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-colors duration-150 ${
                       isSelected
-                        ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-semibold'
-                        : 'hover:bg-gray-50 dark:hover:bg-gray-700/60 text-gray-700 dark:text-gray-200'
+                        ? 'bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-700/70 shadow-sm'
+                        : 'hover:bg-gray-50 dark:hover:bg-gray-700/60 text-gray-700 dark:text-gray-200 border border-transparent'
                     }`}
                   >
-                    <div className="flex items-center space-x-3 min-w-0">
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
                       <div
-                        className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs flex-shrink-0 ${
                           isSelected
-                            ? 'bg-gradient-to-tr from-blue-600 to-cyan-500 text-white'
+                            ? 'bg-gradient-to-tr from-blue-600 to-cyan-500 text-white shadow-sm'
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
                         }`}
                       >
-                        <Wallet className="w-3.5 h-3.5" />
+                        <Wallet className="w-4 h-4" />
                       </div>
-                      <div className="truncate">
-                        <div className="text-sm truncate">{wallet.name}</div>
-                        <div className="text-[11px] text-gray-500 dark:text-gray-400">
+                      <div className="min-w-0 flex-1">
+                        <div
+                          className={`text-sm truncate ${
+                            isSelected
+                              ? 'text-gray-900 dark:text-white font-bold'
+                              : 'text-gray-800 dark:text-gray-200 font-medium'
+                          }`}
+                        >
+                          {wallet.name}
+                        </div>
+                        <div
+                          className={`text-[11px] truncate ${
+                            isSelected
+                              ? 'text-blue-600 dark:text-cyan-400 font-medium'
+                              : 'text-gray-500 dark:text-gray-400'
+                          }`}
+                        >
                           {wallet.transactionCount || 0} txns • {wallet.currency}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
+                    <div className="flex items-center space-x-2 flex-shrink-0 ml-3">
                       <span
                         className={`text-xs font-bold ${
                           wallet.balance >= 0 ? 'text-gray-900 dark:text-white' : 'text-red-500'
@@ -199,7 +231,9 @@ const WalletSelector = ({ className = '' }) => {
                       >
                         {formatCurrency(wallet.balance, { code: wallet.currency, locale: currency?.locale })}
                       </span>
-                      {isSelected && <Check className="w-4 h-4 text-blue-600 dark:text-cyan-400" />}
+                      {isSelected && (
+                        <Check className="w-4 h-4 text-blue-600 dark:text-cyan-400 flex-shrink-0" />
+                      )}
                     </div>
                   </button>
                 );
