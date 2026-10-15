@@ -125,52 +125,7 @@ const TransactionsPage = () => {
   // Dynamic categories from backend history
   const { data: categoriesData } = useApi(token ? "transactions/categories" : null);
 
-  // Compute available categories matching current type filter
-  const availableCategories = useMemo(() => {
-    let standard = [];
-    let custom = [];
 
-    if (filters.type === "expense") {
-      standard = standardExpenseCategories;
-      custom = categoriesData?.customExpense || [];
-    } else if (filters.type === "income") {
-      standard = standardIncomeCategories;
-      custom = categoriesData?.customIncome || [];
-    } else {
-      standard = Array.from(
-        new Set([...standardExpenseCategories, ...standardIncomeCategories])
-      ).sort();
-      custom = Array.from(
-        new Set([
-          ...(categoriesData?.customExpense || []),
-          ...(categoriesData?.customIncome || []),
-        ])
-      ).sort();
-    }
-
-    // Also scan loaded transactions for any category not yet indexed
-    const customSet = new Set(custom);
-    if (Array.isArray(transactions)) {
-      transactions.forEach((t) => {
-        if (
-          t.category &&
-          typeof t.category === "string" &&
-          t.category.trim() &&
-          t.category !== "Other"
-        ) {
-          const cat = t.category.trim();
-          if (!standard.includes(cat)) {
-            customSet.add(cat);
-          }
-        }
-      });
-    }
-
-    return {
-      standard,
-      custom: Array.from(customSet).sort(),
-    };
-  }, [filters.type, categoriesData, transactions]);
 
 
   // Animation variants
@@ -233,6 +188,53 @@ const TransactionsPage = () => {
 
   const isRefreshing = isValidating;
   const transactions = rawData?.transactions || rawData || [];
+
+  // Compute available categories matching current type filter
+  const availableCategories = useMemo(() => {
+    let standard = [];
+    let custom = [];
+
+    if (filters.type === "expense") {
+      standard = standardExpenseCategories;
+      custom = categoriesData?.customExpense || [];
+    } else if (filters.type === "income") {
+      standard = standardIncomeCategories;
+      custom = categoriesData?.customIncome || [];
+    } else {
+      standard = Array.from(
+        new Set([...standardExpenseCategories, ...standardIncomeCategories])
+      ).sort();
+      custom = Array.from(
+        new Set([
+          ...(categoriesData?.customExpense || []),
+          ...(categoriesData?.customIncome || []),
+        ])
+      ).sort();
+    }
+
+    // Also scan loaded transactions for any category not yet indexed
+    const customSet = new Set(custom);
+    if (Array.isArray(transactions)) {
+      transactions.forEach((t) => {
+        if (
+          t.category &&
+          typeof t.category === "string" &&
+          t.category.trim() &&
+          t.category !== "Other"
+        ) {
+          const cat = t.category.trim();
+          if (!standard.includes(cat)) {
+            customSet.add(cat);
+          }
+        }
+      });
+    }
+
+    return {
+      standard,
+      custom: Array.from(customSet).sort(),
+    };
+  }, [filters.type, categoriesData, transactions]);
 
   // Calculate stats from the current dataset
   const income = transactions
