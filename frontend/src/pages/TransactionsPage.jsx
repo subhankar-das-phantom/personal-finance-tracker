@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useContext } from "react";
 import api from "../services/api";
 import { useApi, globalMutate } from "../hooks/useApi";
 import { motion, AnimatePresence } from "framer-motion";
@@ -7,6 +7,11 @@ import TransactionList from "../components/TransactionList";
 import useDebounce from "../hooks/useDebounce";
 import * as XLSX from "xlsx";
 import TransactionForm from "../components/TransactionForm";
+import WalletSelector from "../components/WalletSelector";
+import WalletManagementModal from "../components/WalletManagementModal";
+import TransferModal from "../components/TransferModal";
+import transferService from "../services/transferService";
+import { useWallet } from "../context/WalletContext";
 import {
   Plus,
   Filter,
@@ -24,6 +29,8 @@ import {
   File,
   CheckCircle2,
   SortAsc,
+  ArrowLeftRight,
+  Trash2,
 } from "lucide-react";
 import { useCurrency } from "../context/CurrencyContext";
 import { useTimeFilter } from "../context/TimeFilterContext";
@@ -47,6 +54,7 @@ const TransactionsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("date");
   const [sortOrder, setSortOrder] = useState("desc");
+  const [viewMode, setViewMode] = useState("transactions"); // "transactions" | "transfers"
   const [filters, setFilters] = useState({
     type: "",
     category: "",
@@ -54,11 +62,29 @@ const TransactionsPage = () => {
     dateTo: "",
     minAmount: "",
     maxAmount: "",
+    walletId: "",
   });
   const [showFilters, setShowFilters] = useState(false);
 
   const { token } = useContext(AuthContext);
   const { timeFilter, setTimeFilter, getDateRange } = useTimeFilter();
+  const {
+    activeWalletId,
+    activeWallets,
+    isManageWalletsOpen,
+    setIsManageWalletsOpen,
+    isTransferModalOpen,
+    setIsTransferModalOpen,
+    refreshAllFinancialData,
+  } = useWallet();
+
+  // Transfers query
+  const { data: transfersData, mutate: mutateTransfers, isLoading: isTransfersLoading } = useApi(
+    token ? "transfers" : null
+  );
+  const transfers = Array.isArray(transfersData?.transfers || transfersData)
+    ? transfersData?.transfers || transfersData
+    : [];
 
   // Debounced search term
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -114,6 +140,12 @@ const TransactionsPage = () => {
       params.append("dateTo", endDate.toISOString().split('T')[0]);
     }
 
+    // Add wallet scoping (global active wallet or filter specific)
+    const effectiveWallet = filters.walletId || (activeWalletId !== "all" ? activeWalletId : "");
+    if (effectiveWallet && effectiveWallet !== "all") {
+      params.append("walletId", effectiveWallet);
+    }
+
     // Add all filter parameters
     if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
     if (filters.type) params.append("type", filters.type);
@@ -153,7 +185,7 @@ const TransactionsPage = () => {
   };
 
   const refreshData = async () => {
-    mutateTransactions();
+    refreshAllFinancialData();
   };
 
   const handleSubmit = async (transactionData) => {
@@ -169,11 +201,21 @@ const TransactionsPage = () => {
       }
 
       setShowAddForm(false);
-      mutateTransactions(); // Refresh local list
-      globalMutate('transactions/stats'); // Refresh dashboard stats
-      globalMutate('transactions/chart-data'); // Refresh dashboard charts
+      refreshAllFinancialData();
     } catch (error) {
       console.error("Error saving transaction:", error);
+    }
+  };
+
+  const handleDeleteTransfer = async (id) => {
+    if (!window.confirm("Are you sure you want to delete/revert this transfer?")) {
+      return;
+    }
+    try {
+      await transferService.deleteTransfer(id);
+      refreshAllFinancialData();
+    } catch (err) {
+      console.error("Error deleting transfer:", err);
     }
   };
 
@@ -321,7 +363,7 @@ const TransactionsPage = () => {
         `Total Transactions: ${rangeStats.transactionCount} | Income: ${formatCurrency(rangeStats.totalIncome)} | Expenses: ${formatCurrency(rangeStats.totalExpenses)} | Net: ${formatCurrency(rangeStats.netBalance)}`,
       ],
       [],
-      ["Date", "Type", "Category", "Description", "Amount", "Running Balance"],
+      ["Date", "Type", "Category", "Wallet", "Description", "Amount", "Running Balance"],
     ];
 
     let runningBalance = 0;
@@ -345,6 +387,7 @@ const TransactionsPage = () => {
         }),
         t.type.toUpperCase(),
         t.category,
+        t.wallet?.name || "Primary Wallet",
         t.description || "",
         t.type === "income" ? amount.toFixed(2) : `-${amount.toFixed(2)}`,
         runningBalance.toFixed(2),
@@ -353,16 +396,17 @@ const TransactionsPage = () => {
 
     transactionData.push(
       [],
-      ["TOTALS", "", "", "", "", ""],
-      ["Total Income", "", "", "", rangeStats.totalIncome.toFixed(2), ""],
-      ["Total Expenses", "", "", "", rangeStats.totalExpenses.toFixed(2), ""],
-      ["Net Balance", "", "", "", rangeStats.netBalance.toFixed(2), ""]
+      ["TOTALS", "", "", "", "", "", ""],
+      ["Total Income", "", "", "", "", rangeStats.totalIncome.toFixed(2), ""],
+      ["Total Expenses", "", "", "", "", rangeStats.totalExpenses.toFixed(2), ""],
+      ["Net Balance", "", "", "", "", rangeStats.netBalance.toFixed(2), ""]
     );
 
     const wsTransactions = XLSX.utils.aoa_to_sheet(transactionData);
     wsTransactions["!cols"] = [
       { wch: 15 },
       { wch: 10 },
+      { wch: 20 },
       { wch: 20 },
       { wch: 40 },
       { wch: 15 },
@@ -527,14 +571,15 @@ const TransactionsPage = () => {
 
   const exportToCSV = (transactionsToExport, dateRangeStr) => {
     const csvContent = [
-      ["Date", "Type", "Category", "Description", "Amount"],
+      ["Date", "Type", "Category", "Wallet", "Description", "Amount"],
       ...transactionsToExport
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .map((t) => [
           new Date(t.date).toLocaleDateString(),
           t.type,
           t.category,
-          t.description || "",
+          `"${(t.wallet?.name || "Primary Wallet").replace(/"/g, '""')}"`,
+          `"${(t.description || "").replace(/"/g, '""')}"`,
           t.amount,
         ]),
     ]
@@ -661,8 +706,37 @@ const TransactionsPage = () => {
 
             {/* Controls Row */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
+              {/* Wallet Selector */}
+              <WalletSelector />
+
+              {/* View Mode Toggle: Transactions vs Transfers */}
+              <div className="flex bg-gray-200/70 dark:bg-gray-800 p-1 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("transactions")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    viewMode === "transactions"
+                      ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                      : "text-gray-500 hover:text-gray-800 dark:text-gray-400"
+                  }`}
+                >
+                  Transactions ({transactions.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("transfers")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    viewMode === "transfers"
+                      ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                      : "text-gray-500 hover:text-gray-800 dark:text-gray-400"
+                  }`}
+                >
+                  Transfers ({transfers.length})
+                </button>
+              </div>
+
               {/* Search */}
-              <div className="relative flex-1 min-w-[200px]">
+              <div className="relative flex-1 min-w-[180px]">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden="true" />
                 <input
                   type="text"
@@ -675,7 +749,7 @@ const TransactionsPage = () => {
               </div>
 
               {/* Sort Dropdown */}
-              <div className="relative min-w-[180px]">
+              <div className="relative min-w-[160px]">
                 <label htmlFor="sort-select" className="sr-only">Sort transactions</label>
                 <SortAsc className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden="true" />
                 <select
@@ -699,7 +773,7 @@ const TransactionsPage = () => {
               </div>
 
               {/* Time Filter */}
-              <div className="relative min-w-[150px]">
+              <div className="relative min-w-[130px]">
                 <label htmlFor="time-filter-transactions" className="sr-only">Time Filter</label>
                 <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden="true" />
                 <select
@@ -738,6 +812,15 @@ const TransactionsPage = () => {
                   <RefreshCw
                     className={`h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`}
                   />
+                </Button>
+
+                {/* Transfer Button */}
+                <Button
+                  variant="secondary"
+                  onClick={() => setIsTransferModalOpen(true)}
+                  icon={ArrowLeftRight}
+                >
+                  <span className="hidden sm:inline">Transfer</span>
                 </Button>
 
                 {/* Export Button */}
@@ -829,6 +912,24 @@ const TransactionsPage = () => {
 
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Wallet
+                    </label>
+                    <select
+                      value={filters.walletId}
+                      onChange={(e) => updateFilter("walletId", e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm"
+                    >
+                      <option value="">All Wallets</option>
+                      {activeWallets.map((w) => (
+                        <option key={w._id} value={w._id}>
+                          {w.name} ({w.currency})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Date From
                     </label>
                     <input
@@ -890,7 +991,7 @@ const TransactionsPage = () => {
           {/* Statistics Cards */}
           <motion.div
             variants={itemVariants}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6"
           >
             <StatsCard
               title="Total Income"
@@ -923,14 +1024,86 @@ const TransactionsPage = () => {
             />
           </motion.div>
 
-          {/* Transaction List */}
+          {/* Main List Section */}
           <motion.div variants={itemVariants}>
-            <TransactionList
-              transactions={transactions}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              isLoading={isLoading}
-            />
+            {viewMode === "transactions" ? (
+              <TransactionList
+                transactions={transactions}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                isLoading={isLoading}
+              />
+            ) : (
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="p-4 sm:p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+                      Wallet Transfers ({transfers.length})
+                    </h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Internal money movements between your personal wallets
+                    </p>
+                  </div>
+                  <Button
+                    variant="primary"
+                    onClick={() => setIsTransferModalOpen(true)}
+                    icon={ArrowLeftRight}
+                    className="text-xs"
+                  >
+                    New Transfer
+                  </Button>
+                </div>
+
+                {transfers.length === 0 ? (
+                  <div className="p-12 text-center text-gray-400">
+                    <ArrowLeftRight className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                    <p>No transfers recorded yet. Click "New Transfer" to move funds between wallets.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                    {transfers.map((t) => (
+                      <div
+                        key={t._id}
+                        className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors"
+                      >
+                        <div className="flex items-center space-x-3.5">
+                          <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-cyan-400 flex items-center justify-center flex-shrink-0">
+                            <ArrowLeftRight className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="flex items-center space-x-2 text-sm font-semibold text-gray-900 dark:text-white">
+                              <span>{t.fromWallet?.name || "Source"}</span>
+                              <span className="text-gray-400">→</span>
+                              <span className="text-blue-600 dark:text-cyan-400">
+                                {t.toWallet?.name || "Destination"}
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-2 mt-0.5">
+                              <span>{new Date(t.date).toLocaleDateString()}</span>
+                              {t.description && <span>• {t.description}</span>}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-3">
+                          <span className="text-base font-bold text-gray-900 dark:text-white">
+                            {formatCurrency(t.amount)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTransfer(t._id)}
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors"
+                            title="Revert / Delete transfer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </motion.div>
         </motion.div>
 
@@ -1273,6 +1446,22 @@ const TransactionsPage = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Wallet Management Modal */}
+        <WalletManagementModal
+          isOpen={isManageWalletsOpen}
+          onClose={() => setIsManageWalletsOpen(false)}
+        />
+
+        {/* Transfer Modal */}
+        <TransferModal
+          isOpen={isTransferModalOpen}
+          onClose={() => setIsTransferModalOpen(false)}
+          onSuccess={() => {
+            mutateTransfers();
+            refreshAllFinancialData();
+          }}
+        />
       </div>
     </div>
   );
@@ -1303,18 +1492,18 @@ const StatsCard = ({
   return (
     <Card
       whileHover={{ y: -4 }}
-      className="p-4 sm:p-6 transition-all duration-200"
+      className="p-3.5 sm:p-5 lg:p-6 transition-all duration-200"
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-2 sm:mb-4">
         <div
           className={`p-2 sm:p-3 rounded-xl bg-gradient-to-r ${
             colorClasses[color].split(" ")[0]
           } ${colorClasses[color].split(" ")[1]}`}
         >
-          <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+          <Icon className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
         </div>
         <div
-          className={`px-2 py-1 rounded-full text-xs font-medium ${
+          className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium truncate max-w-[85px] sm:max-w-none ${
             colorClasses[color].split(" ")[2]
           } ${colorClasses[color].split(" ")[3]} ${
             colorClasses[color].split(" ")[4]
@@ -1324,10 +1513,10 @@ const StatsCard = ({
         </div>
       </div>
 
-      <h3 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+      <h3 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-0.5 sm:mb-1 truncate">
         {title}
       </h3>
-      <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
+      <p className="text-sm sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white truncate">
         {formatValue(value)}
       </p>
     </Card>

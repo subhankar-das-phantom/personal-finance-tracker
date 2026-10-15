@@ -7,26 +7,43 @@ import {
   ArrowLeft, TrendingUp, TrendingDown, Scale, Calendar, Sparkles, Filter, LineChart as LineIcon
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
 import { useApi, globalMutate } from '../hooks/useApi';
 import { AuthContext } from '../context/AuthContext';
 import BudgetList from '../components/BudgetList';
 import BudgetProgress from '../components/BudgetProgress';
 import BudgetForm from '../components/BudgetForm';
-import { getBudgets, getBudgetProgress, addBudget, updateBudget, deleteBudget } from '../services/budgetService';
+import { getBudgetProgress, addBudget, updateBudget, deleteBudget } from '../services/budgetService';
 import { useCurrency } from '../context/CurrencyContext';
 import { useTimeFilter } from '../context/TimeFilterContext';
 import { formatCurrency } from '../utils/currency';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
+import WalletSelector from '../components/WalletSelector';
+import WalletManagementModal from '../components/WalletManagementModal';
+import TransferModal from '../components/TransferModal';
+import { useWallet } from '../context/WalletContext';
 
 const COLORS = ['#6366F1', '#22C55E', '#F59E0B', '#EF4444', '#06B6D4', '#A855F7', '#84CC16'];
 
 const AnalyticsPage = () => {
   const { token } = useContext(AuthContext);
   const { timeFilter } = useTimeFilter();
+  const {
+    activeWalletId,
+    isManageWalletsOpen,
+    setIsManageWalletsOpen,
+    isTransferModalOpen,
+    setIsTransferModalOpen,
+    refreshAllFinancialData,
+  } = useWallet();
 
-  const { data: analyticsDataRaw, error: analyticsError, isLoading: isAnalyticsLoading } = useApi(token ? 'transactions/analytics' : null);
+  const analyticsEndpoint = token
+    ? activeWalletId && activeWalletId !== 'all'
+      ? `transactions/analytics?walletId=${activeWalletId}`
+      : 'transactions/analytics'
+    : null;
+
+  const { data: analyticsDataRaw, error: analyticsError, isLoading: isAnalyticsLoading } = useApi(analyticsEndpoint);
   const { data: budgetGoalsRaw, error: budgetError, isLoading: isBudgetLoading } = useApi(token ? '/budget' : null);
   const { data: budgetProgressRaw, error: progressError, isLoading: isProgressLoading } = useApi(token ? '/budget/progress' : null);
 
@@ -121,7 +138,7 @@ const AnalyticsPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="h-10 w-64 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="h-28 bg-white/70 dark:bg-gray-800/70 rounded-2xl border border-gray-200 dark:border-gray-700" />
               ))}
@@ -225,6 +242,7 @@ const AnalyticsPage = () => {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
+              <WalletSelector />
               {chartControls}
               <Button
                 variant="outline"
@@ -237,7 +255,7 @@ const AnalyticsPage = () => {
           </motion.div>
 
           {/* KPI Cards */}
-          <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             <AnalyticsCard icon={TrendingUp} title="This Month Income" value={periods.thisMonth.income} tone="success" />
             <AnalyticsCard icon={TrendingDown} title="This Month Expenses" value={periods.thisMonth.expense} tone="danger" />
             <AnalyticsCard icon={Scale} title="This Month Net" value={periods.thisMonth.netBalance} tone={periods.thisMonth.netBalance >= 0 ? 'brand' : 'danger'} />
@@ -425,6 +443,21 @@ const AnalyticsPage = () => {
             </Card>
           </div>
         </motion.div>
+
+        {/* Wallet Management Modal */}
+        <WalletManagementModal
+          isOpen={isManageWalletsOpen}
+          onClose={() => setIsManageWalletsOpen(false)}
+        />
+
+        {/* Transfer Modal */}
+        <TransferModal
+          isOpen={isTransferModalOpen}
+          onClose={() => setIsTransferModalOpen(false)}
+          onSuccess={() => {
+            refreshAllFinancialData();
+          }}
+        />
       </div>
     </div>
   );
@@ -442,14 +475,14 @@ const AnalyticsCard = ({ icon: Icon, title, value, tone = 'brand' }) => {
   }[tone];
 
   return (
-    <Card whileHover={{ y: -3 }} className="p-5">
-      <div className="flex items-center justify-between mb-3">
-        <div className={`p-3 rounded-xl bg-gradient-to-r ${toneMap.bg}`}>
-          <Icon className="h-6 w-6 text-white" />
+    <Card whileHover={{ y: -3 }} className="p-3.5 sm:p-5 transition-all duration-200">
+      <div className="flex items-center justify-between mb-2 sm:mb-3">
+        <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-r ${toneMap.bg}`}>
+          <Icon className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
         </div>
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${toneMap.chip}`}>{title}</span>
+        <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium truncate max-w-[85px] sm:max-w-none ${toneMap.chip}`}>{title}</span>
       </div>
-      <p className="text-xl sm:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white truncate">{formatCurrency(value, currency.locale, currency.code)}</p>
+      <p className="text-sm sm:text-xl lg:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white truncate">{formatCurrency(value, currency.locale, currency.code)}</p>
     </Card>
   );
 };

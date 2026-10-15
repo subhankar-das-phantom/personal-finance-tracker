@@ -90,12 +90,15 @@ process.on('SIGINT', async () => {
 const usersRouter = require('./routes/users');
 const transactionsRouter = require('./routes/transactions');
 const budgetRouter = require('./routes/budget');
-
+const walletsRouter = require('./routes/wallets');
+const transfersRouter = require('./routes/transfers');
 
 app.use('/api/users', usersRouter);
 app.use('/api/transactions', transactionsRouter);
 app.use('/api/budgetGoals', budgetRouter);
 app.use('/api/budget', budgetRouter);
+app.use('/api/wallets', walletsRouter);
+app.use('/api/transfers', transfersRouter);
 
 // Health route (keep outside /api so limiter skip works)
 app.get('/health', (req, res) => {
@@ -117,6 +120,8 @@ app.get('/', (req, res) => {
       transactions: '/api/transactions',
       budgetGoals: '/api/budgetGoals',
       budget: '/api/budget',
+      wallets: '/api/wallets',
+      transfers: '/api/transfers',
       health: '/health',
     },
   });
@@ -156,10 +161,12 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(port, () => {
-  console.log(`Server is running on port: ${port}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Health check available at: http://localhost:${port}/health`);
-});
+if (process.env.NODE_ENV !== 'test' && require.main === module) {
+  app.listen(port, () => {
+    console.log(`Server is running on port: ${port}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Health check available at: http://localhost:${port}/health`);
+  });
+}
 
 module.exports = app;

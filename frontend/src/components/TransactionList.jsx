@@ -10,6 +10,7 @@ import {
   TrendingDown,
   AlertCircle,
   Loader2,
+  Wallet,
 } from "lucide-react";
 import { useCurrency } from "../context/CurrencyContext";
 import { formatCurrency } from "../utils/currency";
@@ -42,8 +43,6 @@ const TransactionRow = memo(({ transaction, onEdit, onDelete }) => {
       month: "short",
       day: "numeric",
     });
-
-
 
   return (
     <motion.div
@@ -86,11 +85,19 @@ const TransactionRow = memo(({ transaction, onEdit, onDelete }) => {
               </span>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
               <div className="flex items-center space-x-1">
                 <Tag className="h-4 w-4 flex-shrink-0" />
                 <span className="truncate">{transaction.category}</span>
               </div>
+              {transaction.wallet && (
+                <div className="flex items-center space-x-1">
+                  <Wallet className="h-3.5 w-3.5 flex-shrink-0 text-blue-500" />
+                  <span className="truncate px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-cyan-300 text-xs font-semibold">
+                    {transaction.wallet.name}
+                  </span>
+                </div>
+              )}
               <div className="flex items-center space-x-1">
                 <Calendar className="h-4 w-4 flex-shrink-0" />
                 <span>{formatDate(transaction.date)}</span>

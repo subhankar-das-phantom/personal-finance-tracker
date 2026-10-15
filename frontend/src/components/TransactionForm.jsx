@@ -10,17 +10,25 @@ import {
   Save,
   Plus,
   AlertCircle,
-  X
+  X,
+  Wallet
 } from 'lucide-react';
+import { useWallet } from '../context/WalletContext';
+import { useCurrency } from '../context/CurrencyContext';
+import { formatCurrency } from '../utils/currency';
 
 const TransactionForm = ({ onSubmit, transaction, isLoading = false, onClose }) => {
+  const { activeWallets, activeWalletId } = useWallet();
+  const { currency } = useCurrency();
+
   const [formData, setFormData] = useState({
     type: 'expense',
     category: '',
     customCategory: '',
     amount: '',
     date: '',
-    description: ''
+    description: '',
+    walletId: ''
   });
   const [errors, setErrors] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -42,6 +50,7 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false, onClose }) 
       const type = transaction.type || 'expense';
       const category = transaction.category || '';
       const isCustom = category && !categories[type].includes(category) && category !== 'Other';
+      const txWalletId = transaction.wallet?._id || transaction.wallet || '';
       
       setFormData({
         type: type,
@@ -49,14 +58,25 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false, onClose }) 
         customCategory: isCustom ? category : '',
         amount: transaction.amount || '',
         date: transaction.date ? transaction.date.substring(0, 10) : '',
-        description: transaction.description || ''
+        description: transaction.description || '',
+        walletId: txWalletId || (activeWalletId !== 'all' ? activeWalletId : activeWallets[0]?._id || '')
       });
+    } else {
+      // Default to currently selected active wallet or first active wallet
+      const defaultWallet = activeWalletId !== 'all' ? activeWalletId : (activeWallets[0]?._id || '');
+      setFormData(prev => ({
+        ...prev,
+        walletId: prev.walletId || defaultWallet
+      }));
     }
-  }, [transaction]);
+  }, [transaction, activeWalletId, activeWallets]);
 
   const validateForm = () => {
     const newErrors = {};
     
+    if (activeWallets.length > 0 && !formData.walletId) {
+      newErrors.walletId = 'Please select a wallet';
+    }
     if (!formData.category.trim()) newErrors.category = 'Category is required';
     if (formData.category === 'Other' && (!formData.customCategory || !formData.customCategory.trim())) {
       newErrors.customCategory = 'Please specify a category';
@@ -91,7 +111,8 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false, onClose }) 
       await onSubmit({
         ...formData,
         category: formData.category === 'Other' ? formData.customCategory : formData.category,
-        amount: parseFloat(formData.amount)
+        amount: parseFloat(formData.amount),
+        walletId: formData.walletId || activeWallets[0]?._id
       });
       
       if (!transaction) {
@@ -101,7 +122,8 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false, onClose }) 
           customCategory: '',
           amount: '',
           date: '',
-          description: ''
+          description: '',
+          walletId: activeWalletId !== 'all' ? activeWalletId : (activeWallets[0]?._id || '')
         });
         setIsSubmitted(false);
       }
@@ -196,6 +218,39 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false, onClose }) 
               </motion.button>
             ))}
           </div>
+        </motion.div>
+
+        {/* Wallet Selection */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.35 }}
+        >
+          <FormField
+            label="Wallet"
+            icon={Wallet}
+            error={errors.walletId}
+            isSubmitted={isSubmitted}
+          >
+            <motion.select
+              variants={inputVariants}
+              whileFocus="focus"
+              value={formData.walletId}
+              onChange={(e) => handleChange('walletId', e.target.value)}
+              className={`w-full pl-10 pr-4 py-3 rounded-xl border transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                errors.walletId && isSubmitted
+                  ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
+                  : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-200 dark:focus:ring-blue-800'
+              } focus:ring-2 focus:outline-none`}
+            >
+              {activeWallets.length === 0 && <option value="">No active wallets found</option>}
+              {activeWallets.map((w) => (
+                <option key={w._id} value={w._id}>
+                  {w.name} ({formatCurrency(w.balance, currency?.locale || 'en-IN', w.currency || 'INR')})
+                </option>
+              ))}
+            </motion.select>
+          </FormField>
         </motion.div>
 
         {/* Category Selection */}

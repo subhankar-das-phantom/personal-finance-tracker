@@ -232,69 +232,69 @@ const BudgetPage = () => {
             initial="hidden"
             animate="visible"
           >
-            <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                    <Coins className="h-6 w-6" />
+            <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+              <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none p-3.5 sm:p-5 lg:p-6">
+                <div className="flex items-center justify-between mb-2 sm:mb-4">
+                  <div className="p-2 sm:p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                    <Coins className="h-4 w-4 sm:h-6 sm:w-6" />
                   </div>
-                  <span className="text-xs sm:text-sm font-medium opacity-90">Total Budget</span>
+                  <span className="text-[10px] sm:text-xs md:text-sm font-medium opacity-90 truncate max-w-[85px] sm:max-w-none">Total Budget</span>
                 </div>
-                <p className="text-xl sm:text-2xl font-bold mb-1 truncate">
+                <p className="text-sm sm:text-xl lg:text-2xl font-bold mb-0.5 sm:mb-1 truncate">
                   {formatCurrency(stats.totalBudget, currency.locale, currency.code)}
                 </p>
-                <p className="text-xs sm:text-sm opacity-75">Allocated this month</p>
+                <p className="text-[10px] sm:text-xs opacity-75 truncate">Allocated this month</p>
               </Card>
 
-              <Card className={`text-white border-none ${
+              <Card className={`text-white border-none p-3.5 sm:p-5 lg:p-6 ${
                 stats.totalSpent > stats.totalBudget
                   ? 'bg-gradient-to-br from-red-500 to-red-600'
                   : 'bg-gradient-to-br from-orange-500 to-orange-600'
               }`}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                    <TrendingDown className="h-6 w-6" />
+                <div className="flex items-center justify-between mb-2 sm:mb-4">
+                  <div className="p-2 sm:p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                    <TrendingDown className="h-4 w-4 sm:h-6 sm:w-6" />
                   </div>
-                  <span className="text-xs sm:text-sm font-medium opacity-90">Total Spent</span>
+                  <span className="text-[10px] sm:text-xs md:text-sm font-medium opacity-90 truncate max-w-[85px] sm:max-w-none">Total Spent</span>
                 </div>
-                <p className="text-xl sm:text-2xl font-bold mb-1 truncate">
+                <p className="text-sm sm:text-xl lg:text-2xl font-bold mb-0.5 sm:mb-1 truncate">
                   {formatCurrency(stats.totalSpent, currency.locale, currency.code)}
                 </p>
-                <p className="text-xs sm:text-sm opacity-75">
+                <p className="text-[10px] sm:text-xs opacity-75 truncate">
                   {stats.overallPercentageUsed.toFixed(1)}% of budget
                 </p>
               </Card>
 
-              <Card className={`text-white border-none ${
+              <Card className={`text-white border-none p-3.5 sm:p-5 lg:p-6 ${
                 stats.totalRemaining >= 0
                   ? 'bg-gradient-to-br from-green-500 to-green-600'
                   : 'bg-gradient-to-br from-red-500 to-red-600'
               }`}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                    <ArrowUp className="h-6 w-6" />
+                <div className="flex items-center justify-between mb-2 sm:mb-4">
+                  <div className="p-2 sm:p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                    <ArrowUp className="h-4 w-4 sm:h-6 sm:w-6" />
                   </div>
-                  <span className="text-xs sm:text-sm font-medium opacity-90">Remaining</span>
+                  <span className="text-[10px] sm:text-xs md:text-sm font-medium opacity-90 truncate max-w-[85px] sm:max-w-none">Remaining</span>
                 </div>
-                <p className="text-xl sm:text-2xl font-bold mb-1 truncate">
+                <p className="text-sm sm:text-xl lg:text-2xl font-bold mb-0.5 sm:mb-1 truncate">
                   {formatCurrency(Math.abs(stats.totalRemaining), currency.locale, currency.code)}
                 </p>
-                <p className="text-xs sm:text-sm opacity-75">
+                <p className="text-[10px] sm:text-xs opacity-75 truncate">
                   {stats.totalRemaining >= 0 ? 'Still available' : 'Over budget'}
                 </p>
               </Card>
 
-              <Card className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white border-none">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                    <PieChart className="h-6 w-6" />
+              <Card className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white border-none p-3.5 sm:p-5 lg:p-6">
+                <div className="flex items-center justify-between mb-2 sm:mb-4">
+                  <div className="p-2 sm:p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                    <PieChart className="h-4 w-4 sm:h-6 sm:w-6" />
                   </div>
-                  <span className="text-xs sm:text-sm font-medium opacity-90">Categories</span>
+                  <span className="text-[10px] sm:text-xs md:text-sm font-medium opacity-90 truncate max-w-[85px] sm:max-w-none">Categories</span>
                 </div>
-                <p className="text-xl sm:text-2xl font-bold mb-1 truncate">
+                <p className="text-sm sm:text-xl lg:text-2xl font-bold mb-0.5 sm:mb-1 truncate">
                   {stats.categoriesCount}
                 </p>
-                <p className="text-xs sm:text-sm opacity-75">Budget goals set</p>
+                <p className="text-[10px] sm:text-xs opacity-75 truncate">Budget goals set</p>
               </Card>
             </motion.div>
 

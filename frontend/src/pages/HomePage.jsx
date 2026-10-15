@@ -17,15 +17,21 @@ import {
   AlertCircle,
   CheckCircle,
   Wallet,
+  ArrowLeftRight,
+  Settings,
 } from "lucide-react";
 
 import Chart from "../components/Chart";
 import TransactionList from "../components/TransactionList";
 import TransactionForm from "../components/TransactionForm";
 import BudgetForm from "../components/BudgetForm";
+import WalletSelector from "../components/WalletSelector";
+import WalletManagementModal from "../components/WalletManagementModal";
+import TransferModal from "../components/TransferModal";
 import { AuthContext } from "../context/AuthContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { useTimeFilter } from "../context/TimeFilterContext";
+import { useWallet } from "../context/WalletContext";
 import { formatCurrency } from "../utils/currency";
 import Button from "../components/common/Button";
 import Card from "../components/common/Card";
@@ -33,29 +39,85 @@ import Card from "../components/common/Card";
 const HomePage = () => {
   const { token, user } = useContext(AuthContext);
   const { timeFilter, setTimeFilter } = useTimeFilter();
+  const {
+    activeWalletId,
+    activeWallets,
+    activeWallet,
+    setActiveWalletId,
+    summary,
+    isManageWalletsOpen,
+    setIsManageWalletsOpen,
+    isTransferModalOpen,
+    setIsTransferModalOpen,
+    refreshAllFinancialData,
+  } = useWallet();
 
-  const { data: allTransactionsRaw, isLoading: isLoadingTransactions, mutate: mutateTransactions, isValidating: isValidatingTransactions } = useApi(token ? 'transactions' : null);
-  const { data: statsRaw, isLoading: isLoadingStats, isValidating: isValidatingStats } = useApi(token ? 'transactions/stats' : null);
-  const { data: chartDataRaw, isLoading: isLoadingChart, isValidating: isValidatingChart } = useApi(token ? 'transactions/chart-data' : null);
+  // Dynamic SWR endpoints based on active wallet selection
+  const transactionsEndpoint = token
+    ? activeWalletId !== "all"
+      ? `transactions?walletId=${activeWalletId}`
+      : "transactions"
+    : null;
 
-  const allTransactions = Array.isArray(allTransactionsRaw?.transactions || allTransactionsRaw) ? (allTransactionsRaw?.transactions || allTransactionsRaw) : [];
+  const statsEndpoint = token
+    ? activeWalletId !== "all"
+      ? `transactions/stats?walletId=${activeWalletId}`
+      : "transactions/stats"
+    : null;
+
+  const chartEndpoint = token
+    ? activeWalletId !== "all"
+      ? `transactions/chart-data?walletId=${activeWalletId}`
+      : "transactions/chart-data"
+    : null;
+
+  const {
+    data: allTransactionsRaw,
+    isLoading: isLoadingTransactions,
+    mutate: mutateTransactions,
+    isValidating: isValidatingTransactions,
+  } = useApi(transactionsEndpoint);
+
+  const {
+    data: statsRaw,
+    isLoading: isLoadingStats,
+    isValidating: isValidatingStats,
+  } = useApi(statsEndpoint);
+
+  const {
+    data: chartDataRaw,
+    isLoading: isLoadingChart,
+    isValidating: isValidatingChart,
+  } = useApi(chartEndpoint);
+
+  const allTransactions = Array.isArray(
+    allTransactionsRaw?.transactions || allTransactionsRaw
+  )
+    ? allTransactionsRaw?.transactions || allTransactionsRaw
+    : [];
+
   const recentTransactions = allTransactions.slice(0, 5);
+
   const stats = statsRaw || {
     totalIncomeAllTime: 0,
     totalExpensesAllTime: 0,
     netBalanceAllTime: 0,
     transactionCount: 0,
+    openingBalance: 0,
+    transfersIn: 0,
+    transfersOut: 0,
     currentMonth: { income: 0, expenses: 0, netBalance: 0 },
     previousMonth: { income: 0, expenses: 0, netBalance: 0 },
   };
+
   const chartData = chartDataRaw || [];
 
   const isLoading = isLoadingTransactions || isLoadingStats || isLoadingChart;
-  const isRefreshing = isValidatingTransactions || isValidatingStats || isValidatingChart;
+  const isRefreshing =
+    isValidatingTransactions || isValidatingStats || isValidatingChart;
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [editTransaction, setEditTransaction] = useState(null);
-  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [editingBudgetGoal, setEditingBudgetGoal] = useState(null);
 
@@ -81,58 +143,8 @@ const HomePage = () => {
     },
   };
 
-  // handle budget goal submission
-  const handleBudgetGoalSubmit = async (budgetData) => {
-    try {
-      if (editingBudgetGoal) {
-        // Update existing budget goal
-        await api.put(
-          `budget/${editingBudgetGoal._id}`,
-          budgetData
-        );
-      } else {
-        // Create new budget goal
-        await api.post("budget", budgetData);
-      }
-
-      // Close the form and reset editing state
-      setShowBudgetForm(false);
-      setEditingBudgetGoal(null);
-
-      // Show success message
-      if (typeof showNotification === "function") {
-        showNotification(
-          editingBudgetGoal
-            ? "Budget goal updated successfully!"
-            : "Budget goal created successfully!",
-          "success"
-        );
-      }
-
-      // Refresh data if needed
-      await refreshData();
-    } catch (error) {
-      console.error("Error saving budget goal:", error);
-
-      let errorMessage = "Failed to save budget goal. Please try again.";
-
-      if (error.response?.status === 400) {
-        errorMessage =
-          error.response.data.message ||
-          "Budget goal for this category and month already exists.";
-      }
-
-      if (typeof showNotification === "function") {
-        showNotification(errorMessage, "error");
-      } else {
-        alert(errorMessage);
-      }
-    }
-  };
-
-  // notification function
+  // Notification helper
   const showNotification = (message, type = "info") => {
-    // Create notification element
     const notification = document.createElement("div");
     notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transform transition-all duration-300 ${
       type === "success"
@@ -158,39 +170,32 @@ const HomePage = () => {
   `;
 
     document.body.appendChild(notification);
-
-    // Animate in
     setTimeout(() => (notification.style.transform = "translateX(0)"), 10);
-
-    // Remove after 4 seconds
     setTimeout(() => {
       notification.style.transform = "translateX(100%)";
-      setTimeout(() => document.body.removeChild(notification), 300);
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 300);
     }, 4000);
   };
 
-
-
   // Helper to calculate percentage change
   const calculatePercentageChange = (current, previous) => {
-    // Handle edge cases
     if (previous === 0) {
       if (current === 0) return "0%";
-      return current > 0 ? "New!" : "New!"; // Show "New!" instead of infinity
+      return current > 0 ? "New!" : "New!";
     }
 
     const change = ((current - previous) / previous) * 100;
-    const formattedChange =
-      Math.abs(change) >= 1000
-        ? change > 0
-          ? "+999%+"
-          : "-999%+" // Cap extremely high percentages
-        : `${change > 0 ? "+" : ""}${change.toFixed(1)}%`;
-
-    return formattedChange;
+    return Math.abs(change) >= 1000
+      ? change > 0
+        ? "+999%+"
+        : "-999%+"
+      : `${change > 0 ? "+" : ""}${change.toFixed(1)}%`;
   };
 
-  // Calculate changes for display (based on current month vs previous month from backend)
   const incomeChange =
     stats.currentMonth && stats.previousMonth
       ? calculatePercentageChange(
@@ -217,29 +222,21 @@ const HomePage = () => {
 
   // Refresh data
   const refreshData = async () => {
-    mutateTransactions();
-    globalMutate('transactions/stats');
-    globalMutate('transactions/chart-data');
+    refreshAllFinancialData();
   };
 
   // Handle form submission
   const handleAddTransaction = async (transactionData) => {
     try {
       if (editTransaction) {
-        await api.put(
-          `transactions/${editTransaction._id}`,
-          transactionData
-        );
+        await api.put(`transactions/${editTransaction._id}`, transactionData);
         setEditTransaction(null);
       } else {
-        await api.post(
-          "transactions",
-          transactionData
-        );
+        await api.post("transactions", transactionData);
       }
 
       setShowAddForm(false);
-      await refreshData();
+      refreshData();
     } catch (error) {
       console.error("Error saving transaction:", error);
     }
@@ -255,7 +252,7 @@ const HomePage = () => {
   const handleDeleteTransaction = async (id) => {
     try {
       await api.delete(`transactions/${id}`);
-      await refreshData();
+      refreshData();
     } catch (error) {
       console.error("Error deleting transaction:", error);
     }
@@ -267,33 +264,30 @@ const HomePage = () => {
     let filteredTransactions = allTransactions;
 
     switch (timeFilter) {
-      case "thisWeek":
+      case "thisWeek": {
         const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        filteredTransactions = allTransactions.filter(
-          (t) => {
-            const date = new Date(t.date);
-            return date >= weekAgo && date <= now;
-          }
-        );
+        filteredTransactions = allTransactions.filter((t) => {
+          const date = new Date(t.date);
+          return date >= weekAgo && date <= now;
+        });
         break;
-      case "thisMonth":
+      }
+      case "thisMonth": {
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        filteredTransactions = allTransactions.filter(
-          (t) => {
-            const date = new Date(t.date);
-            return date >= monthStart && date <= now;
-          }
-        );
+        filteredTransactions = allTransactions.filter((t) => {
+          const date = new Date(t.date);
+          return date >= monthStart && date <= now;
+        });
         break;
-      case "thisYear":
+      }
+      case "thisYear": {
         const yearStart = new Date(now.getFullYear(), 0, 1);
-        filteredTransactions = allTransactions.filter(
-          (t) => {
-            const date = new Date(t.date);
-            return date >= yearStart && date <= now;
-          }
-        );
+        filteredTransactions = allTransactions.filter((t) => {
+          const date = new Date(t.date);
+          return date >= yearStart && date <= now;
+        });
         break;
+      }
       default:
         break;
     }
@@ -309,7 +303,9 @@ const HomePage = () => {
     return {
       income,
       expenses,
-      netBalance: income - expenses,
+      // For all-time, accurately respect server calculated balance (including opening balance and transfers)
+      netBalance:
+        timeFilter === "all" ? stats.netBalanceAllTime : income - expenses,
       count: filteredTransactions.length,
     };
   };
@@ -318,7 +314,7 @@ const HomePage = () => {
 
   useEffect(() => {
     if (!token) {
-      navigate('/login');
+      navigate("/login");
     }
   }, [token, navigate]);
 
@@ -330,11 +326,11 @@ const HomePage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl"
+                  className="h-28 sm:h-32 bg-gray-200 dark:bg-gray-700 rounded-xl"
                 ></div>
               ))}
             </div>
@@ -355,31 +351,38 @@ const HomePage = () => {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="space-y-8"
+          className="space-y-6"
         >
           {/* Header Section */}
           <motion.div
             variants={itemVariants}
-            className="flex flex-col md:flex-row md:items-center md:justify-between"
+            className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
           >
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1">
                 Welcome back, {user?.username}! 👋
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Here's your financial overview for today
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {activeWallet
+                  ? `Viewing wallet: ${activeWallet.name}`
+                  : "Combined overview across all personal wallets"}
               </p>
             </div>
 
-            <div className="flex items-center gap-3 flex-wrap mt-4 md:mt-0">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              {/* Wallet Selector */}
+              <WalletSelector />
+
               {/* Time Filter */}
-              <label htmlFor="time-filter" className="sr-only">Time Filter</label>
+              <label htmlFor="time-filter" className="sr-only">
+                Time Filter
+              </label>
               <select
                 id="time-filter"
                 value={timeFilter}
                 onChange={(e) => setTimeFilter(e.target.value)}
                 aria-label="Filter transactions by time period"
-                className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+                className="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm font-medium"
               >
                 <option value="thisWeek">This Week</option>
                 <option value="thisMonth">This Month</option>
@@ -392,12 +395,22 @@ const HomePage = () => {
                 variant="secondary"
                 onClick={refreshData}
                 disabled={isRefreshing}
-                className="p-2"
+                className="p-2 rounded-xl"
                 aria-label="Refresh data"
               >
                 <RefreshCw
-                  className={`h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`}
+                  className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
                 />
+              </Button>
+
+              {/* Transfer Funds Button */}
+              <Button
+                variant="secondary"
+                onClick={() => setIsTransferModalOpen(true)}
+                icon={ArrowLeftRight}
+                className="rounded-xl text-sm font-semibold"
+              >
+                <span className="hidden sm:inline">Transfer</span>
               </Button>
 
               {/* Add Transaction Button */}
@@ -407,6 +420,7 @@ const HomePage = () => {
                   setShowAddForm(true);
                 }}
                 icon={Plus}
+                className="rounded-xl text-sm font-semibold"
               >
                 <span className="hidden sm:inline">Add Transaction</span>
                 <span className="sm:hidden">Add</span>
@@ -414,10 +428,72 @@ const HomePage = () => {
             </div>
           </motion.div>
 
+          {/* Quick Wallets Bar (if multiple active wallets exist) */}
+          {activeWallets.length > 1 && (
+            <motion.div
+              variants={itemVariants}
+              className="flex items-center space-x-2 overflow-x-auto pb-1 pt-0.5 no-scrollbar"
+            >
+              <button
+                type="button"
+                onClick={() => setActiveWalletId("all")}
+                className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
+                  activeWalletId === "all"
+                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                    : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                }`}
+              >
+                <span>🌐 All Wallets</span>
+                <span className="opacity-90 font-bold">
+                  {formatCurrency(summary.totalBalance)}
+                </span>
+              </button>
+
+              {activeWallets.map((w) => {
+                const isSelected = activeWalletId === w._id;
+                return (
+                  <button
+                    key={w._id}
+                    type="button"
+                    onClick={() => setActiveWalletId(w._id)}
+                    className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
+                      isSelected
+                        ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white border-blue-600 shadow-sm"
+                        : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    <span>{w.name}</span>
+                    <span
+                      className={`font-bold ${
+                        isSelected
+                          ? "text-white"
+                          : w.balance >= 0
+                          ? "text-gray-900 dark:text-white"
+                          : "text-red-500"
+                      }`}
+                    >
+                      {formatCurrency(w.balance, { code: w.currency })}
+                    </span>
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={() => setIsManageWalletsOpen(true)}
+                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 border border-dashed border-gray-300 dark:border-gray-700 hover:border-gray-400 whitespace-nowrap"
+                title="Manage wallets"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                <span>Manage</span>
+              </button>
+            </motion.div>
+          )}
+
           {/* Stats Cards */}
           <motion.div
             variants={itemVariants}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6"
           >
             <StatsCard
               title="Total Income"
@@ -434,7 +510,11 @@ const HomePage = () => {
               change={expensesChange}
             />
             <StatsCard
-              title="Net Balance"
+              title={
+                activeWallet
+                  ? `${activeWallet.name} Balance`
+                  : "Combined Net Balance"
+              }
               value={filteredStats.netBalance}
               icon={Wallet}
               color={filteredStats.netBalance >= 0 ? "green" : "red"}
@@ -445,7 +525,7 @@ const HomePage = () => {
               value={filteredStats.count}
               icon={BarChart3}
               color="blue"
-              change={`${filteredStats.count} total`}
+              change={`${filteredStats.count} in scope`}
               isCount={true}
             />
           </motion.div>
@@ -459,93 +539,33 @@ const HomePage = () => {
 
             {/* Recent Transactions */}
             <motion.div variants={itemVariants}>
-              <TransactionList
-                transactions={recentTransactions}
-                onEdit={handleEditTransaction}
-                onDelete={handleDeleteTransaction}
-                isLoading={false}
-              />
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Recent Transactions
+                  </h3>
+                  <button
+                    onClick={() => navigate("/transactions")}
+                    className="text-sm font-semibold text-blue-600 dark:text-cyan-400 hover:underline"
+                  >
+                    View All
+                  </button>
+                </div>
+
+                {recentTransactions.length === 0 ? (
+                  <div className="text-center py-10 text-gray-400">
+                    <p>No transactions found for this scope.</p>
+                  </div>
+                ) : (
+                  <TransactionList
+                    transactions={recentTransactions}
+                    onEdit={handleEditTransaction}
+                    onDelete={handleDeleteTransaction}
+                  />
+                )}
+              </div>
             </motion.div>
           </div>
-
-          {/* Quick Actions */}
-          <Card className="p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white mb-4">
-              Quick Actions
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <QuickActionCard
-                title="Download PDF Report"
-                description="Comprehensive financial analysis"
-                icon={Download}
-                color="blue"
-                onClick={async () => {
-                  try {
-                    // Show loading state
-                    setIsGeneratingReport?.(true);
-
-                    const response = await api.get(
-                      "transactions/report",
-                      {
-                        responseType: "blob",
-                      }
-                    );
-
-                    // Create download link
-                    const url = window.URL.createObjectURL(
-                      new Blob([response.data], { type: "application/pdf" })
-                    );
-                    const link = document.createElement("a");
-                    link.href = url;
-
-                    // Dynamic filename with date
-                    const today = new Date().toISOString().split("T")[0];
-                    link.setAttribute(
-                      "download",
-                      `Financial_Report_${today}.pdf`
-                    );
-
-                    // Trigger download
-                    document.body.appendChild(link);
-                    link.click();
-
-                    // Cleanup
-                    link.parentNode.removeChild(link);
-                    window.URL.revokeObjectURL(url);
-
-                    // Success notification
-                    if (typeof showNotification === "function") {
-                      showNotification(
-                        "PDF report downloaded successfully!",
-                        "success"
-                      );
-                    }
-                  } catch (error) {
-                    console.error("Error downloading PDF report:", error);
-
-                    if (error.response?.status === 404) {
-                      alert("No transactions found for report generation");
-                    } else {
-                      alert("Failed to generate PDF report. Please try again.");
-                    }
-                  } finally {
-                    setIsGeneratingReport?.(false);
-                  }
-                }}
-              />
-
-              <QuickActionCard
-                title="Set Budget Goal"
-                description="Plan your monthly budget"
-                icon={Target}
-                color="green"
-                onClick={() => {
-                  setEditingBudgetGoal(null);
-                  setShowBudgetForm(true);
-                }}
-              />
-            </div>
-          </Card>
         </motion.div>
 
         {/* Add/Edit Transaction Modal */}
@@ -555,102 +575,38 @@ const HomePage = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex flex-col items-center overflow-y-auto p-4 sm:p-6"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
               onClick={() => {
                 setShowAddForm(false);
                 setEditTransaction(null);
               }}
             >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
+              <div
+                className="w-full max-w-lg"
                 onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-md my-auto flex-shrink-0"
               >
                 <TransactionForm
-                  onSubmit={handleAddTransaction}
                   transaction={editTransaction}
-                  isLoading={false}
+                  onSubmit={handleAddTransaction}
                   onClose={() => {
                     setShowAddForm(false);
                     setEditTransaction(null);
                   }}
                 />
-              </motion.div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Set Budget Goal Modal */}
-        <AnimatePresence>
-          {showBudgetForm && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex flex-col items-center overflow-y-auto p-4 sm:p-6"
-              onClick={() => {
-                setShowBudgetForm(false);
-                setEditingBudgetGoal(null); // Add this line if you plan to support editing
-              }}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-md my-auto flex-shrink-0"
-              >
-                <BudgetForm
-                  onClose={() => {
-                    setShowBudgetForm(false);
-                    setEditingBudgetGoal?.(null); // Add this if you have editing state
-                  }}
-                  goal={editingBudgetGoal} // Add this if you support editing
-                  onSubmit={async (budgetData) => {
-                    try {
-                      // Fix: Use correct API endpoint and include all required data
-                      await api.post(
-                        "budget", // Fixed endpoint
-                        {
-                          category: budgetData.category,
-                          amount: budgetData.amount,
-                          month: budgetData.month, // Now included
-                          year: budgetData.year, // Now included
-                        }
-                      );
-
-                      showNotification(
-                        "Budget goal set successfully!",
-                        "success"
-                      );
-                      setShowBudgetForm(false);
-
-                      // Refresh data if you have a refresh function
-                      if (typeof refreshData === "function") {
-                        await refreshData();
-                      }
-                    } catch (error) {
-                      console.error("Error setting budget goal:", error);
-
-                      // Better error handling
-                      let errorMessage = "Failed to set budget goal.";
-
-                      if (error.response?.status === 400) {
-                        errorMessage =
-                          error.response.data.message ||
-                          "Budget goal for this category and month already exists.";
-                      }
-
-                      showNotification(errorMessage, "error");
-                    }
-                  }}
-                />
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Global Wallet Modals */}
+        <WalletManagementModal
+          isOpen={isManageWalletsOpen}
+          onClose={() => setIsManageWalletsOpen(false)}
+        />
+        <TransferModal
+          isOpen={isTransferModalOpen}
+          onClose={() => setIsTransferModalOpen(false)}
+        />
       </div>
     </div>
   );
@@ -665,13 +621,12 @@ const StatsCard = ({
   isCount = false,
 }) => {
   const { currency } = useCurrency();
-  
+
   const colorClasses = {
     green:
       "from-emerald-500 to-teal-600 text-emerald-700 bg-emerald-50 dark:bg-emerald-600 dark:text-white",
     red: "from-red-500 to-rose-600 text-red-700 bg-red-50 dark:bg-red-600 dark:text-white",
     blue: "from-blue-500 to-cyan-600 text-blue-700 bg-blue-50 dark:bg-blue-600 dark:text-white",
-
   };
 
   const formatValue = (val) => {
@@ -680,72 +635,35 @@ const StatsCard = ({
   };
 
   return (
-    <Card
-      whileHover={{ y: -4 }}
-      className="p-6 transition-all duration-200"
-    >
-      <div className="flex items-center justify-between mb-4">
+    <Card whileHover={{ y: -4 }} className="p-3.5 sm:p-5 lg:p-6 transition-all duration-200">
+      <div className="flex items-center justify-between mb-2 sm:mb-4">
         <div
-          className={`p-3 rounded-xl bg-gradient-to-r ${
+          className={`p-2 sm:p-3 rounded-xl bg-gradient-to-r ${
             colorClasses[color].split(" ")[0]
           } ${colorClasses[color].split(" ")[1]}`}
         >
-          <Icon className="h-6 w-6 text-white" />
+          <Icon className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
         </div>
         <div
-          className={`px-2 py-1 rounded-full text-xs font-medium ${
+          className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium truncate max-w-[85px] sm:max-w-none ${
             colorClasses[color].split(" ")[2]
           } ${colorClasses[color].split(" ")[3]} ${
             colorClasses[color].split(" ")[4]
-          } ${colorClasses[color].split(" ")[5] || ''} ${colorClasses[color].split(" ")[6] || ''}`}
+          } ${colorClasses[color].split(" ")[5] || ""} ${
+            colorClasses[color].split(" ")[6] || ""
+          }`}
         >
           {change}
         </div>
       </div>
 
-      <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+      <h3 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-0.5 sm:mb-1 truncate">
         {title}
       </h3>
-      <p className="text-base sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
+      <p className="text-sm sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white truncate">
         {formatValue(value)}
       </p>
     </Card>
-  );
-};
-
-// Quick Action Card Component
-const QuickActionCard = ({
-  title,
-  description,
-  icon: Icon,
-  color,
-  onClick,
-}) => {
-  const colorClasses = {
-    blue: "text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20",
-    green: "text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20",
-
-  };
-
-  return (
-    <motion.button
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      className={`p-3 sm:p-4 rounded-xl border border-gray-200 dark:border-gray-700 transition-all duration-200 text-left ${colorClasses[color]}`}
-    >
-      <div className="flex items-start space-x-3">
-        <Icon className="h-5 w-5 sm:h-6 sm:w-6 mt-1" />
-        <div>
-          <h4 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white mb-1">
-            {title}
-          </h4>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-            {description}
-          </p>
-        </div>
-      </div>
-    </motion.button>
   );
 };
 

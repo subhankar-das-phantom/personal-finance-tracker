@@ -29,6 +29,16 @@ router.post('/register', async (req, res) => {
     const savedUser = await newUser.save();
     console.log('User saved:', savedUser);
 
+    // Auto-create default primary wallet
+    const Wallet = require('../models/wallet.model');
+    await Wallet.create({
+      user: savedUser._id,
+      name: 'Primary Wallet',
+      openingBalance: 0,
+      currency: savedUser.currency?.code || 'INR',
+      isArchived: false,
+    });
+
     // Create and assign token
     const token = jwt.sign({ id: savedUser._id }, process.env.JWT_SECRET);
     res.json({
@@ -169,6 +179,8 @@ router.put('/me/password', auth, async (req, res) => {
 // Delete account
 const Transaction = require('../models/transaction.model');
 const BudgetGoal = require('../models/budgetGoal.model');
+const Wallet = require('../models/wallet.model');
+const Transfer = require('../models/transfer.model');
 
 router.delete('/me', auth, async (req, res) => {
   try {
@@ -178,6 +190,8 @@ router.delete('/me', auth, async (req, res) => {
     // Delete all user data
     await Transaction.deleteMany({ user: user._id });
     await BudgetGoal.deleteMany({ user: user._id });
+    await Wallet.deleteMany({ user: user._id });
+    await Transfer.deleteMany({ user: user._id });
     await User.findByIdAndDelete(req.user);
 
     res.json({ msg: 'Account deleted successfully' });

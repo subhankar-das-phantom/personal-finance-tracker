@@ -6,16 +6,19 @@ import { AuthProvider } from './context/AuthContext';
 import { CurrencyProvider } from './context/CurrencyContext';
 import { TimeFilterProvider } from './context/TimeFilterContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { WalletProvider } from './context/WalletContext';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
       <CurrencyProvider>
-        <TimeFilterProvider>
-          <ThemeProvider>
-            <App />
-          </ThemeProvider>
-        </TimeFilterProvider>
+        <WalletProvider>
+          <TimeFilterProvider>
+            <ThemeProvider>
+              <App />
+            </ThemeProvider>
+          </TimeFilterProvider>
+        </WalletProvider>
       </CurrencyProvider>
     </AuthProvider>
   </StrictMode>
