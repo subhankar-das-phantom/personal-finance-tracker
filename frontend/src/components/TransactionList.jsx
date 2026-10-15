@@ -208,8 +208,13 @@ const TransactionList = ({
       ) : (
         <div
           ref={parentRef}
-          className="h-[600px] overflow-y-auto overflow-x-hidden custom-scrollbar"
-          style={{ willChange: "scroll-position" }}
+          className="max-h-[500px] sm:max-h-[600px] overflow-y-auto overflow-x-hidden custom-scrollbar"
+          style={{
+            height: rowVirtualizer.getTotalSize()
+              ? `${Math.min(rowVirtualizer.getTotalSize(), 600)}px`
+              : "auto",
+            willChange: "scroll-position",
+          }}
         >
           <div
             style={{
