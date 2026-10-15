@@ -396,15 +396,15 @@ const HomePage = () => {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="space-y-6"
+          className="space-y-4 sm:space-y-4.5"
         >
           {/* Dashboard Hero Header Card (Matching Premium Reference Screenshot) */}
           <motion.div
             variants={itemVariants}
-            className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-2xl p-5 sm:p-6 shadow-xs"
+            className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-2xl p-4 sm:p-5 shadow-xs"
           >
             {/* Top Row: Date Pill + Live Indicator + Actions */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3.5">
               <div className="flex items-center space-x-2 flex-wrap gap-y-1.5">
                 <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-[#151c2a] border border-slate-200 dark:border-white/10 text-xs text-slate-700 dark:text-zinc-300 font-medium">
                   <Calendar className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
@@ -463,7 +463,7 @@ const HomePage = () => {
             </div>
 
             {/* Middle: Title & Greeting */}
-            <div className="mb-4">
+            <div className="mb-3.5">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                 Dashboard
               </h1>
@@ -477,87 +477,89 @@ const HomePage = () => {
               </p>
             </div>
 
-            {/* Segmented Time Filter (Matching Reference Screenshot) */}
-            <div className="inline-flex items-center p-1 rounded-xl bg-slate-100 dark:bg-[#0c101a] border border-slate-200/80 dark:border-white/5 space-x-1 overflow-x-auto no-scrollbar max-w-full">
-              {timePresets.map((preset) => (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => setTimeFilter(preset.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-150 ${
-                    timeFilter === preset.id
-                      ? "bg-white dark:bg-[#1a2233] text-slate-900 dark:text-white shadow-xs border border-slate-200/80 dark:border-white/10"
-                      : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Quick Wallets Ribbon */}
-          {activeWallets.length > 1 && (
-            <motion.div
-              variants={itemVariants}
-              className="flex items-center space-x-2 overflow-x-auto pb-1 pt-0.5 no-scrollbar"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-            >
-              <button
-                type="button"
-                onClick={() => setActiveWalletId("all")}
-                className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
-                  activeWalletId === "all"
-                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                    : "bg-white dark:bg-[#10141e] text-slate-600 dark:text-zinc-300 border-slate-200/80 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-[#161c2b]"
-                }`}
-              >
-                <span>🌐 All Wallets</span>
-                <span className="font-mono font-bold opacity-90">
-                  {formatCurrency(summary.totalBalance)}
-                </span>
-              </button>
-
-              {activeWallets.map((w) => {
-                const isSelected = activeWalletId === w._id;
-                return (
+            {/* Bottom Row: Segmented Time Filter + Quick Wallets Ribbon */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-white/[0.05]">
+              {/* Segmented Time Filter */}
+              <div className="inline-flex items-center p-1 rounded-xl bg-slate-100 dark:bg-[#0c101a] border border-slate-200/80 dark:border-white/5 space-x-1 overflow-x-auto no-scrollbar max-w-full">
+                {timePresets.map((preset) => (
                   <button
-                    key={w._id}
+                    key={preset.id}
                     type="button"
-                    onClick={() => setActiveWalletId(w._id)}
-                    className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
-                      isSelected
-                        ? "bg-slate-900 dark:bg-[#182030] text-white border-slate-700 dark:border-white/10 shadow-sm"
-                        : "bg-white dark:bg-[#10141e] text-slate-600 dark:text-zinc-300 border-slate-200/80 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-[#161c2b]"
+                    onClick={() => setTimeFilter(preset.id)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-150 ${
+                      timeFilter === preset.id
+                        ? "bg-white dark:bg-[#1a2233] text-slate-900 dark:text-white shadow-xs border border-slate-200/80 dark:border-white/10"
+                        : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
                     }`}
                   >
-                    <span>{w.name}</span>
-                    <span
-                      className={`font-mono font-bold ${
-                        isSelected
-                          ? "text-white"
-                          : w.balance >= 0
-                          ? "text-slate-900 dark:text-white"
-                          : "text-rose-500"
-                      }`}
-                    >
-                      {formatCurrency(w.balance, { code: w.currency })}
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Quick Wallets Ribbon */}
+              {activeWallets.length > 1 && (
+                <div
+                  className="flex items-center space-x-1.5 overflow-x-auto pb-0.5 no-scrollbar"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveWalletId("all")}
+                    className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
+                      activeWalletId === "all"
+                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                        : "bg-slate-50 dark:bg-[#151c2a] text-slate-600 dark:text-zinc-300 border-slate-200/80 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-[#1a2436]"
+                    }`}
+                  >
+                    <span>🌐 All</span>
+                    <span className="font-mono font-bold opacity-90 text-[11px]">
+                      {formatCurrency(summary.totalBalance)}
                     </span>
                   </button>
-                );
-              })}
 
-              <button
-                type="button"
-                onClick={() => setIsManageWalletsOpen(true)}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white border border-dashed border-slate-300 dark:border-zinc-700/80 hover:border-slate-400 whitespace-nowrap"
-                title="Manage wallets"
-              >
-                <Settings className="w-3.5 h-3.5" />
-                <span>Manage</span>
-              </button>
-            </motion.div>
-          )}
+                  {activeWallets.map((w) => {
+                    const isSelected = activeWalletId === w._id;
+                    return (
+                      <button
+                        key={w._id}
+                        type="button"
+                        onClick={() => setActiveWalletId(w._id)}
+                        className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
+                          isSelected
+                            ? "bg-slate-900 dark:bg-[#182030] text-white border-slate-700 dark:border-white/10 shadow-sm"
+                            : "bg-slate-50 dark:bg-[#151c2a] text-slate-600 dark:text-zinc-300 border-slate-200/80 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-[#1a2436]"
+                        }`}
+                      >
+                        <span className="truncate max-w-[100px]">{w.name}</span>
+                        <span
+                          className={`font-mono font-bold text-[11px] ${
+                            isSelected
+                              ? "text-white"
+                              : w.balance >= 0
+                              ? "text-slate-900 dark:text-white"
+                              : "text-rose-500"
+                          }`}
+                        >
+                          {formatCurrency(w.balance, { code: w.currency })}
+                        </span>
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    type="button"
+                    onClick={() => setIsManageWalletsOpen(true)}
+                    className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white border border-dashed border-slate-300 dark:border-zinc-700 hover:border-slate-400 whitespace-nowrap"
+                    title="Manage wallets"
+                  >
+                    <Settings className="w-3 h-3" />
+                    <span>Manage</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </motion.div>
 
           {/* Stats Cards (4-Card Metric Grid Matching Reference Screenshot) */}
           <motion.div
