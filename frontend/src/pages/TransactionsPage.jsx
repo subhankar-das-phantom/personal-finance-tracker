@@ -1,4 +1,4 @@
-import React, { useState, useContext, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useContext, useCallback, useMemo } from "react";
 import api from "../services/api";
 import { useApi, globalMutate } from "../hooks/useApi";
 import { motion, AnimatePresence } from "framer-motion";
@@ -828,10 +828,10 @@ const TransactionsPage = () => {
 
             {/* Middle: Title & Subtitle */}
             <div className="mb-4">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                 {viewMode === "transactions" ? "Transactions" : "Wallet Transfers"}
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
+              <p className="text-[11px] sm:text-xs lg:text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
                 {viewMode === "transactions"
                   ? `Filtering transactions for ${activeWallet ? activeWallet.name : "all wallets"}. Search, sort, or export.`
                   : "Internal balance movements between your personal wallets."}
@@ -1573,21 +1573,21 @@ const StatsCard = ({
   return (
     <Card
       whileHover={{ y: -2 }}
-      className="p-4 sm:p-5 transition-all duration-200 bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-2xl flex flex-col justify-between"
+      className="p-3.5 sm:p-5 transition-all duration-200 bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-2xl flex flex-col justify-between"
     >
       {/* Top: Title on left, Dark Squircle Icon on right */}
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">
+      <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+        <span className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">
           {title}
         </span>
-        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#161c2b] border border-slate-200/70 dark:border-white/5 flex items-center justify-center text-slate-700 dark:text-zinc-300 flex-shrink-0 shadow-2xs">
-          <Icon className="w-4 h-4" />
+        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-100 dark:bg-[#161c2b] border border-slate-200/70 dark:border-white/5 flex items-center justify-center text-slate-700 dark:text-zinc-300 flex-shrink-0 shadow-2xs">
+          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </div>
       </div>
 
       {/* Middle: Prominent Tabular Numeral */}
-      <div className="my-1.5">
-        <div className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white font-mono tracking-tight tabular-nums truncate">
+      <div className="my-1">
+        <div className="text-base sm:text-xl lg:text-2xl font-bold text-slate-900 dark:text-white font-mono tracking-tight tabular-nums truncate">
           {formatValue(value)}
         </div>
       </div>
@@ -1597,7 +1597,7 @@ const StatsCard = ({
         <div className="flex items-center space-x-1 truncate mr-2">
           {change && (
             <span
-              className={`font-semibold flex items-center gap-0.5 text-[11px] sm:text-xs ${
+              className={`font-semibold flex items-center gap-0.5 text-[10px] sm:text-[11px] ${
                 color === "green"
                   ? "text-emerald-600 dark:text-emerald-400"
                   : color === "red"
@@ -1613,7 +1613,7 @@ const StatsCard = ({
         </div>
 
         {badgeText && (
-          <span className="px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-medium bg-slate-100 dark:bg-[#161c2b] text-slate-600 dark:text-zinc-300 border border-slate-200/60 dark:border-white/5 flex-shrink-0">
+          <span className="px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-medium bg-slate-100 dark:bg-[#161c2b] text-slate-600 dark:text-zinc-300 border border-slate-200/60 dark:border-white/5 flex-shrink-0">
             {badgeText}
           </span>
         )}

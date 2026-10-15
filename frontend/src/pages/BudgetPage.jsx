@@ -146,11 +146,7 @@ const BudgetPage = () => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="min-h-screen bg-slate-50 dark:bg-[#080b11] pt-20 pb-20 px-4 sm:px-6 lg:px-8 font-sans antialiased text-slate-900 dark:text-slate-100"
-    >
+    <div className="min-h-screen bg-slate-50 dark:bg-[#080b11] pt-20 pb-20 px-4 sm:px-6 lg:px-8 font-sans antialiased text-slate-900 dark:text-slate-100">
       <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
         
         {/* Top Hero Card - Obsidian billing reference style */}
@@ -187,12 +183,12 @@ const BudgetPage = () => {
           {/* Middle row: Title & Primary Action Button (+ New Budget Goal matching screenshot) */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                 Budget Management
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-                Track monthly spending limits, monitor category pacing and prevent overruns for {currentMonth}
+              <p className="text-[11px] sm:text-xs lg:text-sm text-slate-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+                <span>Track monthly spending limits, monitor category pacing and prevent overruns for {currentMonth}</span>
               </p>
             </div>
 
@@ -251,50 +247,50 @@ const BudgetPage = () => {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               
               {/* Card 1: Total Budget */}
-              <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/15 transition-all duration-200 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-lg shadow-black/5 dark:shadow-black/20">
+              <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/15 transition-all duration-200 rounded-2xl p-3.5 sm:p-5 flex flex-col justify-between shadow-lg shadow-black/5 dark:shadow-black/20">
                 <div>
-                  <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
-                    <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">
+                  <div className="flex items-center justify-between gap-1.5 mb-2 sm:mb-3">
+                    <span className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">
                       Total Allocated
                     </span>
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#161c2b] border border-slate-200 dark:border-white/5 flex items-center justify-center text-blue-500 flex-shrink-0">
-                      <Coins className="w-4 h-4" />
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-100 dark:bg-[#161c2b] border border-slate-200 dark:border-white/5 flex items-center justify-center text-blue-500 flex-shrink-0">
+                      <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </div>
                   </div>
-                  <div className="font-mono font-extrabold text-xl sm:text-2xl lg:text-3xl tracking-tight text-slate-900 dark:text-white truncate">
+                  <div className="font-mono font-bold text-base sm:text-xl lg:text-2xl tracking-tight text-slate-900 dark:text-white truncate">
                     {formatCurrency(stats.totalBudget, currency.locale, currency.code)}
                   </div>
                 </div>
-                <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.04]">
-                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
+                <div className="flex items-center justify-between gap-1.5 mt-2.5 pt-2.5 sm:mt-3 sm:pt-3 border-t border-slate-100 dark:border-white/[0.04]">
+                  <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-zinc-400 truncate">
                     Monthly spending cap
                   </span>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md border font-mono bg-blue-500/10 text-blue-500 border-blue-500/20 flex-shrink-0">
+                  <span className="text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 rounded-md border font-mono bg-blue-500/10 text-blue-500 border-blue-500/20 flex-shrink-0">
                     Total Cap
                   </span>
                 </div>
               </div>
 
               {/* Card 2: Total Spent */}
-              <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/15 transition-all duration-200 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-lg shadow-black/5 dark:shadow-black/20">
+              <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/15 transition-all duration-200 rounded-2xl p-3.5 sm:p-5 flex flex-col justify-between shadow-lg shadow-black/5 dark:shadow-black/20">
                 <div>
-                  <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
-                    <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">
+                  <div className="flex items-center justify-between gap-1.5 mb-2 sm:mb-3">
+                    <span className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">
                       Actual Outflow
                     </span>
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#161c2b] border border-slate-200 dark:border-white/5 flex items-center justify-center text-amber-500 flex-shrink-0">
-                      <TrendingDown className="w-4 h-4" />
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-100 dark:bg-[#161c2b] border border-slate-200 dark:border-white/5 flex items-center justify-center text-amber-500 flex-shrink-0">
+                      <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </div>
                   </div>
-                  <div className="font-mono font-extrabold text-xl sm:text-2xl lg:text-3xl tracking-tight text-slate-900 dark:text-white truncate">
+                  <div className="font-mono font-bold text-base sm:text-xl lg:text-2xl tracking-tight text-slate-900 dark:text-white truncate">
                     {formatCurrency(stats.totalSpent, currency.locale, currency.code)}
                   </div>
                 </div>
-                <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.04]">
-                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
+                <div className="flex items-center justify-between gap-1.5 mt-2.5 pt-2.5 sm:mt-3 sm:pt-3 border-t border-slate-100 dark:border-white/[0.04]">
+                  <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-zinc-400 truncate">
                     {stats.overallPercentageUsed.toFixed(1)}% consumed
                   </span>
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border font-mono flex-shrink-0 ${
+                  <span className={`text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 rounded-md border font-mono flex-shrink-0 ${
                     stats.totalSpent > stats.totalBudget
                       ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
                       : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
@@ -305,27 +301,27 @@ const BudgetPage = () => {
               </div>
 
               {/* Card 3: Remaining */}
-              <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/15 transition-all duration-200 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-lg shadow-black/5 dark:shadow-black/20">
+              <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/15 transition-all duration-200 rounded-2xl p-3.5 sm:p-5 flex flex-col justify-between shadow-lg shadow-black/5 dark:shadow-black/20">
                 <div>
-                  <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
-                    <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">
+                  <div className="flex items-center justify-between gap-1.5 mb-2 sm:mb-3">
+                    <span className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">
                       Remaining Cap
                     </span>
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#161c2b] border border-slate-200 dark:border-white/5 flex items-center justify-center text-emerald-500 flex-shrink-0">
-                      <ArrowUp className="w-4 h-4" />
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-100 dark:bg-[#161c2b] border border-slate-200 dark:border-white/5 flex items-center justify-center text-emerald-500 flex-shrink-0">
+                      <ArrowUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </div>
                   </div>
-                  <div className={`font-mono font-extrabold text-xl sm:text-2xl lg:text-3xl tracking-tight truncate ${
+                  <div className={`font-mono font-bold text-base sm:text-xl lg:text-2xl tracking-tight truncate ${
                     stats.totalRemaining < 0 ? 'text-rose-500' : 'text-slate-900 dark:text-white'
                   }`}>
                     {formatCurrency(Math.abs(stats.totalRemaining), currency.locale, currency.code)}
                   </div>
                 </div>
-                <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.04]">
-                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
+                <div className="flex items-center justify-between gap-1.5 mt-2.5 pt-2.5 sm:mt-3 sm:pt-3 border-t border-slate-100 dark:border-white/[0.04]">
+                  <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-zinc-400 truncate">
                     {stats.totalRemaining >= 0 ? 'Available surplus' : 'Exceeded budget'}
                   </span>
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border font-mono flex-shrink-0 ${
+                  <span className={`text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 rounded-md border font-mono flex-shrink-0 ${
                     stats.totalRemaining >= 0
                       ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
                       : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
@@ -336,25 +332,25 @@ const BudgetPage = () => {
               </div>
 
               {/* Card 4: Categories */}
-              <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/15 transition-all duration-200 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-lg shadow-black/5 dark:shadow-black/20">
+              <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/15 transition-all duration-200 rounded-2xl p-3.5 sm:p-5 flex flex-col justify-between shadow-lg shadow-black/5 dark:shadow-black/20">
                 <div>
-                  <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
-                    <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">
+                  <div className="flex items-center justify-between gap-1.5 mb-2 sm:mb-3">
+                    <span className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">
                       Monitored Categories
                     </span>
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#161c2b] border border-slate-200 dark:border-white/5 flex items-center justify-center text-purple-500 flex-shrink-0">
-                      <PieChart className="w-4 h-4" />
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-100 dark:bg-[#161c2b] border border-slate-200 dark:border-white/5 flex items-center justify-center text-purple-500 flex-shrink-0">
+                      <PieChart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </div>
                   </div>
-                  <div className="font-mono font-extrabold text-xl sm:text-2xl lg:text-3xl tracking-tight text-slate-900 dark:text-white truncate">
+                  <div className="font-mono font-bold text-base sm:text-xl lg:text-2xl tracking-tight text-slate-900 dark:text-white truncate">
                     {stats.categoriesCount}
                   </div>
                 </div>
-                <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.04]">
-                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
+                <div className="flex items-center justify-between gap-1.5 mt-2.5 pt-2.5 sm:mt-3 sm:pt-3 border-t border-slate-100 dark:border-white/[0.04]">
+                  <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-zinc-400 truncate">
                     Active monthly targets
                   </span>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md border font-mono bg-purple-500/10 text-purple-500 border-purple-500/20 flex-shrink-0">
+                  <span className="text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 rounded-md border font-mono bg-purple-500/10 text-purple-500 border-purple-500/20 flex-shrink-0">
                     {stats.categoriesCount} Set
                   </span>
                 </div>
@@ -469,7 +465,7 @@ const BudgetPage = () => {
           </div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 };
 

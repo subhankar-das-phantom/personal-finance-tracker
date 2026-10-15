@@ -181,6 +181,8 @@
 }
 
 html {
+  background-color: #080b11;
+  color: #f1f5f9;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.16) #080b11;
   scrollbar-gutter: stable;
@@ -188,8 +190,8 @@ html {
 }
 
 body {
-  background-color: var(--color-background);
-  color: #1e293b;
+  background-color: #080b11;
+  color: #f1f5f9;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
