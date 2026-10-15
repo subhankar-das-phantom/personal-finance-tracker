@@ -20,7 +20,32 @@ import {
   ArrowLeftRight,
   Settings,
   CreditCard,
+  Sparkles,
+  Clock,
+  Activity,
+  Flame,
+  ShieldCheck,
+  ChevronRight,
 } from "lucide-react";
+
+const CATEGORY_COLORS = [
+  "#3b82f6", // blue
+  "#10b981", // emerald
+  "#f59e0b", // amber
+  "#8b5cf6", // purple
+  "#ec4899", // pink
+  "#06b6d4", // cyan
+];
+
+const WALLET_COLORS = [
+  "#3b82f6", // blue
+  "#8b5cf6", // purple
+  "#10b981", // emerald
+  "#f59e0b", // amber
+  "#06b6d4", // cyan
+  "#ec4899", // pink
+];
+
 
 import Chart from "../components/Chart";
 import TransactionList from "../components/TransactionList";
@@ -91,6 +116,15 @@ const HomePage = () => {
     isValidating: isValidatingChart,
   } = useApi(chartEndpoint);
 
+  const {
+    data: budgetProgressRaw,
+    isLoading: isLoadingBudgetProgress,
+    isValidating: isValidatingBudgetProgress,
+    mutate: mutateBudgetProgress,
+  } = useApi(token ? "budget/progress" : null, { refreshInterval: 30000 });
+
+  const budgetProgress = budgetProgressRaw || null;
+
   const allTransactions = Array.isArray(
     allTransactionsRaw?.transactions || allTransactionsRaw
   )
@@ -113,9 +147,16 @@ const HomePage = () => {
 
   const chartData = chartDataRaw || [];
 
-  const isLoading = isLoadingTransactions || isLoadingStats || isLoadingChart;
+  const isLoading =
+    isLoadingTransactions ||
+    isLoadingStats ||
+    isLoadingChart ||
+    isLoadingBudgetProgress;
   const isRefreshing =
-    isValidatingTransactions || isValidatingStats || isValidatingChart;
+    isValidatingTransactions ||
+    isValidatingStats ||
+    isValidatingChart ||
+    isValidatingBudgetProgress;
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [editTransaction, setEditTransaction] = useState(null);
@@ -235,6 +276,7 @@ const HomePage = () => {
   // Refresh data
   const refreshData = async () => {
     refreshAllFinancialData();
+    mutateBudgetProgress();
   };
 
   // Handle form submission
@@ -270,57 +312,213 @@ const HomePage = () => {
     }
   };
 
-  // Calculate filtered stats based on time filter
-  const getFilteredStats = () => {
+  // Filter transactions consistently by timeFilter
+  const filteredTransactions = useMemo(() => {
     const now = new Date();
-    let filteredTransactions = allTransactions;
-
     switch (timeFilter) {
+      case "today": {
+        const startOfToday = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate()
+        );
+        return allTransactions.filter((t) => new Date(t.date) >= startOfToday);
+      }
+      case "7D":
       case "thisWeek": {
         const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        filteredTransactions = allTransactions.filter((t) => {
-          const date = new Date(t.date);
-          return date >= weekAgo && date <= now;
-        });
-        break;
+        return allTransactions.filter((t) => new Date(t.date) >= weekAgo);
+      }
+      case "30D": {
+        const thirtyDaysAgo = new Date(
+          now.getTime() - 30 * 24 * 60 * 60 * 1000
+        );
+        return allTransactions.filter((t) => new Date(t.date) >= thirtyDaysAgo);
       }
       case "thisMonth": {
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        filteredTransactions = allTransactions.filter((t) => {
-          const date = new Date(t.date);
-          return date >= monthStart && date <= now;
-        });
-        break;
+        return allTransactions.filter((t) => new Date(t.date) >= monthStart);
       }
       case "thisYear": {
         const yearStart = new Date(now.getFullYear(), 0, 1);
-        filteredTransactions = allTransactions.filter((t) => {
-          const date = new Date(t.date);
-          return date >= yearStart && date <= now;
-        });
-        break;
+        return allTransactions.filter((t) => new Date(t.date) >= yearStart);
       }
+      case "all":
       default:
-        break;
+        return allTransactions;
     }
+  }, [allTransactions, timeFilter]);
 
+  // Aggregate stats based on active scope
+  const filteredStats = useMemo(() => {
     const income = filteredTransactions
       .filter((t) => t.type === "income")
-      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
 
     const expenses = filteredTransactions
       .filter((t) => t.type === "expense")
-      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
 
     return {
       income,
       expenses,
-      // For all-time, accurately respect server calculated balance (including opening balance and transfers)
       netBalance:
         timeFilter === "all" ? stats.netBalanceAllTime : income - expenses,
       count: filteredTransactions.length,
     };
-  };
+  }, [filteredTransactions, timeFilter, stats.netBalanceAllTime]);
+
+  // Executive Financial Health Ratios
+  const financialHealth = useMemo(() => {
+    const inc = filteredStats.income || 0;
+    const exp = filteredStats.expenses || 0;
+    const net = filteredStats.netBalance || 0;
+
+    // 1. Savings Rate %
+    let savingsRate = 0;
+    if (inc > 0) {
+      savingsRate = Math.max(-100, Math.min(100, ((inc - exp) / inc) * 100));
+    }
+
+    // 2. Expense-to-Income Ratio %
+    let expenseRatio = 0;
+    if (inc > 0) {
+      expenseRatio = (exp / inc) * 100;
+    } else if (exp > 0) {
+      expenseRatio = 100;
+    }
+
+    // 3. Daily Average Burn based on selected period
+    const now = new Date();
+    let days = 30;
+    if (timeFilter === "today") days = 1;
+    else if (timeFilter === "7D") days = 7;
+    else if (timeFilter === "30D") days = 30;
+    else if (timeFilter === "thisMonth") days = Math.max(1, now.getDate());
+    else if (timeFilter === "thisYear") {
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
+      days = Math.max(
+        1,
+        Math.floor((now - startOfYear) / (1000 * 60 * 60 * 24))
+      );
+    } else {
+      if (allTransactions.length > 0) {
+        const earliest = new Date(
+          allTransactions[allTransactions.length - 1].date
+        );
+        days = Math.max(
+          1,
+          Math.floor((now - earliest) / (1000 * 60 * 60 * 24))
+        );
+      } else {
+        days = 30;
+      }
+    }
+    const dailyAvg = exp / days;
+
+    return {
+      savingsRate,
+      expenseRatio,
+      dailyAvg,
+      net,
+    };
+  }, [filteredStats, timeFilter, allTransactions]);
+
+  // Top Spending Categories Breakdown
+  const topCategories = useMemo(() => {
+    const expenseTxns = filteredTransactions.filter((t) => t.type === "expense");
+    const totalExp = expenseTxns.reduce(
+      (sum, t) => sum + parseFloat(t.amount || 0),
+      0
+    );
+
+    const map = {};
+    expenseTxns.forEach((t) => {
+      const cat = t.category || "General";
+      if (!map[cat]) {
+        map[cat] = { category: cat, amount: 0, count: 0 };
+      }
+      map[cat].amount += parseFloat(t.amount || 0);
+      map[cat].count += 1;
+    });
+
+    const items = Object.values(map)
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 4)
+      .map((item) => ({
+        ...item,
+        percentage:
+          totalExp > 0 ? ((item.amount / totalExp) * 100).toFixed(1) : "0",
+      }));
+
+    return {
+      items,
+      totalExpenses: totalExp,
+    };
+  }, [filteredTransactions]);
+
+  // Multi-Wallet Portfolio Allocation
+  const walletAllocation = useMemo(() => {
+    const totalPositiveBalance = activeWallets.reduce(
+      (sum, w) => sum + Math.max(0, w.balance || 0),
+      0
+    );
+
+    const items = activeWallets.map((w) => {
+      const bal = w.balance || 0;
+      const pct =
+        totalPositiveBalance > 0
+          ? ((Math.max(0, bal) / totalPositiveBalance) * 100).toFixed(1)
+          : "0";
+      return {
+        ...w,
+        percentage: Number(pct),
+      };
+    });
+
+    return {
+      items,
+      totalPositiveBalance,
+      netWorth: summary.totalBalance,
+    };
+  }, [activeWallets, summary.totalBalance]);
+
+  // Monthly Budget Health & Pacing
+  const budgetHealth = useMemo(() => {
+    if (!budgetProgress || !budgetProgress.budgetProgress) {
+      return null;
+    }
+    const goals = budgetProgress.budgetProgress;
+    const totalBudget = goals.reduce((sum, g) => sum + (g.budgetAmount || 0), 0);
+    const totalSpent = goals.reduce((sum, g) => sum + (g.actualSpent || 0), 0);
+    const percentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+
+    const now = new Date();
+    const lastDayOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0
+    ).getDate();
+    const currentDay = now.getDate();
+    const daysRemaining = Math.max(0, lastDayOfMonth - currentDay);
+    const monthProgress = (currentDay / lastDayOfMonth) * 100;
+
+    const isOverBudget = totalSpent > totalBudget;
+    const isPaceHigh = percentage > monthProgress + 10;
+
+    return {
+      goalsCount: goals.length,
+      totalBudget,
+      totalSpent,
+      remaining: Math.max(0, totalBudget - totalSpent),
+      percentage,
+      daysRemaining,
+      monthProgress,
+      isOverBudget,
+      isPaceHigh,
+      goals: goals.slice(0, 2),
+    };
+  }, [budgetProgress]);
 
   const navigate = useNavigate();
 
@@ -330,8 +528,6 @@ const HomePage = () => {
     }
   }, [token, navigate]);
 
-  const filteredStats = getFilteredStats();
-
   const currentDateFormatted = useMemo(() => {
     return new Date().toLocaleDateString("en-US", {
       weekday: "short",
@@ -339,6 +535,10 @@ const HomePage = () => {
       month: "short",
       year: "numeric",
     });
+  }, []);
+
+  const currentMonthName = useMemo(() => {
+    return new Date().toLocaleDateString("en-US", { month: "long" });
   }, []);
 
   const fiscalQuarter = useMemo(() => {
@@ -605,6 +805,151 @@ const HomePage = () => {
             />
           </motion.div>
 
+          {/* Financial Health & Intelligence Strip (4 High-Value Ratio KPIs) */}
+          <motion.div
+            variants={itemVariants}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
+          >
+            {/* 1. Savings Rate */}
+            <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-xl p-3.5 sm:p-4 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
+                  Savings Rate
+                </span>
+                <span
+                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                    financialHealth.savingsRate >= 20
+                      ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40"
+                      : financialHealth.savingsRate >= 0
+                      ? "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800/40"
+                      : "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800/40"
+                  }`}
+                >
+                  {financialHealth.savingsRate >= 20
+                    ? "Healthy"
+                    : financialHealth.savingsRate >= 0
+                    ? "Modest"
+                    : "Deficit"}
+                </span>
+              </div>
+              <div className="text-base sm:text-xl font-bold font-mono text-slate-900 dark:text-white tabular-nums my-1">
+                {financialHealth.savingsRate.toFixed(1)}%
+              </div>
+              <div className="mt-1">
+                <div className="h-1.5 w-full bg-slate-100 dark:bg-[#161c2b] rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      financialHealth.savingsRate >= 20
+                        ? "bg-emerald-500"
+                        : financialHealth.savingsRate >= 0
+                        ? "bg-amber-500"
+                        : "bg-rose-500"
+                    }`}
+                    style={{
+                      width: `${Math.max(0, Math.min(100, financialHealth.savingsRate))}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-1 truncate">
+                  Retained from total income
+                </p>
+              </div>
+            </div>
+
+            {/* 2. Expense-to-Income Ratio */}
+            <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-xl p-3.5 sm:p-4 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
+                  Expense Ratio
+                </span>
+                <span
+                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                    financialHealth.expenseRatio <= 70
+                      ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/40"
+                      : financialHealth.expenseRatio <= 90
+                      ? "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800/40"
+                      : "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800/40"
+                  }`}
+                >
+                  {financialHealth.expenseRatio <= 70
+                    ? "Controlled"
+                    : financialHealth.expenseRatio <= 90
+                    ? "Elevated"
+                    : "High Burn"}
+                </span>
+              </div>
+              <div className="text-base sm:text-xl font-bold font-mono text-slate-900 dark:text-white tabular-nums my-1">
+                {financialHealth.expenseRatio.toFixed(1)}%
+              </div>
+              <div className="mt-1">
+                <div className="h-1.5 w-full bg-slate-100 dark:bg-[#161c2b] rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      financialHealth.expenseRatio <= 70
+                        ? "bg-blue-500"
+                        : financialHealth.expenseRatio <= 90
+                        ? "bg-amber-500"
+                        : "bg-rose-500"
+                    }`}
+                    style={{
+                      width: `${Math.max(0, Math.min(100, financialHealth.expenseRatio))}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-1 truncate">
+                  Outflow vs inflow proportion
+                </p>
+              </div>
+            </div>
+
+            {/* 3. Daily Average Spend */}
+            <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-xl p-3.5 sm:p-4 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
+                  Daily Burn Rate
+                </span>
+                <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500" />
+              </div>
+              <div className="text-base sm:text-xl font-bold font-mono text-slate-900 dark:text-white tabular-nums my-1">
+                {formatCurrency(financialHealth.dailyAvg)}
+              </div>
+              <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-1 truncate">
+                Average spend per day
+              </p>
+            </div>
+
+            {/* 4. Cash Flow Velocity */}
+            <div className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-xl p-3.5 sm:p-4 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
+                  Net Cash Flow
+                </span>
+                <span
+                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                    financialHealth.net >= 0
+                      ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40"
+                      : "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800/40"
+                  }`}
+                >
+                  {financialHealth.net >= 0 ? "Surplus" : "Deficit"}
+                </span>
+              </div>
+              <div
+                className={`text-base sm:text-xl font-bold font-mono tabular-nums my-1 ${
+                  financialHealth.net >= 0 ? "text-emerald-500" : "text-rose-500"
+                }`}
+              >
+                {financialHealth.net >= 0 ? "+" : ""}
+                {formatCurrency(financialHealth.net)}
+              </div>
+              <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-1 truncate">
+                {financialHealth.net >= 0
+                  ? "Net positive capital growth"
+                  : "Net drawdown on reserves"}
+              </p>
+            </div>
+          </motion.div>
+
           {/* Main Content Grid: Chart & Recent Transactions */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
             {/* Chart Section */}
@@ -652,6 +997,321 @@ const HomePage = () => {
               </div>
             </motion.div>
           </div>
+
+          {/* Deep Financial Intelligence Row: Categories Breakdown, Wallet Portfolio Allocation, Budget Pacing */}
+          <motion.div
+            variants={itemVariants}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            {/* 1. Top Spending Categories Card */}
+            <div className="bg-white dark:bg-[#10141e] rounded-2xl border border-slate-200/80 dark:border-white/[0.07] p-5 sm:p-6 flex flex-col justify-between shadow-xs">
+              <div>
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-white/[0.05]">
+                  <div className="flex items-center space-x-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                      <PieChart className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                        Top Categories
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-zinc-400">
+                        Primary cost centers
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => navigate("/analytics")}
+                    className="text-xs font-semibold text-blue-600 dark:text-cyan-400 hover:underline px-2 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors"
+                  >
+                    Analytics →
+                  </button>
+                </div>
+
+                {topCategories.items.length === 0 ? (
+                  <div className="text-center py-8 text-slate-400 dark:text-zinc-500 text-xs">
+                    <p>No expense data recorded in this period.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3.5">
+                    {topCategories.items.map((cat, idx) => (
+                      <div key={cat.category} className="space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center space-x-2 min-w-0">
+                            <span
+                              className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                              style={{
+                                backgroundColor:
+                                  CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
+                              }}
+                            />
+                            <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate">
+                              {cat.category}
+                            </span>
+                            <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-mono">
+                              ({cat.count})
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
+                            <span className="font-mono font-bold text-slate-900 dark:text-white">
+                              {formatCurrency(cat.amount)}
+                            </span>
+                            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 dark:bg-[#161c2b] text-slate-600 dark:text-zinc-400 font-medium">
+                              {cat.percentage}%
+                            </span>
+                          </div>
+                        </div>
+                        <div className="h-1.5 w-full bg-slate-100 dark:bg-[#161c2b] rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-300"
+                            style={{
+                              width: `${cat.percentage}%`,
+                              backgroundColor:
+                                CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-3 mt-4 border-t border-slate-100 dark:border-white/[0.05] flex items-center justify-between text-xs">
+                <span className="text-slate-500 dark:text-zinc-400 text-[11px]">
+                  Total Outflow
+                </span>
+                <span className="font-mono font-bold text-slate-900 dark:text-white">
+                  {formatCurrency(topCategories.totalExpenses)}
+                </span>
+              </div>
+            </div>
+
+            {/* 2. Wallet Portfolio Allocation Card */}
+            <div className="bg-white dark:bg-[#10141e] rounded-2xl border border-slate-200/80 dark:border-white/[0.07] p-5 sm:p-6 flex flex-col justify-between shadow-xs">
+              <div>
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-white/[0.05]">
+                  <div className="flex items-center space-x-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                      <Wallet className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                        Wallet Distribution
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-zinc-400">
+                        {activeWallets.length} active asset accounts
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsTransferModalOpen(true)}
+                    className="text-xs font-semibold text-blue-600 dark:text-cyan-400 hover:underline px-2 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors inline-flex items-center gap-1"
+                  >
+                    <ArrowLeftRight className="w-3 h-3" />
+                    Transfer
+                  </button>
+                </div>
+
+                {/* Segmented Portfolio Bar */}
+                <div className="mb-4">
+                  <div className="h-2 w-full bg-slate-100 dark:bg-[#161c2b] rounded-full overflow-hidden flex gap-0.5">
+                    {walletAllocation.items.map((w, idx) => (
+                      <div
+                        key={w._id}
+                        className="h-full transition-all duration-300 first:rounded-l-full last:rounded-r-full"
+                        style={{
+                          width: `${Math.max(w.percentage, 2)}%`,
+                          backgroundColor:
+                            WALLET_COLORS[idx % WALLET_COLORS.length],
+                        }}
+                        title={`${w.name}: ${w.percentage}%`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Wallet rows */}
+                <div className="space-y-2.5">
+                  {walletAllocation.items.slice(0, 4).map((w, idx) => (
+                    <div
+                      key={w._id}
+                      className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-[#151c2a] border border-slate-200/60 dark:border-white/[0.04]"
+                    >
+                      <div className="flex items-center space-x-2 min-w-0">
+                        <span
+                          className="w-2 h-2 rounded-full flex-shrink-0"
+                          style={{
+                            backgroundColor:
+                              WALLET_COLORS[idx % WALLET_COLORS.length],
+                          }}
+                        />
+                        <span className="text-xs font-semibold text-slate-800 dark:text-zinc-200 truncate">
+                          {w.name}
+                        </span>
+                        <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-slate-200/60 dark:bg-[#1f273d] text-slate-600 dark:text-zinc-400">
+                          {w.currency}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
+                        <span className="font-mono text-xs font-bold text-slate-900 dark:text-white">
+                          {formatCurrency(w.balance, { code: w.currency })}
+                        </span>
+                        <span className="text-[10px] font-mono font-medium text-slate-400 dark:text-zinc-500">
+                          {w.percentage}%
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-3 mt-4 border-t border-slate-100 dark:border-white/[0.05] flex items-center justify-between text-xs">
+                <span className="text-slate-500 dark:text-zinc-400 text-[11px]">
+                  Net Worth Total
+                </span>
+                <span className="font-mono font-bold text-blue-600 dark:text-cyan-400">
+                  {formatCurrency(summary.totalBalance)}
+                </span>
+              </div>
+            </div>
+
+            {/* 3. Monthly Budget Health & Pacing Card */}
+            <div className="bg-white dark:bg-[#10141e] rounded-2xl border border-slate-200/80 dark:border-white/[0.07] p-5 sm:p-6 flex flex-col justify-between shadow-xs">
+              <div>
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-white/[0.05]">
+                  <div className="flex items-center space-x-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200/60 dark:border-purple-800/40 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                      <Target className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                        Budget Health
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-zinc-400">
+                        {currentMonthName} pace & limits
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => navigate("/budget")}
+                    className="text-xs font-semibold text-blue-600 dark:text-cyan-400 hover:underline px-2 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors"
+                  >
+                    Manage →
+                  </button>
+                </div>
+
+                {budgetHealth && budgetHealth.goalsCount > 0 ? (
+                  <div className="space-y-3.5">
+                    {/* Spent vs Budget Gauge */}
+                    <div>
+                      <div className="flex items-baseline justify-between mb-1.5">
+                        <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                          {formatCurrency(budgetHealth.totalSpent)} spent
+                        </span>
+                        <span className="text-xs font-mono text-slate-400 dark:text-zinc-500">
+                          of {formatCurrency(budgetHealth.totalBudget)}
+                        </span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-100 dark:bg-[#161c2b] rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${
+                            budgetHealth.isOverBudget
+                              ? "bg-rose-500"
+                              : budgetHealth.isPaceHigh
+                              ? "bg-amber-500"
+                              : "bg-emerald-500"
+                          }`}
+                          style={{
+                            width: `${Math.min(100, budgetHealth.percentage)}%`,
+                          }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] mt-1.5">
+                        <span
+                          className={`font-semibold ${
+                            budgetHealth.isOverBudget
+                              ? "text-rose-500"
+                              : budgetHealth.isPaceHigh
+                              ? "text-amber-500"
+                              : "text-emerald-500"
+                          }`}
+                        >
+                          {budgetHealth.isOverBudget
+                            ? "Over Budget"
+                            : budgetHealth.isPaceHigh
+                            ? "Pace Warning"
+                            : "On Track"}
+                        </span>
+                        <span className="text-slate-400 dark:text-zinc-500">
+                          {budgetHealth.daysRemaining} days remaining
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Preview of top budget targets */}
+                    <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-white/[0.05]">
+                      {budgetHealth.goals.map((goal) => (
+                        <div
+                          key={goal.category}
+                          className="flex items-center justify-between text-xs"
+                        >
+                          <span className="text-slate-600 dark:text-zinc-300 truncate font-medium">
+                            {goal.category}
+                          </span>
+                          <div className="flex items-center space-x-1.5">
+                            <span className="font-mono font-bold text-slate-900 dark:text-white">
+                              {formatCurrency(goal.actualSpent)}
+                            </span>
+                            <span className="text-[10px] font-mono text-slate-400">
+                              / {formatCurrency(goal.budgetAmount)}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-500 mx-auto mb-2">
+                      <Target className="w-5 h-5" />
+                    </div>
+                    <p className="text-xs font-bold text-slate-800 dark:text-zinc-200">
+                      No budget limits configured
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5 mb-3 max-w-xs mx-auto">
+                      Set monthly category limits to prevent spending leaks.
+                    </p>
+                    <button
+                      onClick={() => navigate("/budget")}
+                      className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white shadow-xs transition-colors"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Create Target</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-3 mt-4 border-t border-slate-100 dark:border-white/[0.05] flex items-center justify-between text-xs">
+                <span className="text-slate-500 dark:text-zinc-400 text-[11px]">
+                  Remaining Allowance
+                </span>
+                <span
+                  className={`font-mono font-bold ${
+                    budgetHealth?.isOverBudget
+                      ? "text-rose-500"
+                      : "text-emerald-500"
+                  }`}
+                >
+                  {budgetHealth
+                    ? formatCurrency(budgetHealth.remaining)
+                    : "Not configured"}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+
         </motion.div>
 
         {/* Add/Edit Transaction Modal (Stable, Jitter-Free) */}
