@@ -189,6 +189,15 @@ html {
   scroll-behavior: smooth;
 }
 
+html.dark,
+.dark {
+  color-scheme: dark;
+}
+
+html:not(.dark) {
+  color-scheme: light;
+}
+
 body {
   background-color: #080b11;
   color: #f1f5f9;
@@ -202,6 +211,33 @@ body {
 .dark body {
   background-color: #080b11;
   color: #f1f5f9;
+}
+
+/* Ensure date and time inputs have visible calendar picker icons in dark mode */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  cursor: pointer;
+}
+
+.dark input[type="date"],
+.dark input[type="time"],
+.dark input[type="datetime-local"] {
+  color-scheme: dark !important;
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator,
+.dark input[type="time"]::-webkit-calendar-picker-indicator,
+.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.15s ease;
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator:hover,
+.dark input[type="time"]::-webkit-calendar-picker-indicator:hover,
+.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 /* Global ultra-sleek obsidian scrollbar (eliminates thick grey Windows scrollbars) */

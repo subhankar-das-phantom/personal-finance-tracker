@@ -786,7 +786,7 @@ const TransactionsPage = () => {
           {/* Header Card (Matching Premium Obsidian Reference) */}
           <motion.div
             variants={itemVariants}
-            className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-2xl p-5 sm:p-6 shadow-xs"
+            className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-2xl p-5 sm:p-6 shadow-xs relative z-20"
           >
             {/* Top Row: Date capsule + Live pill + Actions */}
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
@@ -1066,7 +1066,7 @@ const TransactionsPage = () => {
                       type="date"
                       value={filters.dateFrom}
                       onChange={(e) => updateFilter("dateFrom", e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white dark:[color-scheme:dark] cursor-pointer focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
 
@@ -1078,7 +1078,7 @@ const TransactionsPage = () => {
                       type="date"
                       value={filters.dateTo}
                       onChange={(e) => updateFilter("dateTo", e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white dark:[color-scheme:dark] cursor-pointer focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
 
@@ -1477,7 +1477,7 @@ const TransactionsPage = () => {
                                 preset: "custom",
                               })
                             }
-                            className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-green-500 focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 transition-all text-sm"
+                            className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white dark:[color-scheme:dark] cursor-pointer focus:border-green-500 focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 transition-all text-sm"
                           />
                         </div>
                       </div>
@@ -1486,7 +1486,7 @@ const TransactionsPage = () => {
                           End Date
                         </label>
                         <div className="relative">
-                          <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                           <input
                             type="date"
                             value={exportDateRange.endDate}
@@ -1498,7 +1498,7 @@ const TransactionsPage = () => {
                               })
                             }
                             min={exportDateRange.startDate}
-                            className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-green-500 focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 transition-all text-sm"
+                            className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white dark:[color-scheme:dark] cursor-pointer focus:border-green-500 focus:ring-4 focus:ring-green-200 dark:focus:ring-green-900 transition-all text-sm"
                           />
                         </div>
                       </div>

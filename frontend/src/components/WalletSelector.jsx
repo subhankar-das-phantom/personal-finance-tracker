@@ -13,7 +13,7 @@ import { useWallet } from '../context/WalletContext';
 import { formatCurrency } from '../utils/currency';
 import { useCurrency } from '../context/CurrencyContext';
 
-const WalletSelector = ({ className = '' }) => {
+const WalletSelector = ({ className = '', align = 'auto' }) => {
   const {
     activeWallets,
     activeWallet,
@@ -27,6 +27,7 @@ const WalletSelector = ({ className = '' }) => {
   const { currency } = useCurrency();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [dropdownAlign, setDropdownAlign] = useState(() => (align === 'auto' ? 'right' : align));
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -37,6 +38,33 @@ const WalletSelector = ({ className = '' }) => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (align !== 'auto') {
+      setDropdownAlign(align);
+      return;
+    }
+    const updateAlign = () => {
+      if (dropdownRef.current) {
+        const rect = dropdownRef.current.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const spaceRight = viewportWidth - rect.right;
+
+        // If less than 350px on the right or located in the right half of the screen
+        if (spaceRight < 340 || rect.left > viewportWidth / 2) {
+          setDropdownAlign('right');
+        } else {
+          setDropdownAlign('left');
+        }
+      }
+    };
+
+    if (isOpen) {
+      updateAlign();
+      window.addEventListener('resize', updateAlign);
+      return () => window.removeEventListener('resize', updateAlign);
+    }
+  }, [isOpen, align]);
 
   const selectedTitle = activeWallet ? activeWallet.name : 'All Wallets';
   const selectedBalance = activeWallet ? activeWallet.balance : summary.totalBalance;
@@ -91,7 +119,9 @@ const WalletSelector = ({ className = '' }) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.98 }}
             transition={{ duration: 0.12 }}
-            className="absolute left-0 mt-2 w-80 sm:w-88 rounded-2xl bg-white dark:bg-[#10141e] border border-slate-200 dark:border-white/10 shadow-2xl shadow-black/40 z-50 overflow-hidden font-sans"
+            className={`absolute ${
+              dropdownAlign === 'left' ? 'left-0' : 'right-0'
+            } mt-2 w-80 sm:w-88 max-w-[calc(100vw-2rem)] rounded-2xl bg-white dark:bg-[#10141e] border border-slate-200 dark:border-white/10 shadow-2xl shadow-black/40 z-50 overflow-hidden font-sans`}
           >
             {/* Header */}
             <div className="p-3 bg-slate-50 dark:bg-[#161c2b] border-b border-slate-200 dark:border-white/[0.06] flex items-center justify-between text-xs">

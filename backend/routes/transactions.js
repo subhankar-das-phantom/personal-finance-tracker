@@ -799,8 +799,8 @@ function calculateFinancialStats(transactions) {
     .sort((a, b) => b.amount - a.amount)
     .slice(0, 5);
 
-  // Financial insights
-  const insights = calculateFinancialInsights(periods);
+  // Financial insights with quantitative algorithmic engine
+  const insights = calculateFinancialInsights(periods, categoryBreakdown, monthlyTrends, topExpenseCategories, transactions);
 
   return {
     periods,
@@ -834,36 +834,212 @@ function calculatePeriodStats(transactions) {
   };
 }
 
-function calculateFinancialInsights(periods) {
+function calculateFinancialInsights(periods, categoryBreakdown = {}, monthlyTrends = [], topExpenseCategories = [], transactions = []) {
   const insights = [];
 
-  // Month-over-month analysis
-  if (periods.thisMonth.count > 0 && periods.lastMonth.count > 0 && periods.lastMonth.income > 0) {
-    const incomeChange = ((periods.thisMonth.income - periods.lastMonth.income) / periods.lastMonth.income) * 100;
-    const expenseChange =
-      periods.lastMonth.expense > 0
-        ? ((periods.thisMonth.expense - periods.lastMonth.expense) / periods.lastMonth.expense) * 100
-        : 0;
+  const thisMonth = periods.thisMonth || {};
+  const lastMonth = periods.lastMonth || {};
+  const thisYear = periods.thisYear || {};
+  const allTime = periods.allTime || {};
 
-    insights.push(
-      `Income ${incomeChange >= 0 ? 'increased' : 'decreased'} by ${Math.abs(incomeChange).toFixed(1)}% vs last month`
-    );
-    if (periods.lastMonth.expense > 0) {
-      insights.push(
-        `Expenses ${expenseChange >= 0 ? 'increased' : 'decreased'} by ${Math.abs(expenseChange).toFixed(1)}% vs last month`
-      );
+  // 1. Savings Rate & Retained Income
+  const savingsRate = thisMonth.savingsRate || 0;
+  const hasMonthlyActivity = (thisMonth.income > 0 || thisMonth.expense > 0);
+
+  if (hasMonthlyActivity) {
+    if (thisMonth.income > 0 && thisMonth.expense === 0) {
+      insights.push({
+        id: 'savings',
+        code: 'SAVINGS',
+        category: 'Savings Rate',
+        tone: 'optimal',
+        title: 'All Income Retained',
+        metric: '100% Retained',
+        description: 'You have zero expenses logged so far this month, retaining 100% of your earnings.',
+        recommendation: 'Keep an eye on upcoming bills to preserve as much of this balance as possible.',
+      });
+    } else if (thisMonth.income === 0 && thisMonth.expense > 0) {
+      insights.push({
+        id: 'savings',
+        code: 'SAVINGS',
+        category: 'Savings Rate',
+        tone: 'caution',
+        title: 'Expenses Without Recorded Income',
+        metric: `${thisMonth.expense.toFixed(0)} Spent`,
+        description: 'You have recorded expenses this month without any logged income yet.',
+        recommendation: 'Remember to record your salary or other earnings so your true net savings rate can be calculated.',
+      });
+    } else if (savingsRate >= 35) {
+      insights.push({
+        id: 'savings',
+        code: 'SAVINGS',
+        category: 'Savings Rate',
+        tone: 'optimal',
+        title: 'Superb Savings Rate',
+        metric: `${savingsRate.toFixed(1)}% Saved`,
+        description: `You are saving ${savingsRate.toFixed(1)}% of your income this month, well ahead of standard 20% benchmarks.`,
+        recommendation: 'Consider allocating a portion of this surplus into an emergency reserve or long-term investments.',
+      });
+    } else if (savingsRate >= 20) {
+      insights.push({
+        id: 'savings',
+        code: 'SAVINGS',
+        category: 'Savings Rate',
+        tone: 'optimal',
+        title: 'Healthy Savings Rate',
+        metric: `${savingsRate.toFixed(1)}% Saved`,
+        description: `Savings rate of ${savingsRate.toFixed(1)}% comfortably meets the classical 50/30/20 guideline (20% target).`,
+        recommendation: 'Maintain your current spending discipline to finish the month with a strong positive balance.',
+      });
+    } else if (savingsRate > 0) {
+      insights.push({
+        id: 'savings',
+        code: 'SAVINGS',
+        category: 'Savings Rate',
+        tone: 'caution',
+        title: 'Positive but Modest Savings',
+        metric: `${savingsRate.toFixed(1)}% Saved`,
+        description: `You have saved ${savingsRate.toFixed(1)}% of your earnings this month. While positive, margins are modest.`,
+        recommendation: 'Review flexible everyday spending to see if you can nudge your savings closer to the 20% mark.',
+      });
+    } else {
+      const deficit = Math.abs(thisMonth.netBalance || 0);
+      insights.push({
+        id: 'savings',
+        code: 'SAVINGS',
+        category: 'Savings Rate',
+        tone: 'warning',
+        title: 'Spending Exceeds Income',
+        metric: `-${Math.abs(savingsRate).toFixed(1)}% Deficit`,
+        description: `Expenses have exceeded income by ${deficit.toFixed(2)} so far this month.`,
+        recommendation: 'Pause non-essential purchases for the rest of the month to restore a balanced cash flow.',
+      });
     }
   }
 
-  // Savings rate analysis
-  if (periods.thisMonth.savingsRate > 20) {
-    insights.push('Excellent savings rate this month (>20%)');
-  } else if (periods.thisMonth.savingsRate > 10) {
-    insights.push('Good savings rate this month (10-20%)');
-  } else if (periods.thisMonth.savingsRate > 0) {
-    insights.push('Positive savings this month (<10%)');
-  } else {
-    insights.push('Spending exceeded income this month - consider budget review');
+  // 2. Spending Pace
+  const today = new Date();
+  const currentDay = today.getDate() || 1;
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const dailyBurn = (thisMonth.expense || 0) / currentDay;
+  const projectedMonthExpense = dailyBurn * daysInMonth;
+
+  if (thisMonth.expense > 0) {
+    const projectedChange = lastMonth.expense > 0 
+      ? ((projectedMonthExpense - lastMonth.expense) / lastMonth.expense) * 100 
+      : 0;
+
+    insights.push({
+      id: 'spending-pace',
+      code: 'SPENDING_PACE',
+      category: 'Spending Pace',
+      tone: projectedChange <= 5 ? 'optimal' : projectedChange > 25 ? 'warning' : 'caution',
+      title: projectedChange > 20 ? 'Spending Pacing Above Last Month' : 'Monthly Spending Pace',
+      metric: `${dailyBurn.toFixed(0)}/day Average`,
+      description: `You are averaging ${dailyBurn.toFixed(2)}/day (day ${currentDay} of ${daysInMonth}), on track to reach about ${projectedMonthExpense.toFixed(0)} by month-end (${projectedChange >= 0 ? '+' : ''}${projectedChange.toFixed(1)}% vs last month).`,
+      recommendation: projectedChange > 10 
+        ? 'Spending pace is slightly higher than last month. Consider keeping discretionary expenses light for the next week.' 
+        : 'Your spending pace is steady and aligned with previous months.',
+    });
+  }
+
+  // 3. Top Categories
+  if (topExpenseCategories && topExpenseCategories.length > 0 && thisMonth.expense > 0) {
+    const top1 = topExpenseCategories[0];
+    const top2 = topExpenseCategories[1];
+    const top2Total = (top1?.amount || 0) + (top2?.amount || 0);
+    const concentrationRatio = (top2Total / thisMonth.expense) * 100;
+
+    if (concentrationRatio >= 50) {
+      insights.push({
+        id: 'categories',
+        code: 'CATEGORIES',
+        category: 'Top Categories',
+        tone: concentrationRatio > 70 ? 'warning' : 'caution',
+        title: 'Concentrated Spending in Top Categories',
+        metric: `${concentrationRatio.toFixed(0)}% in Top ${top2 ? '2 Categories' : 'Category'}`,
+        description: `Over half of this month's spending is in ${top1.category}${top2 ? ` (${((top1.amount/thisMonth.expense)*100).toFixed(0)}%) and ${top2.category} (${((top2.amount/thisMonth.expense)*100).toFixed(0)}%)` : ''}.`,
+        recommendation: `Check your recent ${top1.category} purchases to see if there are subscriptions or flexible items you can optimize.`,
+      });
+    } else {
+      insights.push({
+        id: 'categories',
+        code: 'CATEGORIES',
+        category: 'Top Categories',
+        tone: 'optimal',
+        title: 'Well-Balanced Spending',
+        metric: `${concentrationRatio.toFixed(0)}% in Top 2`,
+        description: 'Your spending is nicely distributed across several categories without being dominated by any single area.',
+        recommendation: 'Your spending distribution is well diversified across your lifestyle needs.',
+      });
+    }
+  }
+
+  // 4. Cash Flow Growth
+  if (thisMonth.count > 0 && lastMonth.count > 0 && lastMonth.income > 0) {
+    const incomeGrowth = ((thisMonth.income - lastMonth.income) / lastMonth.income) * 100;
+    const expenseGrowth = lastMonth.expense > 0 
+      ? ((thisMonth.expense - lastMonth.expense) / lastMonth.expense) * 100 
+      : 0;
+    const marginSpread = incomeGrowth - expenseGrowth;
+
+    insights.push({
+      id: 'cash-flow',
+      code: 'CASH_FLOW',
+      category: 'Cash Flow',
+      tone: marginSpread >= 0 ? 'optimal' : 'caution',
+      title: marginSpread >= 0 ? 'Expanding Cash Flow' : 'Expenses Outpaced Income Growth',
+      metric: `${marginSpread >= 0 ? '+' : ''}${marginSpread.toFixed(1)}% Net Margin`,
+      description: `Income shifted by ${incomeGrowth >= 0 ? '+' : ''}${incomeGrowth.toFixed(1)}% while spending moved ${expenseGrowth >= 0 ? '+' : ''}${expenseGrowth.toFixed(1)}% compared to last month.`,
+      recommendation: marginSpread >= 0 
+        ? 'Your income is growing faster than your spending. Great time to put the extra margin into savings.' 
+        : 'Spending grew faster than income this month. Keep non-essential purchases steady.',
+    });
+  }
+
+  // 5. Notable Large Expense
+  if (transactions && transactions.length > 3) {
+    const expenseTxns = transactions.filter(t => t.type === 'expense');
+    if (expenseTxns.length > 0) {
+      const amounts = expenseTxns.map(t => parseFloat(t.amount));
+      const maxTxn = Math.max(...amounts);
+      const avgExpense = amounts.reduce((a, b) => a + b, 0) / amounts.length;
+      const outlierRatio = maxTxn / (avgExpense || 1);
+
+      if (outlierRatio >= 3.0) {
+        const topTxnItem = expenseTxns.find(t => parseFloat(t.amount) === maxTxn);
+        insights.push({
+          id: 'notable-expense',
+          code: 'NOTABLE_EXPENSE',
+          category: 'Notable Expense',
+          tone: 'caution',
+          title: 'Large Expense Detected',
+          metric: `${maxTxn.toFixed(0)} (${outlierRatio.toFixed(1)}x avg)`,
+          description: `A transaction of ${maxTxn.toFixed(2)} in ${topTxnItem?.category || 'General'} was significantly higher than your average expense (${avgExpense.toFixed(2)}).`,
+          recommendation: 'Check that this was an expected one-time purchase so your regular monthly budget stays on track.',
+        });
+      }
+    }
+  }
+
+  // 6. Quarterly Consistency Habit
+  if (monthlyTrends && monthlyTrends.length >= 3) {
+    const last3 = monthlyTrends.slice(-3);
+    const positiveNetMonths = last3.filter(m => m.netBalance >= 0).length;
+    const consistencyRate = (positiveNetMonths / 3) * 100;
+
+    insights.push({
+      id: 'savings-habit',
+      code: 'SAVINGS_HABIT',
+      category: 'Savings Habit',
+      tone: consistencyRate === 100 ? 'optimal' : consistencyRate >= 66 ? 'positive' : 'caution',
+      title: `${positiveNetMonths} of 3 Months in the Green`,
+      metric: `${consistencyRate.toFixed(0)}% Positive Months`,
+      description: `Over the past 3 months, you saved more than you spent in ${positiveNetMonths} of them, reflecting steady financial discipline.`,
+      recommendation: consistencyRate === 100 
+        ? 'Terrific habit! You have maintained positive savings every month this quarter.' 
+        : 'Aim for three consecutive months of positive net savings to build a strong savings streak.',
+    });
   }
 
   return insights;
@@ -989,8 +1165,11 @@ async function generatePDFReport(doc, transactions, stats, userCurrency, scopeTi
 
   stats.insights.forEach((insight) => {
     checkNewPage();
-    doc.fontSize(10).fillColor('#4A5568').text(`• ${insight}`, 70, yPosition);
-    yPosition += 15;
+    const lineText = typeof insight === 'string' 
+      ? insight 
+      : `[${insight.category || 'Insight'}] ${insight.title} — ${insight.description}`;
+    doc.fontSize(10).fillColor('#4A5568').text(`• ${lineText}`, 70, yPosition, { width: 470 });
+    yPosition += 22;
   });
   yPosition += 20;
 

@@ -295,7 +295,12 @@ const TransferModal = ({ isOpen, onClose }) => {
                     required
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    onClick={(e) => {
+                      try {
+                        e.target.showPicker?.();
+                      } catch (err) {}
+                    }}
+                    className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white dark:[color-scheme:dark] cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                   <Calendar className="w-4 h-4 text-gray-400 absolute right-3 top-3 pointer-events-none" />
                 </div>

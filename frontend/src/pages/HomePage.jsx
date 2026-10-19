@@ -506,7 +506,7 @@ const HomePage = () => {
           {/* Dashboard Hero Header Card (Matching Premium Reference Screenshot) */}
           <motion.div
             variants={itemVariants}
-            className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-2xl p-4 sm:p-5 shadow-xs"
+            className="bg-white dark:bg-[#10141e] border border-slate-200/80 dark:border-white/[0.07] rounded-2xl p-4 sm:p-5 shadow-xs relative z-20"
           >
             {/* Top Row: Date Pill + Live Indicator + Actions */}
             <div className="flex flex-wrap items-center justify-between gap-3 mb-3.5">

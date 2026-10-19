@@ -378,12 +378,17 @@ const TransactionForm = ({ onSubmit, transaction, isLoading = false, onClose }) 
             Date
           </label>
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-zinc-400 pointer-events-none" />
             <input
               type="date"
               value={formData.date}
               onChange={(e) => handleChange('date', e.target.value)}
-              className={`w-full pl-9 pr-4 py-2.5 rounded-xl border text-sm transition-all duration-150 bg-slate-50 dark:bg-[#0b0e17] text-slate-900 dark:text-white ${
+              onClick={(e) => {
+                try {
+                  e.target.showPicker?.();
+                } catch (err) {}
+              }}
+              className={`w-full pl-9 pr-4 py-2.5 rounded-xl border text-sm transition-all duration-150 bg-slate-50 dark:bg-[#0b0e17] text-slate-900 dark:text-white dark:[color-scheme:dark] cursor-pointer ${
                 errors.date && isSubmitted
                   ? 'border-rose-500 focus:ring-1 focus:ring-rose-500'
                   : 'border-slate-200 dark:border-white/10 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
